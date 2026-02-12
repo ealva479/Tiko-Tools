@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch File Renamer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2d2d2d;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --gray-300: #a3a3a3;
+            --gray-400: #737373;
+            --gray-500: #525252;
+            --gray-600: #404040;
+            --pink: #ffb3ba;
+            --pink-dark: #ff8a93;
+            --chrome: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            --gradient-card: linear-gradient(135deg, #242424 0%, #1f1f1f 100%);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--off-white);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--gradient-card);
+            border-radius: 16px;
+            border: 1px solid var(--gray-600);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-300);
+            margin-bottom: 40px;
+            font-size: 15px;
+        }
+
+        .section {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--pink);
+            background: rgba(255, 179, 186, 0.1);
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .preset-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .preset-example {
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--gray-300);
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--off-white);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--pink);
+            box-shadow: 0 0 0 3px rgba(255, 179, 186, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .file-original {
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--gray-300);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-arrow {
+            font-size: 18px;
+            color: var(--gray-500);
+        }
+
+        .file-new {
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--white);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-new.error {
+            color: var(--pink);
+        }
+
+        .file-new.unchanged {
+            color: var(--gray-500);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--off-white);
+            border: 1px solid var(--gray-600);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-600);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #6ee7b7);
+            color: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .success-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .file-arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Batch File Renamer</h1>
+        <p class="subtitle">Rename multiple files with patterns, prefixes, numbering, and engine-specific conventions</p>
+
+        <div class="section">
+            <div class="section-title">Engine Presets</div>
+            <div class="preset-grid">
+                <div class="preset-btn active" data-preset="custom">
+                    <div class="preset-name">Custom</div>
+                    <div class="preset-example">Your pattern</div>
+                </div>
+                <div class="preset-btn" data-preset="unreal">
+                    <div class="preset-name">Unreal Engine</div>
+                    <div class="preset-example">T_Name_D</div>
+                </div>
+                <div class="preset-btn" data-preset="unity">
+                    <div class="preset-name">Unity</div>
+                    <div class="preset-example">Name_Diffuse</div>
+                </div>
+                <div class="preset-btn" data-preset="godot">
+                    <div class="preset-name">Godot</div>
+                    <div class="preset-example">name_diffuse</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Rename Settings</div>
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label class="setting-label">Pattern</label>
+                    <input type="text" id="pattern" placeholder="Use {n} for number, {name} for original" value="{name}">
+                    <div class="hint">Example: Project_{name}_{n}</div>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Prefix</label>
+                    <input type="text" id="prefix" placeholder="Add before filename">
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Suffix</label>
+                    <input type="text" id="suffix" placeholder="Add before extension">
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Start Number</label>
+                    <input type="number" id="startNumber" value="1" min="0">
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Number Padding</label>
+                    <select id="padding">
+                        <option value="1">No padding (1, 2, 3)</option>
+                        <option value="2">2 digits (01, 02, 03)</option>
+                        <option value="3" selected>3 digits (001, 002, 003)</option>
+                        <option value="4">4 digits (0001, 0002)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Case Transform</label>
+                    <select id="caseTransform">
+                        <option value="none">Keep Original</option>
+                        <option value="lowercase">lowercase</option>
+                        <option value="uppercase">UPPERCASE</option>
+                        <option value="capitalize">Capitalize Words</option>
+                        <option value="camel">camelCase</option>
+                        <option value="pascal">PascalCase</option>
+                        <option value="snake">snake_case</option>
+                        <option value="kebab">kebab-case</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-grid" style="margin-top: 20px;">
+                <div class="setting-group">
+                    <label class="setting-label">Find</label>
+                    <input type="text" id="findText" placeholder="Text to find">
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Replace With</label>
+                    <input type="text" id="replaceText" placeholder="Replacement text">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">File Names</div>
+            <div class="setting-group">
+                <label class="setting-label">Enter file names (one per line)</label>
+                <textarea id="fileNames" placeholder="texture_01.png&#10;model_mesh.fbx&#10;material_shader.mat"></textarea>
+                <div class="hint">Or paste a list of filenames with extensions</div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Files</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statChanged">0</div>
+                <div class="stat-label">Will Change</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statErrors">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+        </div>
+
+        <div id="previewContainer" style="display: none;">
+            <div class="section-title">Preview</div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="previewBtn">Generate Preview</button>
+            <button class="btn btn-primary" id="copyBtn" disabled>Copy New Names</button>
+            <button class="btn btn-primary" id="downloadBtn" disabled>Download as CSV</button>
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ Names copied to clipboard!</div>
+
+    <script>
+        const state = {
+            files: [],
+            settings: {
+                pattern: '{name}',
+                prefix: '',
+                suffix: '',
+                startNumber: 1,
+                padding: 3,
+                caseTransform: 'none',
+                findText: '',
+                replaceText: ''
+            }
+        };
+
+        // Presets
+        const presets = {
+            unreal: {
+                pattern: 'T_{name}_D',
+                caseTransform: 'pascal'
+            },
+            unity: {
+                pattern: '{name}_Diffuse',
+                caseTransform: 'pascal'
+            },
+            godot: {
+                pattern: '{name}',
+                caseTransform: 'snake'
+            }
+        };
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const preset = btn.dataset.preset;
+                if (preset !== 'custom' && presets[preset]) {
+                    document.getElementById('pattern').value = presets[preset].pattern;
+                    document.getElementById('caseTransform').value = presets[preset].caseTransform;
+                    state.settings.pattern = presets[preset].pattern;
+                    state.settings.caseTransform = presets[preset].caseTransform;
+                }
+            });
+        });
+
+        // Settings
+        document.getElementById('pattern').oninput = (e) => state.settings.pattern = e.target.value;
+        document.getElementById('prefix').oninput = (e) => state.settings.prefix = e.target.value;
+        document.getElementById('suffix').oninput = (e) => state.settings.suffix = e.target.value;
+        document.getElementById('startNumber').oninput = (e) => state.settings.startNumber = parseInt(e.target.value);
+        document.getElementById('padding').onchange = (e) => state.settings.padding = parseInt(e.target.value);
+        document.getElementById('caseTransform').onchange = (e) => state.settings.caseTransform = e.target.value;
+        document.getElementById('findText').oninput = (e) => state.settings.findText = e.target.value;
+        document.getElementById('replaceText').oninput = (e) => state.settings.replaceText = e.target.value;
+
+        // Generate preview
+        document.getElementById('previewBtn').onclick = () => {
+            const fileNamesText = document.getElementById('fileNames').value.trim();
+            if (!fileNamesText) {
+                alert('Please enter file names');
+                return;
+            }
+
+            state.files = fileNamesText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .map((filename, index) => {
+                    const parts = filename.split('.');
+                    const ext = parts.length > 1 ? parts.pop() : '';
+                    const name = parts.join('.');
+                    
+                    return {
+                        original: filename,
+                        name: name,
+                        ext: ext,
+                        index: index
+                    };
+                });
+
+            renderPreview();
+        };
+
+        function renderPreview() {
+            if (state.files.length === 0) return;
+
+            const fileList = document.getElementById('fileList');
+            const previewContainer = document.getElementById('previewContainer');
+            const stats = document.getElementById('stats');
+
+            let changed = 0;
+            let errors = 0;
+
+            const previews = state.files.map((file, idx) => {
+                const newName = generateNewName(file, idx);
+                const isChanged = newName !== file.original;
+                const hasError = newName.includes('//') || newName.trim().length === 0;
+
+                if (isChanged) changed++;
+                if (hasError) errors++;
+
+                return {
+                    ...file,
+                    newName: newName,
+                    isChanged: isChanged,
+                    hasError: hasError
+                };
+            });
+
+            state.files = previews;
+
+            fileList.innerHTML = previews.map(file => `
+                <div class="file-item">
+                    <div class="file-original">${file.original}</div>
+                    <div class="file-arrow">→</div>
+                    <div class="file-new ${file.hasError ? 'error' : !file.isChanged ? 'unchanged' : ''}">
+                        ${file.newName}
+                    </div>
+                </div>
+            `).join('');
+
+            previewContainer.style.display = 'block';
+            stats.style.display = 'grid';
+            
+            document.getElementById('statTotal').textContent = state.files.length;
+            document.getElementById('statChanged').textContent = changed;
+            document.getElementById('statErrors').textContent = errors;
+
+            document.getElementById('copyBtn').disabled = errors > 0;
+            document.getElementById('downloadBtn').disabled = errors > 0;
+        }
+
+        function generateNewName(file, index) {
+            let newName = file.name;
+
+            // Find & replace
+            if (state.settings.findText) {
+                newName = newName.replace(new RegExp(state.settings.findText, 'g'), state.settings.replaceText);
+            }
+
+            // Pattern
+            let pattern = state.settings.pattern;
+            const number = (state.settings.startNumber + index).toString().padStart(state.settings.padding, '0');
+            pattern = pattern.replace(/{n}/g, number);
+            pattern = pattern.replace(/{name}/g, newName);
+
+            newName = pattern;
+
+            // Prefix/Suffix
+            if (state.settings.prefix) {
+                newName = state.settings.prefix + newName;
+            }
+            if (state.settings.suffix) {
+                newName = newName + state.settings.suffix;
+            }
+
+            // Case transform
+            newName = transformCase(newName, state.settings.caseTransform);
+
+            // Add extension
+            if (file.ext) {
+                newName += '.' + file.ext;
+            }
+
+            return newName;
+        }
+
+        function transformCase(str, mode) {
+            switch(mode) {
+                case 'lowercase':
+                    return str.toLowerCase();
+                case 'uppercase':
+                    return str.toUpperCase();
+                case 'capitalize':
+                    return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                case 'camel':
+                    return str.split(/[\s_-]/).map((w, i) => 
+                        i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+                    ).join('');
+                case 'pascal':
+                    return str.split(/[\s_-]/).map(w => 
+                        w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+                    ).join('');
+                case 'snake':
+                    return str.toLowerCase().replace(/[\s-]/g, '_');
+                case 'kebab':
+                    return str.toLowerCase().replace(/[\s_]/g, '-');
+                default:
+                    return str;
+            }
+        }
+
+        // Copy to clipboard
+        document.getElementById('copyBtn').onclick = () => {
+            const newNames = state.files.map(f => f.newName).join('\n');
+            navigator.clipboard.writeText(newNames);
+            
+            const toast = document.getElementById('successToast');
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        };
+
+        // Download CSV
+        document.getElementById('downloadBtn').onclick = () => {
+            const csv = 'Original,New\n' + state.files.map(f => `"${f.original}","${f.newName}"`).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'renamed_files.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+    </script>
+</body>
+</html>

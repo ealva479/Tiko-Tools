@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Channel Packer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2d2d2d;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --gray-300: #a3a3a3;
+            --gray-400: #737373;
+            --gray-500: #525252;
+            --gray-600: #404040;
+            --pink: #ffb3ba;
+            --pink-dark: #ff8a93;
+            --chrome: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            --gradient-card: linear-gradient(135deg, #242424 0%, #1f1f1f 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--off-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--gradient-card);
+            border-radius: 16px;
+            border: 1px solid var(--gray-600);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-300);
+            font-size: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--gray-600);
+            color: var(--white);
+        }
+
+        .icon-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 100;
+        }
+
+        .icon-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            background: var(--bg-tertiary);
+            padding: 6px;
+            border-radius: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: var(--gray-300);
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover {
+            color: var(--white);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--gray-500);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            background: var(--bg-tertiary);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--pink);
+            background: linear-gradient(135deg, rgba(255, 179, 186, 0.1), rgba(255, 138, 147, 0.1));
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--pink);
+            background: linear-gradient(135deg, rgba(255, 179, 186, 0.15), rgba(255, 138, 147, 0.15));
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-text {
+            color: var(--off-white);
+            font-size: 15px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: var(--gray-400);
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .settings-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--gray-300);
+            font-weight: 500;
+        }
+
+        select, input[type="text"] {
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--off-white);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--pink);
+            box-shadow: 0 0 0 3px rgba(255, 179, 186, 0.1);
+        }
+
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .channel-card {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--gray-600);
+            transition: all 0.2s ease;
+            cursor: grab;
+            position: relative;
+        }
+
+        .channel-card:active {
+            cursor: grabbing;
+        }
+
+        .channel-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .channel-card.drag-over {
+            border-color: var(--pink);
+            background: rgba(255, 179, 186, 0.1);
+        }
+
+        .channel-card.detected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .channel-name {
+            font-weight: 500;
+            color: var(--white);
+            font-size: 13px;
+        }
+
+        .channel-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .badge-yellow { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+
+        .channel-file {
+            font-size: 12px;
+            color: var(--gray-300);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .channel-file.empty {
+            font-style: italic;
+            color: var(--gray-500);
+        }
+
+        .channel-preview {
+            margin-top: 12px;
+            width: 100%;
+            height: 80px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            display: none;
+            object-fit: cover;
+        }
+
+        .channel-preview.visible {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #d0d0d0 0%, #f5f5f5 25%, #ffffff 50%, #f5f5f5 75%, #d0d0d0 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--off-white);
+            border: 1px solid var(--gray-600);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-600);
+            border-color: var(--gray-500);
+        }
+
+        .comparison-view {
+            display: none;
+            margin: 32px 0;
+        }
+
+        .comparison-view.visible {
+            display: block;
+        }
+
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+
+        .comparison-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+        }
+
+        .comparison-slider {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .comparison-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .comparison-after {
+            clip-path: inset(0 0 0 50%);
+        }
+
+        .comparison-divider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 3px;
+            height: 100%;
+            background: var(--white);
+            cursor: ew-resize;
+            transform: translateX(-50%);
+        }
+
+        .comparison-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: var(--white);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .comparison-divider::after {
+            content: '⇄';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--bg-primary);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .comparison-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            font-size: 13px;
+            color: var(--gray-300);
+        }
+
+        .file-history {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .history-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .history-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .history-item:hover {
+            border-color: var(--pink);
+            transform: scale(1.05);
+        }
+
+        .history-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .history-item-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 6px;
+            background: rgba(26, 26, 26, 0.9);
+            font-size: 10px;
+            color: var(--white);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .presets-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .presets-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .preset-card {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .preset-card:hover {
+            border-color: var(--pink);
+            background: rgba(255, 179, 186, 0.05);
+        }
+
+        .preset-card.active {
+            border-color: var(--pink);
+            background: rgba(255, 179, 186, 0.1);
+        }
+
+        .preset-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .preset-desc {
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .preview-modes {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .preview-mode-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--gray-300);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preview-mode-btn:hover {
+            border-color: var(--pink);
+        }
+
+        .preview-mode-btn.active {
+            background: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            display: none;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-bar.visible {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pink-dark), var(--pink));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 13px;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--gray-600) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #6ee7b7);
+            color: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .success-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .channel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Texture Channel Packer Pro</h1>
+                <p class="subtitle">Advanced PBR texture packing with custom mapping and batch processing</p>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="undoBtn" disabled>
+                    ↶
+                    <span class="tooltip">Undo</span>
+                </button>
+                <button class="icon-btn" id="redoBtn" disabled>
+                    ↷
+                    <span class="tooltip">Redo</span>
+                </button>
+                <button class="icon-btn" id="historyBtn">
+                    🕐
+                    <span class="tooltip">History</span>
+                </button>
+                <button class="icon-btn" id="settingsBtn">
+                    ⚙
+                    <span class="tooltip">Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" id="packMode">📦 Pack Textures</button>
+            <button class="mode-btn" id="unpackMode">📂 Unpack Texture</button>
+            <button class="mode-btn" id="batchMode">⚡ Batch Process</button>
+        </div>
+
+        <!-- Presets Panel -->
+        <div class="presets-panel">
+            <div class="presets-title">Quick Presets</div>
+            <div class="presets-grid">
+                <div class="preset-card active" data-preset="orm">
+                    <div class="preset-name">ORM (Unreal)</div>
+                    <div class="preset-desc">R=Occlusion G=Rough B=Metal</div>
+                </div>
+                <div class="preset-card" data-preset="rma">
+                    <div class="preset-name">RMA (Unity)</div>
+                    <div class="preset-desc">R=Metal G=Occlusion B=Rough</div>
+                </div>
+                <div class="preset-card" data-preset="custom">
+                    <div class="preset-name">Custom</div>
+                    <div class="preset-desc">Manual mapping</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel">
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label class="setting-label">Output Resolution</label>
+                    <select id="resolutionSelect">
+                        <option value="original">Original Size</option>
+                        <option value="4096">4K (4096×4096)</option>
+                        <option value="2048" selected>2K (2048×2048)</option>
+                        <option value="1024">1K (1024×1024)</option>
+                        <option value="512">512×512</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Export Format</label>
+                    <select id="formatSelect">
+                        <option value="png" selected>PNG</option>
+                        <option value="jpg">JPG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Quality</label>
+                    <select id="qualitySelect">
+                        <option value="high" selected>High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low (Compressed)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Filename Prefix</label>
+                    <input type="text" id="filenamePrefix" placeholder="T_Material_" value="T_Packed_">
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text" id="uploadText">Drop texture files here or click to browse</div>
+            <div class="upload-subtext" id="uploadSubtext">Auto-detects Metallic, Roughness, AO, Opacity • Supports batch processing</div>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="channel-grid" id="channelGrid">
+            <div class="channel-card" draggable="true" data-channel="red">
+                <div class="channel-header">
+                    <span class="channel-name">Red Channel</span>
+                    <span class="channel-badge badge-red">R</span>
+                </div>
+                <div class="channel-file empty" id="file-red">
+                    <span class="status-icon">⚪</span> Drag texture or auto-detect
+                </div>
+                <canvas class="channel-preview" id="preview-red"></canvas>
+            </div>
+
+            <div class="channel-card" draggable="true" data-channel="green">
+                <div class="channel-header">
+                    <span class="channel-name">Green Channel</span>
+                    <span class="channel-badge badge-green">G</span>
+                </div>
+                <div class="channel-file empty" id="file-green">
+                    <span class="status-icon">⚪</span> Drag texture or auto-detect
+                </div>
+                <canvas class="channel-preview" id="preview-green"></canvas>
+            </div>
+
+            <div class="channel-card" draggable="true" data-channel="blue">
+                <div class="channel-header">
+                    <span class="channel-name">Blue Channel</span>
+                    <span class="channel-badge badge-blue">B</span>
+                </div>
+                <div class="channel-file empty" id="file-blue">
+                    <span class="status-icon">⚪</span> Drag texture or auto-detect
+                </div>
+                <canvas class="channel-preview" id="preview-blue"></canvas>
+            </div>
+
+            <div class="channel-card" draggable="true" data-channel="alpha">
+                <div class="channel-header">
+                    <span class="channel-name">Alpha Channel</span>
+                    <span class="channel-badge badge-yellow">A</span>
+                </div>
+                <div class="channel-file empty" id="file-alpha">
+                    <span class="status-icon">⚪</span> Drag texture or auto-detect
+                </div>
+                <canvas class="channel-preview" id="preview-alpha"></canvas>
+            </div>
+        </div>
+
+        <div class="preview-modes" id="previewModes" style="display: none;">
+            <button class="preview-mode-btn active" data-mode="combined">Combined</button>
+            <button class="preview-mode-btn" data-mode="red">Red Only</button>
+            <button class="preview-mode-btn" data-mode="green">Green Only</button>
+            <button class="preview-mode-btn" data-mode="blue">Blue Only</button>
+            <button class="preview-mode-btn" data-mode="alpha">Alpha Only</button>
+        </div>
+
+        <div class="comparison-view" id="comparisonView">
+            <div class="comparison-title">Before & After Comparison</div>
+            <div class="comparison-container">
+                <div class="comparison-slider" id="comparisonSlider">
+                    <img class="comparison-image" id="beforeImage" alt="Before">
+                    <img class="comparison-image comparison-after" id="afterImage" alt="After">
+                    <div class="comparison-divider" id="comparisonDivider"></div>
+                </div>
+                <div class="comparison-labels">
+                    <span>Original</span>
+                    <span>Packed</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+            <button class="btn btn-primary" id="packBtn" disabled>Pack & Download</button>
+        </div>
+
+        <!-- File History -->
+        <div class="file-history" id="fileHistory" style="display: none;">
+            <div class="history-title">Recent Files</div>
+            <div class="history-grid" id="historyGrid"></div>
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ Export successful!</div>
+
+    <script>
+        // State management
+        const state = {
+            mode: 'pack',
+            textures: { red: null, green: null, blue: null, alpha: null },
+            channelMapping: { red: 'metallic', green: 'roughness', blue: 'ao', alpha: 'opacity' },
+            history: [],
+            historyIndex: -1,
+            fileHistory: [],
+            settings: {
+                resolution: '2048',
+                format: 'png',
+                quality: 'high',
+                prefix: 'T_Packed_'
+            }
+        };
+
+        // Load state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('texturePackerState');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state.fileHistory = parsed.fileHistory || [];
+                state.settings = { ...state.settings, ...parsed.settings };
+                renderHistory();
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('texturePackerState', JSON.stringify({
+                fileHistory: state.fileHistory,
+                settings: state.settings
+            }));
+        }
+
+        // Initialize
+        loadState();
+
+        // Preset handling
+        document.querySelectorAll('.preset-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                const preset = card.dataset.preset;
+                applyPreset(preset);
+            });
+        });
+
+        function applyPreset(preset) {
+            const presets = {
+                orm: { red: 'ao', green: 'roughness', blue: 'metallic', alpha: 'opacity' },
+                rma: { red: 'metallic', green: 'ao', blue: 'roughness', alpha: 'opacity' },
+                custom: state.channelMapping
+            };
+            state.channelMapping = presets[preset];
+            updateChannelLabels();
+        }
+
+        function updateChannelLabels() {
+            const labels = { metallic: 'Metallic', roughness: 'Roughness', ao: 'Ambient Occlusion', opacity: 'Opacity' };
+            Object.entries(state.channelMapping).forEach(([channel, type]) => {
+                const card = document.querySelector(`[data-channel="${channel}"]`);
+                if (card && !state.textures[channel]) {
+                    const fileEl = card.querySelector('.channel-file');
+                    fileEl.textContent = labels[type] || 'Empty';
+                }
+            });
+        }
+
+        // Drag and drop for channel reordering
+        let draggedChannel = null;
+
+        document.querySelectorAll('.channel-card').forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                draggedChannel = card.dataset.channel;
+                card.classList.add('dragging');
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                draggedChannel = null;
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                card.classList.add('drag-over');
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.classList.remove('drag-over');
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                
+                if (draggedChannel && draggedChannel !== card.dataset.channel) {
+                    // Swap textures
+                    const temp = state.textures[draggedChannel];
+                    state.textures[draggedChannel] = state.textures[card.dataset.channel];
+                    state.textures[card.dataset.channel] = temp;
+                    updateUI();
+                    saveHistory();
+                }
+            });
+        });
+
+        // File upload
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.onclick = () => fileInput.click();
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const patterns = {
+                metallic: /metal(lic)?/i,
+                roughness: /rough(ness)?/i,
+                ao: /(ao|ambient|occlusion)/i,
+                opacity: /(opacity|alpha)/i
+            };
+
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const fileName = file.name.toLowerCase();
+                let detected = false;
+
+                // Auto-detect
+                for (const [type, pattern] of Object.entries(patterns)) {
+                    if (pattern.test(fileName)) {
+                        const channel = Object.keys(state.channelMapping).find(k => state.channelMapping[k] === type);
+                        if (channel) {
+                            loadTexture(file, channel);
+                            detected = true;
+                            break;
+                        }
+                    }
+                }
+
+                // If not detected, assign to first empty channel
+                if (!detected) {
+                    const emptyChannel = ['red', 'green', 'blue', 'alpha'].find(ch => !state.textures[ch]);
+                    if (emptyChannel) {
+                        loadTexture(file, emptyChannel);
+                    }
+                }
+            });
+        }
+
+        function loadTexture(file, channel) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.textures[channel] = { img, name: file.name };
+                    updateUI();
+                    saveHistory();
+                    checkPackButton();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateUI() {
+            Object.entries(state.textures).forEach(([channel, data]) => {
+                const card = document.querySelector(`[data-channel="${channel}"]`);
+                const fileEl = document.getElementById(`file-${channel}`);
+                const preview = document.getElementById(`preview-${channel}`);
+
+                if (data) {
+                    card.classList.add('detected');
+                    fileEl.classList.remove('empty');
+                    fileEl.innerHTML = `<span class="status-icon">✅</span> ${data.name}`;
+                    
+                    // Show preview
+                    preview.classList.add('visible');
+                    const ctx = preview.getContext('2d');
+                    preview.width = data.img.width;
+                    preview.height = data.img.height;
+                    ctx.drawImage(data.img, 0, 0);
+                } else {
+                    card.classList.remove('detected');
+                    fileEl.classList.add('empty');
+                    fileEl.innerHTML = '<span class="status-icon">⚪</span> Drag texture or auto-detect';
+                    preview.classList.remove('visible');
+                }
+            });
+
+            document.getElementById('previewModes').style.display = 
+                Object.values(state.textures).some(t => t) ? 'flex' : 'none';
+        }
+
+        function checkPackButton() {
+            const hasAny = Object.values(state.textures).some(t => t);
+            document.getElementById('packBtn').disabled = !hasAny;
+        }
+
+        // History management
+        function saveHistory() {
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push(JSON.parse(JSON.stringify({
+                textures: Object.entries(state.textures).reduce((acc, [k, v]) => {
+                    acc[k] = v ? { name: v.name } : null;
+                    return acc;
+                }, {})
+            })));
+            state.historyIndex = state.history.length - 1;
+            updateHistoryButtons();
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = state.historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = state.historyIndex >= state.history.length - 1;
+        }
+
+        document.getElementById('undoBtn').onclick = () => {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                // Note: Full undo would require storing image data
+                updateHistoryButtons();
+            }
+        };
+
+        document.getElementById('redoBtn').onclick = () => {
+            if (state.historyIndex < state.history.length - 1) {
+                state.historyIndex++;
+                updateHistoryButtons();
+            }
+        };
+
+        // Pack textures
+        document.getElementById('packBtn').onclick = async () => {
+            const btn = document.getElementById('packBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.classList.add('visible');
+            progressFill.style.width = '0%';
+
+            setTimeout(() => progressFill.style.width = '30%', 100);
+
+            // Create canvas
+            const maxWidth = Math.max(...Object.values(state.textures).filter(t => t).map(t => t.img.width));
+            const maxHeight = Math.max(...Object.values(state.textures).filter(t => t).map(t => t.img.height));
+
+            const targetSize = state.settings.resolution === 'original' ? maxWidth : parseInt(state.settings.resolution);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+            const ctx = canvas.getContext('2d');
+
+            const outputData = ctx.createImageData(targetSize, targetSize);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = targetSize;
+            tempCanvas.height = targetSize;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            progressFill.style.width = '60%';
+
+            // Helper to get channel data
+            function getChannelData(channel) {
+                const texture = state.textures[channel];
+                if (!texture) return null;
+                
+                tempCtx.clearRect(0, 0, targetSize, targetSize);
+                tempCtx.drawImage(texture.img, 0, 0, targetSize, targetSize);
+                return tempCtx.getImageData(0, 0, targetSize, targetSize).data;
+            }
+
+            // Get all channel data
+            const redData = getChannelData('red');
+            const greenData = getChannelData('green');
+            const blueData = getChannelData('blue');
+            const alphaData = getChannelData('alpha');
+
+            // Pack channels
+            for (let i = 0; i < outputData.data.length; i += 4) {
+                outputData.data[i] = redData ? redData[i] : 0;
+                outputData.data[i + 1] = greenData ? greenData[i + 1] : 255;
+                outputData.data[i + 2] = blueData ? blueData[i + 2] : 255;
+                outputData.data[i + 3] = alphaData ? alphaData[i] : 255;
+            }
+
+            ctx.putImageData(outputData, 0, 0);
+            progressFill.style.width = '90%';
+
+            // Show comparison
+            const compView = document.getElementById('comparisonView');
+            const firstTexture = Object.values(state.textures).find(t => t);
+            if (firstTexture) {
+                document.getElementById('beforeImage').src = firstTexture.img.src;
+                document.getElementById('afterImage').src = canvas.toDataURL();
+                compView.classList.add('visible');
+            }
+
+            // Export
+            const format = state.settings.format;
+            const quality = state.settings.quality === 'high' ? 0.95 : state.settings.quality === 'medium' ? 0.8 : 0.6;
+            
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${state.settings.prefix}${Date.now()}.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // Add to history
+                state.fileHistory.unshift({
+                    url: canvas.toDataURL(),
+                    name: a.download,
+                    timestamp: Date.now()
+                });
+                state.fileHistory = state.fileHistory.slice(0, 10);
+                renderHistory();
+                saveState();
+
+                // Show success
+                const toast = document.getElementById('successToast');
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 3000);
+
+                progressFill.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.classList.remove('visible');
+                    btn.textContent = 'Pack & Download';
+                    btn.disabled = false;
+                }, 500);
+            }, `image/${format}`, quality);
+        };
+
+        // Render history
+        function renderHistory() {
+            const grid = document.getElementById('historyGrid');
+            const panel = document.getElementById('fileHistory');
+            
+            if (state.fileHistory.length > 0) {
+                panel.style.display = 'block';
+                grid.innerHTML = state.fileHistory.map(item => `
+                    <div class="history-item" onclick="loadFromHistory('${item.url}')">
+                        <img src="${item.url}" alt="${item.name}">
+                        <div class="history-item-name">${item.name}</div>
+                    </div>
+                `).join('');
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        window.loadFromHistory = function(url) {
+            // Load a previous export
+            const img = new Image();
+            img.onload = () => {
+                state.textures.red = { img, name: 'From History' };
+                updateUI();
+                checkPackButton();
+            };
+            img.src = url;
+        };
+
+        // Comparison slider
+        const compSlider = document.getElementById('comparisonSlider');
+        const compDivider = document.getElementById('comparisonDivider');
+        const afterImage = document.getElementById('afterImage');
+
+        let isDragging = false;
+
+        compDivider.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        compSlider.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = compSlider.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percent = (x / rect.width) * 100;
+            
+            compDivider.style.left = `${percent}%`;
+            afterImage.style.clipPath = `inset(0 0 0 ${percent}%)`;
+        });
+
+        // Clear
+        document.getElementById('clearBtn').onclick = () => {
+            state.textures = { red: null, green: null, blue: null, alpha: null };
+            updateUI();
+            checkPackButton();
+            document.getElementById('comparisonView').classList.remove('visible');
+            saveHistory();
+        };
+
+        // Settings
+        document.getElementById('resolutionSelect').onchange = (e) => {
+            state.settings.resolution = e.target.value;
+            saveState();
+        };
+
+        document.getElementById('formatSelect').onchange = (e) => {
+            state.settings.format = e.target.value;
+            saveState();
+        };
+
+        document.getElementById('qualitySelect').onchange = (e) => {
+            state.settings.quality = e.target.value;
+            saveState();
+        };
+
+        document.getElementById('filenamePrefix').onchange = (e) => {
+            state.settings.prefix = e.target.value;
+            saveState();
+        };
+
+        // Preview modes
+        document.querySelectorAll('.preview-mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.preview-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Would implement channel isolation here
+            });
+        });
+
+        // Initialize
+        renderHistory();
+        updateChannelLabels();
+    </script>
+</body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Image Resizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2d2d2d;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --gray-300: #a3a3a3;
+            --gray-400: #737373;
+            --gray-500: #525252;
+            --gray-600: #404040;
+            --pink: #ffb3ba;
+            --pink-dark: #ff8a93;
+            --chrome: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            --gradient-card: linear-gradient(135deg, #242424 0%, #1f1f1f 100%);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--off-white);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--gradient-card);
+            border-radius: 16px;
+            border: 1px solid var(--gray-600);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-300);
+            margin-bottom: 40px;
+            font-size: 15px;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--gray-500);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 32px;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--pink);
+            background: linear-gradient(135deg, rgba(255, 179, 186, 0.1), rgba(255, 138, 147, 0.1));
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: var(--off-white);
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: var(--gray-400);
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .settings-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--gray-300);
+            font-weight: 500;
+        }
+
+        select, input[type="number"] {
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--off-white);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--pink);
+            box-shadow: 0 0 0 3px rgba(255, 179, 186, 0.1);
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .preset-btn {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gray-600);
+            border-radius: 8px;
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--pink);
+            background: rgba(255, 179, 186, 0.1);
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(135deg, #c0c0c0 0%, #ffffff 50%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .image-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: var(--bg-secondary);
+        }
+
+        .image-info {
+            font-size: 12px;
+            color: var(--gray-300);
+        }
+
+        .image-name {
+            font-weight: 500;
+            color: var(--white);
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .image-size {
+            color: var(--gray-400);
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 179, 186, 0.9);
+            border: none;
+            color: var(--bg-primary);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: var(--pink-dark);
+            transform: scale(1.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--off-white);
+            border: 1px solid var(--gray-600);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-600);
+        }
+
+        .progress-section {
+            display: none;
+            margin: 32px 0;
+        }
+
+        .progress-section.visible {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--gray-300);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pink-dark), var(--pink));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--gray-600);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #6ee7b7);
+            color: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .success-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .images-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Batch Image Resizer</h1>
+        <p class="subtitle">Resize multiple images at once with smart presets and custom settings</p>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">Drop images here or click to browse</div>
+            <div class="upload-subtext">Supports JPG, PNG, WebP • Multiple files supported</div>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+
+        <div class="settings-panel">
+            <div class="settings-title">Resize Settings</div>
+            
+            <div class="preset-buttons">
+                <div class="preset-btn" data-preset="mobile">📱 Mobile<br><small>1080px</small></div>
+                <div class="preset-btn" data-preset="hd">💻 HD<br><small>1920px</small></div>
+                <div class="preset-btn" data-preset="2k">🖥️ 2K<br><small>2048px</small></div>
+                <div class="preset-btn" data-preset="4k">📺 4K<br><small>4096px</small></div>
+                <div class="preset-btn active" data-preset="custom">⚙️ Custom</div>
+            </div>
+
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label class="setting-label">Resize Mode</label>
+                    <select id="resizeMode">
+                        <option value="width">Max Width</option>
+                        <option value="height">Max Height</option>
+                        <option value="longest">Longest Side</option>
+                        <option value="shortest">Shortest Side</option>
+                        <option value="exact">Exact Size (crop)</option>
+                        <option value="percentage">Percentage</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Target Size (px or %)</label>
+                    <input type="number" id="targetSize" value="1920" min="1">
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Output Format</label>
+                    <select id="formatSelect">
+                        <option value="original">Keep Original</option>
+                        <option value="jpg">JPG</option>
+                        <option value="png">PNG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Quality</label>
+                    <select id="qualitySelect">
+                        <option value="0.95">High (95%)</option>
+                        <option value="0.85" selected>Medium (85%)</option>
+                        <option value="0.70">Low (70%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="imagesContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <div style="color: var(--gray-300); margin-bottom: 8px;">No images loaded</div>
+                <div style="font-size: 13px;">Upload images to get started</div>
+            </div>
+        </div>
+
+        <div class="images-grid" id="imagesGrid" style="display: none;"></div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <span id="progressText">Processing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+            <button class="btn btn-primary" id="processBtn">Resize & Download</button>
+        </div>
+
+        <div class="stats-grid" id="statsGrid" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Images</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statOriginalSize">0 MB</div>
+                <div class="stat-label">Original Size</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statFinalSize">0 MB</div>
+                <div class="stat-label">Final Size</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statSavings">0%</div>
+                <div class="stat-label">Size Savings</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ Images processed successfully!</div>
+
+    <script>
+        const state = {
+            images: [],
+            settings: {
+                mode: 'longest',
+                size: 1920,
+                format: 'original',
+                quality: 0.85
+            }
+        };
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const imagesGrid = document.getElementById('imagesGrid');
+        const imagesContainer = document.getElementById('imagesContainer');
+
+        // Upload handling
+        uploadZone.onclick = () => fileInput.click();
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.images.push({
+                            id: Date.now() + Math.random(),
+                            file: file,
+                            img: img,
+                            src: e.target.result,
+                            name: file.name,
+                            originalSize: file.size,
+                            width: img.width,
+                            height: img.height
+                        });
+                        renderImages();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderImages() {
+            if (state.images.length === 0) {
+                imagesContainer.style.display = 'block';
+                imagesGrid.style.display = 'none';
+                document.getElementById('controls').style.display = 'none';
+                return;
+            }
+
+            imagesContainer.style.display = 'none';
+            imagesGrid.style.display = 'grid';
+            document.getElementById('controls').style.display = 'flex';
+
+            imagesGrid.innerHTML = state.images.map(img => `
+                <div class="image-card">
+                    <button class="remove-btn" onclick="removeImage('${img.id}')">×</button>
+                    <img src="${img.src}" class="image-preview" alt="${img.name}">
+                    <div class="image-info">
+                        <div class="image-name">${img.name}</div>
+                        <div class="image-size">${img.width}×${img.height} • ${(img.originalSize / 1024).toFixed(0)} KB</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.removeImage = function(id) {
+            state.images = state.images.filter(img => img.id != id);
+            renderImages();
+        };
+
+        // Preset handling
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const preset = btn.dataset.preset;
+                const sizes = { mobile: 1080, hd: 1920, '2k': 2048, '4k': 4096 };
+                
+                if (preset !== 'custom') {
+                    document.getElementById('targetSize').value = sizes[preset];
+                    state.settings.size = sizes[preset];
+                }
+            });
+        });
+
+        // Settings
+        document.getElementById('resizeMode').onchange = (e) => {
+            state.settings.mode = e.target.value;
+        };
+
+        document.getElementById('targetSize').onchange = (e) => {
+            state.settings.size = parseInt(e.target.value);
+        };
+
+        document.getElementById('formatSelect').onchange = (e) => {
+            state.settings.format = e.target.value;
+        };
+
+        document.getElementById('qualitySelect').onchange = (e) => {
+            state.settings.quality = parseFloat(e.target.value);
+        };
+
+        // Clear
+        document.getElementById('clearBtn').onclick = () => {
+            state.images = [];
+            renderImages();
+        };
+
+        // Process images
+        document.getElementById('processBtn').onclick = async () => {
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const statsGrid = document.getElementById('statsGrid');
+
+            progressSection.classList.add('visible');
+            document.getElementById('processBtn').disabled = true;
+
+            let totalOriginalSize = 0;
+            let totalFinalSize = 0;
+
+            for (let i = 0; i < state.images.length; i++) {
+                const imgData = state.images[i];
+                const progress = ((i + 1) / state.images.length) * 100;
+                
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `Processing ${i + 1} of ${state.images.length}`;
+                progressPercent.textContent = Math.round(progress) + '%';
+
+                totalOriginalSize += imgData.originalSize;
+
+                // Resize image
+                const resized = await resizeImage(imgData);
+                totalFinalSize += resized.size;
+
+                // Download
+                const a = document.createElement('a');
+                a.href = resized.dataUrl;
+                const ext = state.settings.format === 'original' 
+                    ? imgData.name.split('.').pop()
+                    : state.settings.format;
+                a.download = imgData.name.replace(/\.[^/.]+$/, '') + '_resized.' + ext;
+                a.click();
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Show stats
+            statsGrid.style.display = 'grid';
+            document.getElementById('statTotal').textContent = state.images.length;
+            document.getElementById('statOriginalSize').textContent = (totalOriginalSize / (1024 * 1024)).toFixed(2) + ' MB';
+            document.getElementById('statFinalSize').textContent = (totalFinalSize / (1024 * 1024)).toFixed(2) + ' MB';
+            const savings = ((totalOriginalSize - totalFinalSize) / totalOriginalSize * 100).toFixed(1);
+            document.getElementById('statSavings').textContent = savings + '%';
+
+            // Show success
+            const toast = document.getElementById('successToast');
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+
+            progressSection.classList.remove('visible');
+            document.getElementById('processBtn').disabled = false;
+        };
+
+        function resizeImage(imgData) {
+            return new Promise(resolve => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                let newWidth, newHeight;
+                const { mode, size } = state.settings;
+
+                if (mode === 'percentage') {
+                    newWidth = imgData.width * (size / 100);
+                    newHeight = imgData.height * (size / 100);
+                } else if (mode === 'width') {
+                    newWidth = size;
+                    newHeight = (imgData.height / imgData.width) * size;
+                } else if (mode === 'height') {
+                    newHeight = size;
+                    newWidth = (imgData.width / imgData.height) * size;
+                } else if (mode === 'longest') {
+                    if (imgData.width > imgData.height) {
+                        newWidth = size;
+                        newHeight = (imgData.height / imgData.width) * size;
+                    } else {
+                        newHeight = size;
+                        newWidth = (imgData.width / imgData.height) * size;
+                    }
+                } else if (mode === 'shortest') {
+                    if (imgData.width < imgData.height) {
+                        newWidth = size;
+                        newHeight = (imgData.height / imgData.width) * size;
+                    } else {
+                        newHeight = size;
+                        newWidth = (imgData.width / imgData.height) * size;
+                    }
+                } else if (mode === 'exact') {
+                    newWidth = size;
+                    newHeight = size;
+                }
+
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+                ctx.drawImage(imgData.img, 0, 0, newWidth, newHeight);
+
+                const format = state.settings.format === 'original' 
+                    ? imgData.file.type 
+                    : `image/${state.settings.format}`;
+
+                canvas.toBlob((blob) => {
+                    resolve({
+                        dataUrl: URL.createObjectURL(blob),
+                        size: blob.size
+                    });
+                }, format, state.settings.quality);
+            });
+        }
+    </script>
+</body>
+</html>
