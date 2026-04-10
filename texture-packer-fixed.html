@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Channel Packer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2d2d2d;
+            --white: #ffffff;
+            --off-white: #f5f5f5;
+            --gray-300: #a3a3a3;
+            --gray-400: #737373;
+            --gray-500: #525252;
+            --gray-600: #404040;
+            --pink: #ffb3ba;
+            --pink-dark: #ff8a93;
+            --chrome: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            --gradient-card: linear-gradient(135deg, #242424 0%, #1f1f1f 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--off-white);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--gradient-card);
+            border-radius: 16px;
+            border: 1px solid var(--gray-600);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-300);
+            margin-bottom: 40px;
+            font-size: 15px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            background: var(--bg-tertiary);
+            padding: 6px;
+            border-radius: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: var(--gray-300);
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover {
+            color: var(--white);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--gray-500);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 32px;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--pink);
+            background: linear-gradient(135deg, rgba(255, 179, 186, 0.1), rgba(255, 138, 147, 0.1));
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: var(--off-white);
+            font-size: 15px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: var(--gray-400);
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .texture-sets {
+            margin-bottom: 32px;
+        }
+
+        .set-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+
+        .texture-set {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .set-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .set-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .remove-set {
+            background: rgba(255, 179, 186, 0.2);
+            border: 1px solid var(--pink);
+            color: var(--pink);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-set:hover {
+            background: var(--pink);
+            color: var(--bg-primary);
+        }
+
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .channel-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--gray-600);
+            transition: all 0.2s ease;
+        }
+
+        .channel-card.detected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .channel-name {
+            font-weight: 500;
+            color: var(--white);
+            font-size: 12px;
+        }
+
+        .channel-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .badge-yellow { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+
+        .channel-file {
+            font-size: 11px;
+            color: var(--gray-300);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .channel-file.empty {
+            font-style: italic;
+            color: var(--gray-500);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--gray-600);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c0c0c0 0%, #f0f0f0 25%, #ffffff 50%, #f0f0f0 75%, #c0c0c0 100%);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--off-white);
+            border: 1px solid var(--gray-600);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-600);
+        }
+
+        .progress-section {
+            display: none;
+            margin: 32px 0;
+        }
+
+        .progress-section.visible {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--gray-300);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pink-dark), var(--pink));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .info-box {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--gray-500);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 32px;
+            font-size: 13px;
+            color: var(--gray-300);
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--white);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #6ee7b7);
+            color: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .success-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .channel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Texture Channel Packer Pro</h1>
+        <p class="subtitle">Batch pack multiple texture sets automatically</p>
+
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drop all texture files here or click to browse</div>
+            <div class="upload-subtext">Auto-groups by name • Supports Metallic, Roughness, AO, Opacity</div>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+
+        <div id="statsContainer" style="display: none;">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="statSets">0</div>
+                    <div class="stat-label">Texture Sets</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statFiles">0</div>
+                    <div class="stat-label">Total Files</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statReady">0</div>
+                    <div class="stat-label">Ready to Pack</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="texture-sets" id="textureSets" style="display: none;">
+            <div class="set-title">Detected Texture Sets</div>
+            <div id="setsContainer"></div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="empty-state-icon">🎨</div>
+            <div style="color: var(--gray-300); margin-bottom: 8px;">No textures loaded</div>
+            <div style="font-size: 13px;">Upload textures to automatically group and pack them</div>
+        </div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <span id="progressText">Processing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+            <button class="btn btn-primary" id="packBtn" disabled>Pack All & Download</button>
+        </div>
+
+        <div class="info-box">
+            <strong>How it works:</strong>
+            Upload all your textures at once. Files are automatically grouped by base name (e.g., "Wood_Metallic", "Wood_Roughness" → "Wood" set). Each set packs into one ORM texture.
+            <br><br>
+            <strong>Supported patterns:</strong> metal, metallic, rough, roughness, ao, ambient, occlusion, opacity, alpha
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ All textures packed!</div>
+
+    <script>
+        const textureSets = new Map();
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        const patterns = {
+            metallic: /[_\-\s](metal|metallic)[_\-\s]?/i,
+            roughness: /[_\-\s](rough|roughness)[_\-\s]?/i,
+            ao: /[_\-\s](ao|ambient|occlusion)[_\-\s]?/i,
+            opacity: /[_\-\s](opacity|alpha|transparent)[_\-\s]?/i
+        };
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const fileName = file.name;
+                const { baseName, type } = parseFileName(fileName);
+
+                if (!baseName || !type) {
+                    console.log(`Could not parse: ${fileName}`);
+                    return;
+                }
+
+                if (!textureSets.has(baseName)) {
+                    textureSets.set(baseName, {
+                        name: baseName,
+                        metallic: null,
+                        roughness: null,
+                        ao: null,
+                        opacity: null
+                    });
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const set = textureSets.get(baseName);
+                        set[type] = { img, fileName };
+                        textureSets.set(baseName, set);
+                        renderSets();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function parseFileName(fileName) {
+            const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+            
+            for (const [type, pattern] of Object.entries(patterns)) {
+                if (pattern.test(nameWithoutExt)) {
+                    const baseName = nameWithoutExt.replace(pattern, '').replace(/[_\-\s]+$/, '').replace(/^[_\-\s]+/, '');
+                    return { baseName, type };
+                }
+            }
+
+            return { baseName: null, type: null };
+        }
+
+        function renderSets() {
+            if (textureSets.size === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('textureSets').style.display = 'none';
+                document.getElementById('statsContainer').style.display = 'none';
+                document.getElementById('controls').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('textureSets').style.display = 'block';
+            document.getElementById('statsContainer').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+
+            let totalFiles = 0;
+            let readySets = 0;
+
+            const setsHTML = Array.from(textureSets.entries()).map(([name, set]) => {
+                const hasAnyTexture = Object.values(set).some((v, i) => i > 0 && v !== null);
+                if (hasAnyTexture) readySets++;
+
+                const fileCount = [set.metallic, set.roughness, set.ao, set.opacity].filter(t => t !== null).length;
+                totalFiles += fileCount;
+
+                return `
+                    <div class="texture-set">
+                        <div class="set-header">
+                            <div class="set-name">${name}</div>
+                            <button class="remove-set" onclick="removeSet('${name}')">Remove</button>
+                        </div>
+                        <div class="channel-grid">
+                            <div class="channel-card ${set.metallic ? 'detected' : ''}">
+                                <div class="channel-header">
+                                    <span class="channel-name">Metallic</span>
+                                    <span class="channel-badge badge-red">R</span>
+                                </div>
+                                <div class="channel-file ${set.metallic ? '' : 'empty'}">
+                                    ${set.metallic ? '✅ ' + set.metallic.fileName : '⚪ Not detected'}
+                                </div>
+                            </div>
+                            <div class="channel-card ${set.roughness ? 'detected' : ''}">
+                                <div class="channel-header">
+                                    <span class="channel-name">Roughness</span>
+                                    <span class="channel-badge badge-green">G</span>
+                                </div>
+                                <div class="channel-file ${set.roughness ? '' : 'empty'}">
+                                    ${set.roughness ? '✅ ' + set.roughness.fileName : '⚪ Not detected'}
+                                </div>
+                            </div>
+                            <div class="channel-card ${set.ao ? 'detected' : ''}">
+                                <div class="channel-header">
+                                    <span class="channel-name">Ambient Occlusion</span>
+                                    <span class="channel-badge badge-blue">B</span>
+                                </div>
+                                <div class="channel-file ${set.ao ? '' : 'empty'}">
+                                    ${set.ao ? '✅ ' + set.ao.fileName : '⚪ Not detected'}
+                                </div>
+                            </div>
+                            <div class="channel-card ${set.opacity ? 'detected' : ''}">
+                                <div class="channel-header">
+                                    <span class="channel-name">Opacity</span>
+                                    <span class="channel-badge badge-yellow">A</span>
+                                </div>
+                                <div class="channel-file ${set.opacity ? '' : 'empty'}">
+                                    ${set.opacity ? '✅ ' + set.opacity.fileName : '⚪ Not detected'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('setsContainer').innerHTML = setsHTML;
+            document.getElementById('statSets').textContent = textureSets.size;
+            document.getElementById('statFiles').textContent = totalFiles;
+            document.getElementById('statReady').textContent = readySets;
+            document.getElementById('packBtn').disabled = readySets === 0;
+        }
+
+        window.removeSet = function(name) {
+            textureSets.delete(name);
+            renderSets();
+        };
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            textureSets.clear();
+            fileInput.value = '';
+            renderSets();
+        });
+
+        document.getElementById('packBtn').addEventListener('click', async () => {
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const packBtn = document.getElementById('packBtn');
+
+            progressSection.classList.add('visible');
+            packBtn.disabled = true;
+
+            const setsArray = Array.from(textureSets.entries());
+            let processed = 0;
+
+            for (const [name, set] of setsArray) {
+                const hasAnyTexture = [set.metallic, set.roughness, set.ao, set.opacity].some(t => t !== null);
+                if (!hasAnyTexture) continue;
+
+                const progress = ((processed + 1) / setsArray.length) * 100;
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `Packing ${name}...`;
+                progressPercent.textContent = Math.round(progress) + '%';
+
+                await packTextureSet(name, set);
+                processed++;
+
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            progressSection.classList.remove('visible');
+            packBtn.disabled = false;
+
+            const toast = document.getElementById('successToast');
+            toast.textContent = `✓ Packed ${processed} texture sets!`;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        });
+
+        async function packTextureSet(name, set) {
+            return new Promise((resolve) => {
+                let maxWidth = 0;
+                let maxHeight = 0;
+
+                [set.metallic, set.roughness, set.ao, set.opacity].forEach(texture => {
+                    if (texture) {
+                        maxWidth = Math.max(maxWidth, texture.img.width);
+                        maxHeight = Math.max(maxHeight, texture.img.height);
+                    }
+                });
+
+                if (maxWidth === 0 || maxHeight === 0) {
+                    resolve();
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = maxWidth;
+                canvas.height = maxHeight;
+                const ctx = canvas.getContext('2d');
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = maxWidth;
+                tempCanvas.height = maxHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                const outputData = ctx.createImageData(maxWidth, maxHeight);
+
+                function getGrayscaleData(texture) {
+                    if (!texture) return null;
+                    tempCtx.clearRect(0, 0, maxWidth, maxHeight);
+                    tempCtx.drawImage(texture.img, 0, 0, maxWidth, maxHeight);
+                    const imageData = tempCtx.getImageData(0, 0, maxWidth, maxHeight);
+                    return imageData.data;
+                }
+
+                const metallicData = getGrayscaleData(set.metallic);
+                const roughnessData = getGrayscaleData(set.roughness);
+                const aoData = getGrayscaleData(set.ao);
+                const opacityData = getGrayscaleData(set.opacity);
+
+                for (let i = 0; i < outputData.data.length; i += 4) {
+                    outputData.data[i] = metallicData ? metallicData[i] : 0;
+                    outputData.data[i + 1] = roughnessData ? roughnessData[i + 1] : 255;
+                    outputData.data[i + 2] = aoData ? aoData[i + 2] : 255;
+                    outputData.data[i + 3] = opacityData ? opacityData[i] : 255;
+                }
+
+                ctx.putImageData(outputData, 0, 0);
+
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${name}_ORM.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    resolve();
+                }, 'image/png');
+            });
+        }
+    </script>
+</body>
+</html>
