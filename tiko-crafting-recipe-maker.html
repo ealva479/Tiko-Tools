@@ -10,27 +10,40 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:        #0e0e0e;
-    --bg2:       #161616;
-    --bg3:       #1e1e1e;
-    --bg4:       #252525;
-    --border:    rgba(255,255,255,0.08);
-    --border2:   rgba(255,255,255,0.14);
-    --text:      #f0f0f0;
-    --text2:     #888;
-    --text3:     #555;
-    --pink:      #e8a0b4;
-    --pink2:     #f0c0cf;
-    --pink-dim:  rgba(232,160,180,0.12);
-    --pink-glow: rgba(232,160,180,0.06);
+    --bg:        #0A0A0D;
+    --bg2:       #121217;
+    --bg3:       #1a1a22;
+    --bg4:       #2A2A33;
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #F1F1F5;
+    --text2:     #A1A1AA;
+    --text3:     #6B7280;
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+    --purple3:   #5B21B6;
+    --purple-dim:  rgba(139,92,246,0.12);
+    --purple-glow: rgba(139,92,246,0.4);
+    --teal:      #14B8A6;
+    --teal2:     #22D3EE;
+    --teal3:     #0F766E;
+    --teal-dim:  rgba(20,184,166,0.12);
+    --teal-glow: rgba(20,184,166,0.3);
+    --chrome:    #C0C0C8;
+    --fog:       #6B7280;
+    --lavender:  #C4B5FD;
+    --pink:      #EC4899;
+    --gold:      #F59E0B;
+    --red:       #EF4444;
     --mono: 'DM Mono', monospace;
     --sans: 'DM Sans', sans-serif;
 
-    --c-raw:         #7ec8a0;
-    --c-material:    #7aabdc;
-    --c-tool:        #d4a96a;
-    --c-consumable:  #b88ecf;
-    --c-output:      #e8a0b4;
+    /* Item type colors — re-keyed to new palette */
+    --c-raw:         #14B8A6;  /* teal */
+    --c-material:    #22D3EE;  /* cyber aqua */
+    --c-tool:        #F59E0B;  /* ichor gold — tools/stations */
+    --c-consumable:  #C4B5FD;  /* faded lavender */
+    --c-output:      #8B5CF6;  /* aether purple — outputs */
   }
 
   html, body {
@@ -39,7 +52,6 @@
     overflow: hidden; user-select: none;
   }
 
-  /* ── LAYOUT ─────────────────────────────── */
   #root { display: flex; height: 100vh; flex-direction: column; }
 
   #topbar {
@@ -48,12 +60,19 @@
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center;
     padding: 0 16px; gap: 16px;
-    flex-shrink: 0;
+    flex-shrink: 0; position: relative;
+  }
+  #topbar::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--purple) 30%, var(--teal) 70%, transparent 100%);
+    opacity: 0.4;
   }
   #topbar .logo {
     font-family: var(--mono); font-size: 12px; font-weight: 500;
-    color: var(--pink); letter-spacing: 0.08em; text-transform: uppercase;
-    white-space: nowrap;
+    letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+    background: linear-gradient(90deg, var(--purple) 0%, var(--teal) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
   }
   #topbar .title {
     font-size: 13px; color: var(--text2); font-weight: 300; white-space: nowrap;
@@ -72,7 +91,7 @@
 
   #workspace { display: flex; flex: 1; overflow: hidden; }
 
-  /* ── SIDEBAR ─────────────────────────────── */
+  /* SIDEBAR */
   #sidebar {
     width: 210px; min-width: 210px;
     background: var(--bg2);
@@ -93,13 +112,13 @@
 
   .item-pill {
     padding: 7px 10px; border-radius: 5px;
-    background: var(--bg3); border: 1px solid var(--border);
+    background: var(--bg4); border: 1px solid var(--border);
     font-size: 12px; font-weight: 400; cursor: grab;
     display: flex; align-items: center; gap: 8px;
     color: var(--text); transition: background 0.12s, border-color 0.12s;
     flex-shrink: 0;
   }
-  .item-pill:hover { background: var(--bg4); border-color: var(--border2); }
+  .item-pill:hover { background: var(--bg3); border-color: rgba(139,92,246,0.3); }
   .item-pill:active { cursor: grabbing; }
   .pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .pill-type { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-left: auto; white-space: nowrap; }
@@ -119,35 +138,44 @@
     display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
   }
   #add-form input, #add-form select {
-    background: var(--bg3); border: 1px solid var(--border2);
+    background: var(--bg4); border: 1px solid var(--border2);
     color: var(--text); border-radius: 4px; padding: 6px 9px;
     font-size: 12px; font-family: var(--sans); outline: none; width: 100%;
     transition: border-color 0.15s;
   }
-  #add-form input:focus, #add-form select:focus { border-color: var(--pink); }
-  #add-form select option { background: var(--bg3); }
-  #add-form button {
-    background: var(--pink-dim); border: 1px solid rgba(232,160,180,0.25);
-    color: var(--pink2); border-radius: 4px; padding: 7px;
-    font-size: 12px; font-family: var(--mono); cursor: pointer;
-    letter-spacing: 0.05em; transition: background 0.12s;
+  #add-form input:focus, #add-form select:focus { border-color: var(--purple); }
+  #add-form select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2314B8A6' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center; padding-right: 26px;
+    cursor: pointer;
   }
-  #add-form button:hover { background: rgba(232,160,180,0.2); }
+  #add-form select option { background: var(--bg4); }
+  #add-form button {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+    border: 1px solid rgba(139,92,246,0.35);
+    color: #fff; border-radius: 4px; padding: 8px;
+    font-size: 12px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.05em; transition: filter 0.15s, box-shadow 0.15s;
+    text-transform: uppercase; font-weight: 500;
+  }
+  #add-form button:hover { filter: brightness(1.12); box-shadow: 0 0 12px rgba(139,92,246,0.4); }
 
-  /* ── CANVAS ─────────────────────────────── */
+  /* CANVAS */
   #canvas-wrap {
     flex: 1; position: relative; overflow: hidden;
     background: var(--bg);
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(232,160,180,0.025) 0%, transparent 50%),
+      radial-gradient(circle at 20% 20%, rgba(139,92,246,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(20,184,166,0.04) 0%, transparent 55%),
       linear-gradient(var(--border) 1px, transparent 1px),
       linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 100% 100%, 28px 28px, 28px 28px;
+    background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
   }
 
   #main-svg { width: 100%; height: 100%; display: block; }
 
-  /* ── TOOLBAR ─────────────────────────────── */
+  /* TOOLBAR */
   #toolbar {
     position: absolute; top: 12px; right: 12px;
     display: flex; gap: 6px; z-index: 20;
@@ -157,36 +185,45 @@
     color: var(--text2); border-radius: 4px; padding: 6px 12px;
     font-size: 11px; font-family: var(--mono); cursor: pointer;
     letter-spacing: 0.04em; transition: all 0.12s;
+    text-transform: uppercase;
   }
-  .tb-btn:hover { color: var(--text); border-color: var(--border2); background: var(--bg3); }
-  .tb-btn.danger:hover { color: #e87a7a; border-color: rgba(232,120,120,0.3); }
-  .tb-btn.accent { color: var(--pink); border-color: rgba(232,160,180,0.3); }
-  .tb-btn.accent:hover { background: var(--pink-dim); }
+  .tb-btn:hover { color: var(--text); border-color: rgba(139,92,246,0.3); background: var(--bg3); }
+  .tb-btn.danger:hover {
+    color: var(--red); border-color: rgba(239,68,68,0.4);
+    background: rgba(239,68,68,0.08);
+  }
+  .tb-btn.accent {
+    color: var(--purple2); border-color: rgba(139,92,246,0.35);
+    background: var(--purple-dim);
+  }
+  .tb-btn.accent:hover {
+    background: rgba(139,92,246,0.2);
+    box-shadow: 0 0 10px rgba(139,92,246,0.3);
+    color: #fff;
+  }
 
-  /* ── NODE SVG STYLES ─────────────────────── */
+  /* NODE SVG STYLES */
   .r-node { cursor: move; }
-  .node-body {
-    fill: #1a1a1a; stroke: rgba(255,255,255,0.1); stroke-width: 1;
-  }
-  .node-body.sel { stroke: var(--pink); stroke-width: 1.5; }
-  .node-title { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #f0f0f0; }
-  .node-sub { font-family: 'DM Mono', monospace; font-size: 10px; fill: #555; }
-  .node-lbl { font-family: 'DM Mono', monospace; font-size: 10px; fill: #666; }
-  .port-ring { fill: #1a1a1a; stroke: rgba(255,255,255,0.2); stroke-width: 1.5; }
-  .port-ring.conn { fill: var(--pink); stroke: var(--pink2); }
-  .port-ring:hover { fill: var(--pink); stroke: var(--pink2); }
-  .conn-path { fill: none; stroke: rgba(232,160,180,0.35); stroke-width: 1.5; }
-  .conn-path-temp { fill: none; stroke: rgba(232,160,180,0.5); stroke-width: 1.5; stroke-dasharray: 5 4; }
-  .qty-pill-bg { fill: rgba(232,160,180,0.18); }
-  .qty-pill-text { font-family: 'DM Mono', monospace; font-size: 9px; fill: var(--pink2); }
+  .node-body { fill: #1a1a22; stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+  .node-body.sel { stroke: #8B5CF6; stroke-width: 1.5; filter: drop-shadow(0 0 6px rgba(139,92,246,0.4)); }
+  .node-title { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; fill: #F1F1F5; }
+  .node-sub { font-family: 'DM Mono', monospace; font-size: 10px; fill: #6B7280; }
+  .node-lbl { font-family: 'DM Mono', monospace; font-size: 10px; fill: #A1A1AA; }
+  .port-ring { fill: #1a1a22; stroke: rgba(255,255,255,0.25); stroke-width: 1.5; }
+  .port-ring.conn { fill: #14B8A6; stroke: #22D3EE; }
+  .port-ring:hover { fill: #8B5CF6; stroke: #A855F7; }
+  .conn-path { fill: none; stroke: rgba(139,92,246,0.5); stroke-width: 1.5; }
+  .conn-path-temp { fill: none; stroke: rgba(34,211,238,0.7); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .qty-pill-bg { fill: rgba(20,184,166,0.2); }
+  .qty-pill-text { font-family: 'DM Mono', monospace; font-size: 9px; fill: #22D3EE; }
 
-  /* ── CONTEXT MENU ─────────────────────────── */
+  /* CONTEXT MENU */
   #ctx-menu {
     position: absolute; display: none; z-index: 200;
     background: var(--bg2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 4px;
     min-width: 148px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(139,92,246,0.08);
   }
   .ctx-item {
     padding: 7px 12px; font-size: 12px; cursor: pointer;
@@ -194,33 +231,37 @@
     font-family: var(--sans); transition: background 0.1s, color 0.1s;
   }
   .ctx-item:hover { background: var(--bg4); color: var(--text); }
-  .ctx-item.danger:hover { color: #e87a7a; }
+  .ctx-item.danger:hover { color: var(--red); background: rgba(239,68,68,0.08); }
   .ctx-sep { height: 1px; background: var(--border); margin: 3px 0; }
 
-  /* ── QTY POPUP ─────────────────────────────── */
+  /* QTY POPUP */
   #qty-popup {
     position: absolute; display: none; z-index: 200;
     background: var(--bg2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 12px;
-    min-width: 148px; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    min-width: 148px; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(139,92,246,0.08);
   }
-  #qty-popup label { font-size: 10px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; display: block; margin-bottom: 7px; }
+  #qty-popup label {
+    font-size: 10px; font-family: var(--mono); color: var(--text3);
+    letter-spacing: 0.07em; text-transform: uppercase; display: block; margin-bottom: 7px;
+  }
   #qty-popup input {
-    background: var(--bg3); border: 1px solid var(--border2);
+    background: var(--bg4); border: 1px solid var(--border2);
     color: var(--text); border-radius: 4px; padding: 6px 9px;
     font-size: 13px; font-family: var(--mono); outline: none; width: 100%;
     margin-bottom: 8px; transition: border-color 0.15s;
   }
-  #qty-popup input:focus { border-color: var(--pink); }
+  #qty-popup input:focus { border-color: var(--teal); }
   #qty-popup button {
-    background: var(--pink-dim); border: 1px solid rgba(232,160,180,0.25);
-    color: var(--pink2); border-radius: 4px; padding: 6px;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+    border: 1px solid rgba(139,92,246,0.35);
+    color: #fff; border-radius: 4px; padding: 7px;
     font-size: 11px; font-family: var(--mono); cursor: pointer; width: 100%;
-    transition: background 0.12s;
+    transition: filter 0.12s; text-transform: uppercase; font-weight: 500;
   }
-  #qty-popup button:hover { background: rgba(232,160,180,0.2); }
+  #qty-popup button:hover { filter: brightness(1.12); }
 
-  /* ── EMPTY STATE ─────────────────────────────── */
+  /* EMPTY STATE */
   #empty-hint {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
@@ -228,11 +269,15 @@
     opacity: 1; transition: opacity 0.3s;
   }
   #empty-hint.hidden { opacity: 0; }
-  #empty-hint .big { font-size: 13px; color: var(--text3); font-weight: 400; margin-bottom: 6px; }
-  #empty-hint .small { font-family: var(--mono); font-size: 10px; color: var(--text3); opacity: 0.6; }
+  #empty-hint .big { font-size: 13px; color: var(--text2); font-weight: 400; margin-bottom: 6px; }
+  #empty-hint .small {
+    font-family: var(--mono); font-size: 10px; color: var(--text3); opacity: 0.7;
+    letter-spacing: 0.04em;
+  }
   #empty-hint .arrow {
-    font-size: 22px; color: var(--text3); margin-bottom: 12px;
+    font-size: 22px; color: var(--purple); margin-bottom: 12px;
     animation: nudge 2s ease-in-out infinite;
+    text-shadow: 0 0 12px rgba(139,92,246,0.5);
   }
   @keyframes nudge { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-6px)} }
 </style>
@@ -241,7 +286,7 @@
 
 <div id="root">
   <div id="topbar">
-    <span class="logo">Tiko Dev</span>
+    <span class="logo">[ TIKO ]</span>
     <span class="title">Crafting Recipe Maker</span>
     <div class="sep"></div>
     <div class="hint">
@@ -254,7 +299,7 @@
 
   <div id="workspace">
     <div id="sidebar">
-      <div class="sidebar-section">Items</div>
+      <div class="sidebar-section">// Items</div>
       <div id="item-list"></div>
 
       <div id="type-legend">
@@ -274,7 +319,7 @@
           <option value="consumable">Consumable</option>
           <option value="output">Output / product</option>
         </select>
-        <button id="add-btn">+ Add item</button>
+        <button id="add-btn">+ Add Item</button>
       </div>
     </div>
 
@@ -282,7 +327,7 @@
       <svg id="main-svg" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <marker id="arrowh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="rgba(232,160,180,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="rgba(139,92,246,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
         </defs>
         <g id="conn-layer"></g>
@@ -319,7 +364,7 @@
 
 <script>
 const NW = 168, PORT_R = 5, HDR_H = 32, ROW_H = 20, PAD = 10;
-const TYPE_COLOR = { raw:'#7ec8a0', material:'#7aabdc', tool:'#d4a96a', consumable:'#b88ecf', output:'#e8a0b4' };
+const TYPE_COLOR = { raw:'#14B8A6', material:'#22D3EE', tool:'#F59E0B', consumable:'#C4B5FD', output:'#8B5CF6' };
 const TYPE_LABEL = { raw:'RAW', material:'MATL', tool:'TOOL', consumable:'CONS', output:'OUT' };
 
 let nodes = [], conns = [], uid = 1;
@@ -391,32 +436,26 @@ function renderNode(n) {
   const g = el('g', {class:'r-node', 'data-nid':n.id});
   g.style.transform = `translate(${n.x}px,${n.y}px)`;
 
-  // body
   const body = el('rect', {width:NW,height:h,rx:6,class: n.id===selId?'node-body sel':'node-body'});
   g.appendChild(body);
 
-  // color bar
-  const bar = el('rect', {width:3,height:h,rx:2,fill:color,opacity:'0.9'});
+  const bar = el('rect', {width:3,height:h,rx:2,fill:color,opacity:'0.95'});
   g.appendChild(bar);
 
-  // header bg
-  const hdr = el('rect', {width:NW,height:HDR_H,rx:6,fill:color,opacity:'0.08'});
+  const hdr = el('rect', {width:NW,height:HDR_H,rx:6,fill:color,opacity:'0.1'});
   g.appendChild(hdr);
-  const hdr2 = el('rect', {y:HDR_H-6,width:NW,height:6,fill:color,opacity:'0.08'});
+  const hdr2 = el('rect', {y:HDR_H-6,width:NW,height:6,fill:color,opacity:'0.1'});
   g.appendChild(hdr2);
 
-  // title
   const title = el('text', {x:14,y:HDR_H/2,'dominant-baseline':'middle',class:'node-title'});
   title.textContent = n.item.name.length>18 ? n.item.name.slice(0,17)+'…' : n.item.name;
   g.appendChild(title);
 
-  // type badge
   const badge = el('text', {x:NW-8,y:HDR_H/2,'text-anchor':'end','dominant-baseline':'middle',class:'node-sub'});
   badge.textContent = TYPE_LABEL[n.item.type];
-  badge.style.fill = color; badge.style.opacity = '0.8';
+  badge.style.fill = color; badge.style.opacity = '0.85';
   g.appendChild(badge);
 
-  // input port rows
   for (let i=0; i<=inputConns.length; i++) {
     const py = HDR_H + PAD + i*ROW_H + ROW_H/2;
     const pg = el('g', {class:'port', 'data-pid':i, 'data-nid':n.id, 'data-ptype':'in'});
@@ -438,7 +477,6 @@ function renderNode(n) {
     g.appendChild(pg);
   }
 
-  // output port
   const op = outPortPos(n);
   const opg = el('g', {class:'port', 'data-nid':n.id,'data-ptype':'out'});
   const hasOut = conns.some(c=>c.fromId===n.id);
@@ -447,7 +485,6 @@ function renderNode(n) {
   opg.addEventListener('mousedown', e=>{ e.stopPropagation(); startPort(e,n); });
   g.appendChild(opg);
 
-  // drag hit area
   const hit = el('rect', {x:6,width:NW-14,height:h,fill:'transparent','data-dh':n.id});
   hit.addEventListener('mousedown', e=>{ e.stopPropagation(); select(n.id); startDrag(e,n); });
   hit.addEventListener('contextmenu', e=>{ e.preventDefault(); e.stopPropagation(); openNodeCtx(e,n.id); });
@@ -508,8 +545,6 @@ svg.addEventListener('mousemove', e=>{
   if (panning && panFrom) {
     pan.x += e.clientX-panFrom.x; pan.y += e.clientY-panFrom.y;
     panFrom = {x:e.clientX,y:e.clientY};
-    nLayer.style.transform = `translate(${pan.x}px,${pan.y}px)`;
-    cLayer.style.transform  = `translate(${pan.x}px,${pan.y}px)`;
   }
 });
 
