@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Channel Packer Pro - Tiko Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Foundation */
+            --bg-primary: #0A0A0D;
+            --bg-secondary: #121217;
+            --bg-tertiary: #2A2A33;
+            
+            /* Primary Accent - Teal (Main brand color) */
+            --teal-main: #14B8A6;
+            --teal-bright: #22D3EE;
+            --teal-deep: #0F766E;
+            
+            /* Secondary Accent - Purple (Minimal use) */
+            --purple-main: #8B5CF6;
+            --purple-hover: #A855F7;
+            --purple-deep: #5B21B6;
+            
+            /* Text */
+            --white: #F1F1F5;
+            --gray-text: #A1A1AA;
+            --gray-light: #E5E7EB;
+            
+            /* Atmospheric */
+            --chrome-silver: #C0C0C8;
+            --cool-fog: #6B7280;
+            
+            /* Gradients - Teal dominant */
+            --gradient-primary: linear-gradient(135deg, #14B8A6 0%, #22D3EE 100%);
+            --gradient-neon: linear-gradient(135deg, #22D3EE 0%, #14B8A6 100%);
+            --gradient-dark: linear-gradient(135deg, #0A0A0D 0%, #121217 50%, #2A2A33 100%);
+            --gradient-card: linear-gradient(135deg, #121217 0%, #0F0F12 100%);
+            --gradient-accent: linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #22D3EE 100%);
+            
+            /* Chrome gradient */
+            --chrome: linear-gradient(135deg, #C0C0C8 0%, #F1F1F5 50%, #C0C0C8 100%);
+            
+            /* Glows - Teal dominant */
+            --glow-teal: 0 0 30px rgba(20, 184, 166, 0.5);
+            --glow-teal-strong: 0 0 40px rgba(34, 211, 238, 0.6);
+            --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--white);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--gradient-card);
+            border-radius: 20px;
+            border: 1px solid rgba(20, 184, 166, 0.1);
+            padding: 48px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--gray-text);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(20, 184, 166, 0.15);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px rgba(20, 184, 166, 0.4));
+        }
+
+        .engine-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .preset-card {
+            background: var(--bg-tertiary);
+            border: 2px solid rgba(20, 184, 166, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preset-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .preset-card:hover {
+            border-color: var(--teal-main);
+            transform: translateY(-4px);
+            box-shadow: var(--glow-teal);
+        }
+
+        .preset-card:hover::before {
+            left: 100%;
+        }
+
+        .preset-card.active {
+            border-color: var(--teal-bright);
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(34, 211, 238, 0.1));
+            box-shadow: var(--glow-teal);
+        }
+
+        .preset-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .preset-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .preset-mapping {
+            font-size: 12px;
+            color: var(--gray-text);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(20, 184, 166, 0.3);
+            border-radius: 16px;
+            padding: 56px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.02), rgba(34, 211, 238, 0.01));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 2px;
+            background: var(--gradient-primary);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .upload-zone:hover::before,
+        .upload-zone.drag-over::before {
+            opacity: 1;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(34, 211, 238, 0.05));
+            box-shadow: var(--glow-teal);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 0 20px rgba(20, 184, 166, 0.4));
+        }
+
+        .upload-text {
+            color: var(--white);
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: var(--gray-text);
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .texture-sets {
+            display: none;
+        }
+
+        .texture-sets.visible {
+            display: block;
+        }
+
+        .texture-set {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(20, 184, 166, 0.15);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .texture-set:hover {
+            border-color: rgba(20, 184, 166, 0.3);
+            box-shadow: 0 4px 20px rgba(20, 184, 166, 0.1);
+        }
+
+        .set-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(20, 184, 166, 0.1);
+        }
+
+        .set-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--white);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .remove-set {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #EF4444;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .remove-set:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #EF4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .channel-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(20, 184, 166, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .channel-card.detected {
+            border-color: var(--teal-main);
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(34, 211, 238, 0.05));
+            box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .channel-name {
+            font-weight: 500;
+            color: var(--white);
+            font-size: 13px;
+        }
+
+        .channel-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-green { background: rgba(20, 184, 166, 0.15); color: var(--teal-bright); border: 1px solid rgba(20, 184, 166, 0.3); }
+        .badge-blue { background: rgba(34, 211, 238, 0.15); color: var(--teal-bright); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .channel-file {
+            font-size: 12px;
+            color: var(--gray-text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .channel-file.empty {
+            font-style: italic;
+            color: var(--cool-fog);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-item {
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            border-color: var(--teal-main);
+            box-shadow: var(--glow-teal);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-text);
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px 36px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            box-shadow: var(--glow-teal);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:hover:not(:disabled)::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--gradient-neon);
+            box-shadow: var(--glow-teal-strong);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--white);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--teal-deep);
+            border-color: var(--teal-main);
+            box-shadow: var(--glow-teal);
+        }
+
+        .progress-section {
+            display: none;
+            margin: 32px 0;
+        }
+
+        .progress-section.visible {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--gray-text);
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(20, 184, 166, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+            width: 0%;
+            box-shadow: var(--glow-teal);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .info-box {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--teal-main);
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 32px;
+            font-size: 14px;
+            color: var(--gray-text);
+            border: 1px solid rgba(20, 184, 166, 0.15);
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--white);
+            font-size: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray-text);
+        }
+
+        .empty-state-icon {
+            font-size: 72px;
+            margin-bottom: 24px;
+            opacity: 0.3;
+            filter: drop-shadow(0 0 20px rgba(20, 184, 166, 0.2));
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            padding: 20px 32px;
+            border-radius: 12px;
+            box-shadow: var(--glow-teal-strong);
+            font-weight: 600;
+            font-size: 15px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .success-toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .channel-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .engine-presets {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Texture Channel Packer Pro</h1>
+            <p class="subtitle">Pack textures for Unreal Engine, Unity, Godot, and more</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span class="section-icon">🎮</span>
+                Select Engine/Format
+            </div>
+            
+            <div class="engine-presets">
+                <div class="preset-card active" data-preset="unreal">
+                    <div class="preset-icon">⚙️</div>
+                    <div class="preset-name">Unreal Engine</div>
+                    <div class="preset-mapping">ORM Format<br>R=AO G=Rough B=Metal</div>
+                </div>
+
+                <div class="preset-card" data-preset="unity-hdrp">
+                    <div class="preset-icon">🎯</div>
+                    <div class="preset-name">Unity HDRP</div>
+                    <div class="preset-mapping">Mask Map<br>R=Metal G=AO B=Detail A=Smooth</div>
+                </div>
+
+                <div class="preset-card" data-preset="unity-standard">
+                    <div class="preset-icon">🔷</div>
+                    <div class="preset-name">Unity Standard</div>
+                    <div class="preset-mapping">R=Metal G=AO B=Height A=Smooth</div>
+                </div>
+
+                <div class="preset-card" data-preset="godot">
+                    <div class="preset-icon">🤖</div>
+                    <div class="preset-name">Godot</div>
+                    <div class="preset-mapping">ORM Format<br>R=AO G=Rough B=Metal</div>
+                </div>
+
+                <div class="preset-card" data-preset="gltf">
+                    <div class="preset-icon">📦</div>
+                    <div class="preset-name">glTF/PBR</div>
+                    <div class="preset-mapping">R=AO G=Rough B=Metal</div>
+                </div>
+
+                <div class="preset-card" data-preset="custom">
+                    <div class="preset-icon">⚡</div>
+                    <div class="preset-name">Custom</div>
+                    <div class="preset-mapping">Manual Mapping</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span class="section-icon">📁</span>
+                Upload Textures
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">Drop all texture files here or click to browse</div>
+                <div class="upload-subtext">Auto-groups by name • Supports PNG, JPG, TGA</div>
+                <input type="file" id="fileInput" multiple accept="image/*">
+            </div>
+
+            <div id="statsContainer" style="display: none;">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statSets">0</div>
+                        <div class="stat-label">Texture Sets</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statFiles">0</div>
+                        <div class="stat-label">Total Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statReady">0</div>
+                        <div class="stat-label">Ready to Pack</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="texture-sets" id="textureSets">
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">🎨</span>
+                    Detected Texture Sets
+                </div>
+                <div id="setsContainer"></div>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="empty-state-icon">🎨</div>
+            <div class="empty-state-text">No textures loaded</div>
+            <div style="font-size: 14px;">Upload textures to automatically group and pack them</div>
+        </div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <span id="progressText">Processing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+            <button class="btn btn-primary" id="packBtn" disabled>Pack All & Download</button>
+        </div>
+
+        <div class="info-box">
+            <strong>📝 How it works:</strong>
+            1. Choose your target engine/format<br>
+            2. Upload all textures at once (auto-grouped by name)<br>
+            3. Click "Pack All" to process and download<br><br>
+            <strong>Supported patterns:</strong> metal, metallic, rough, roughness, ao, ambient, occlusion, opacity, alpha, smooth, smoothness
+        </div>
+    </div>
+
+    <div class="success-toast" id="successToast">✓ All textures packed!</div>
+
+    <script>
+        const textureSets = new Map();
+        let currentPreset = 'unreal';
+
+        const presetConfigs = {
+            'unreal': {
+                r: 'ao',
+                g: 'roughness',
+                b: 'metallic',
+                a: 'opacity',
+                suffix: '_ORM'
+            },
+            'unity-hdrp': {
+                r: 'metallic',
+                g: 'ao',
+                b: 'detail',
+                a: 'smoothness',
+                suffix: '_MaskMap'
+            },
+            'unity-standard': {
+                r: 'metallic',
+                g: 'ao',
+                b: 'height',
+                a: 'smoothness',
+                suffix: '_Packed'
+            },
+            'godot': {
+                r: 'ao',
+                g: 'roughness',
+                b: 'metallic',
+                a: 'opacity',
+                suffix: '_ORM'
+            },
+            'gltf': {
+                r: 'ao',
+                g: 'roughness',
+                b: 'metallic',
+                a: 'opacity',
+                suffix: '_ORM'
+            },
+            'custom': {
+                r: 'metallic',
+                g: 'roughness',
+                b: 'ao',
+                a: 'opacity',
+                suffix: '_Packed'
+            }
+        };
+
+        const patterns = {
+            metallic: /[_\-\s](metal|metallic)[_\-\s]?/i,
+            roughness: /[_\-\s](rough|roughness)[_\-\s]?/i,
+            smoothness: /[_\-\s](smooth|smoothness)[_\-\s]?/i,
+            ao: /[_\-\s](ao|ambient|occlusion)[_\-\s]?/i,
+            opacity: /[_\-\s](opacity|alpha|transparent)[_\-\s]?/i,
+            height: /[_\-\s](height|disp|displacement)[_\-\s]?/i,
+            detail: /[_\-\s](detail|mask)[_\-\s]?/i
+        };
+
+        // Preset selection
+        document.querySelectorAll('.preset-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentPreset = card.dataset.preset;
+                updateChannelLabels();
+            });
+        });
+
+        // Upload handling
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const fileName = file.name;
+                const { baseName, type } = parseFileName(fileName);
+
+                if (!baseName || !type) {
+                    console.log(`Could not parse: ${fileName}`);
+                    return;
+                }
+
+                if (!textureSets.has(baseName)) {
+                    textureSets.set(baseName, {
+                        name: baseName,
+                        metallic: null,
+                        roughness: null,
+                        smoothness: null,
+                        ao: null,
+                        opacity: null,
+                        height: null,
+                        detail: null
+                    });
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const set = textureSets.get(baseName);
+                        set[type] = { img, fileName };
+                        textureSets.set(baseName, set);
+                        renderSets();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function parseFileName(fileName) {
+            const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+            
+            for (const [type, pattern] of Object.entries(patterns)) {
+                if (pattern.test(nameWithoutExt)) {
+                    const baseName = nameWithoutExt.replace(pattern, '').replace(/[_\-\s]+$/, '').replace(/^[_\-\s]+/, '');
+                    return { baseName, type };
+                }
+            }
+
+            return { baseName: null, type: null };
+        }
+
+        function getChannelLabel(channelType) {
+            const labels = {
+                metallic: 'Metallic',
+                roughness: 'Roughness',
+                smoothness: 'Smoothness',
+                ao: 'Ambient Occlusion',
+                opacity: 'Opacity',
+                height: 'Height',
+                detail: 'Detail Mask'
+            };
+            return labels[channelType] || channelType;
+        }
+
+        function updateChannelLabels() {
+            renderSets();
+        }
+
+        function renderSets() {
+            if (textureSets.size === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('textureSets').classList.remove('visible');
+                document.getElementById('statsContainer').style.display = 'none';
+                document.getElementById('controls').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('textureSets').classList.add('visible');
+            document.getElementById('statsContainer').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+
+            const config = presetConfigs[currentPreset];
+            let totalFiles = 0;
+            let readySets = 0;
+
+            const setsHTML = Array.from(textureSets.entries()).map(([name, set]) => {
+                const channels = [config.r, config.g, config.b, config.a];
+                const hasRequiredChannels = channels.some(ch => set[ch] !== null);
+                if (hasRequiredChannels) readySets++;
+
+                const fileCount = Object.values(set).filter(t => t !== null && typeof t === 'object').length;
+                totalFiles += fileCount;
+
+                const badges = ['red', 'green', 'blue', 'yellow'];
+
+                return `
+                    <div class="texture-set">
+                        <div class="set-header">
+                            <div class="set-name">${name}</div>
+                            <button class="remove-set" onclick="removeSet('${name}')">Remove</button>
+                        </div>
+                        <div class="channel-grid">
+                            ${channels.map((channelType, idx) => `
+                                <div class="channel-card ${set[channelType] ? 'detected' : ''}">
+                                    <div class="channel-header">
+                                        <span class="channel-name">${getChannelLabel(channelType)}</span>
+                                        <span class="channel-badge badge-${badges[idx]}">${['R','G','B','A'][idx]}</span>
+                                    </div>
+                                    <div class="channel-file ${set[channelType] ? '' : 'empty'}">
+                                        ${set[channelType] ? '✅ ' + set[channelType].fileName : '⚪ Not detected'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('setsContainer').innerHTML = setsHTML;
+            document.getElementById('statSets').textContent = textureSets.size;
+            document.getElementById('statFiles').textContent = totalFiles;
+            document.getElementById('statReady').textContent = readySets;
+            document.getElementById('packBtn').disabled = readySets === 0;
+        }
+
+        window.removeSet = function(name) {
+            textureSets.delete(name);
+            renderSets();
+        };
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            textureSets.clear();
+            fileInput.value = '';
+            renderSets();
+        });
+
+        document.getElementById('packBtn').addEventListener('click', async () => {
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const packBtn = document.getElementById('packBtn');
+
+            progressSection.classList.add('visible');
+            packBtn.disabled = true;
+
+            const setsArray = Array.from(textureSets.entries());
+            let processed = 0;
+
+            for (const [name, set] of setsArray) {
+                const config = presetConfigs[currentPreset];
+                const channels = [config.r, config.g, config.b, config.a];
+                const hasAnyTexture = channels.some(ch => set[ch] !== null);
+                
+                if (!hasAnyTexture) continue;
+
+                const progress = ((processed + 1) / setsArray.length) * 100;
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `Packing ${name}...`;
+                progressPercent.textContent = Math.round(progress) + '%';
+
+                await packTextureSet(name, set, config);
+                processed++;
+
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            progressSection.classList.remove('visible');
+            packBtn.disabled = false;
+
+            const toast = document.getElementById('successToast');
+            toast.textContent = `✓ Packed ${processed} texture set${processed !== 1 ? 's' : ''}!`;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        });
+
+        async function packTextureSet(name, set, config) {
+            return new Promise((resolve) => {
+                const textureData = {
+                    r: set[config.r],
+                    g: set[config.g],
+                    b: set[config.b],
+                    a: set[config.a]
+                };
+
+                let maxWidth = 0;
+                let maxHeight = 0;
+
+                Object.values(textureData).forEach(texture => {
+                    if (texture) {
+                        maxWidth = Math.max(maxWidth, texture.img.width);
+                        maxHeight = Math.max(maxHeight, texture.img.height);
+                    }
+                });
+
+                if (maxWidth === 0 || maxHeight === 0) {
+                    resolve();
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = maxWidth;
+                canvas.height = maxHeight;
+                const ctx = canvas.getContext('2d');
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = maxWidth;
+                tempCanvas.height = maxHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                const outputData = ctx.createImageData(maxWidth, maxHeight);
+
+                function getGrayscaleData(texture) {
+                    if (!texture) return null;
+                    tempCtx.clearRect(0, 0, maxWidth, maxHeight);
+                    tempCtx.drawImage(texture.img, 0, 0, maxWidth, maxHeight);
+                    const imageData = tempCtx.getImageData(0, 0, maxWidth, maxHeight);
+                    return imageData.data;
+                }
+
+                // Handle smoothness (invert to roughness if needed)
+                function processChannel(channelName, texture) {
+                    if (!texture) return null;
+                    const data = getGrayscaleData(texture);
+                    
+                    // If this is smoothness and we need roughness, invert it
+                    if (channelName === 'smoothness' && (config.g === 'smoothness' || config.a === 'smoothness')) {
+                        const inverted = new Uint8ClampedArray(data.length);
+                        for (let i = 0; i < data.length; i += 4) {
+                            inverted[i] = 255 - data[i];
+                            inverted[i + 1] = 255 - data[i + 1];
+                            inverted[i + 2] = 255 - data[i + 2];
+                            inverted[i + 3] = data[i + 3];
+                        }
+                        return inverted;
+                    }
+                    
+                    return data;
+                }
+
+                const rData = processChannel(config.r, textureData.r);
+                const gData = processChannel(config.g, textureData.g);
+                const bData = processChannel(config.b, textureData.b);
+                const aData = processChannel(config.a, textureData.a);
+
+                const defaults = {
+                    metallic: 0,
+                    roughness: 255,
+                    smoothness: 0,
+                    ao: 255,
+                    opacity: 255,
+                    height: 128,
+                    detail: 255
+                };
+
+                for (let i = 0; i < outputData.data.length; i += 4) {
+                    outputData.data[i] = rData ? rData[i] : defaults[config.r];
+                    outputData.data[i + 1] = gData ? gData[i + 1] : defaults[config.g];
+                    outputData.data[i + 2] = bData ? bData[i + 2] : defaults[config.b];
+                    outputData.data[i + 3] = aData ? aData[i] : defaults[config.a];
+                }
+
+                ctx.putImageData(outputData, 0, 0);
+
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${name}${config.suffix}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    resolve();
+                }, 'image/png');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -3,485 +3,704 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Model Viewer — Tiko Developments</title>
+<title>3D Viewer — Tiko Developments</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg:        #0A0A0D;
     --bg2:       #121217;
-    --bg3:       #1a1a22;
+    --bg3:       #16161c;
     --bg4:       #2A2A33;
     --border:    rgba(255,255,255,0.06);
     --border2:   rgba(255,255,255,0.12);
+    --border3:   rgba(255,255,255,0.20);
     --text:      #F1F1F5;
     --text2:     #A1A1AA;
     --text3:     #6B7280;
-    --purple:    #8B5CF6;
-    --purple2:   #A855F7;
-    --purple3:   #5B21B6;
-    --purple-dim:  rgba(139,92,246,0.12);
-    --purple-glow: rgba(139,92,246,0.4);
+    --text4:     #4a4a52;
+
     --teal:      #14B8A6;
     --teal2:     #22D3EE;
     --teal3:     #0F766E;
     --teal-dim:  rgba(20,184,166,0.12);
-    --teal-glow: rgba(20,184,166,0.3);
-    --chrome:    #C0C0C8;
-    --fog:       #6B7280;
-    --lavender:  #C4B5FD;
-    --pink:      #EC4899;
-    --gold:      #F59E0B;
+
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+    --purple3:   #5B21B6;
+    --purple-dim: rgba(139,92,246,0.12);
+
     --red:       #EF4444;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
+    --gold:      #F59E0B;
+
+    --mono: 'JetBrains Mono', 'DM Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   html, body {
     height: 100%; background: var(--bg);
     font-family: var(--sans); color: var(--text);
     overflow: hidden; user-select: none;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Stripe pattern utility */
+  .stripes {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 7px
+    );
   }
 
   #root { display: flex; height: 100vh; flex-direction: column; }
 
-  /* TOPBAR */
+  /* ── REGISTRATION MARKS ──────────────────── */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px;
+    pointer-events: none; z-index: 1000;
+    color: var(--teal); opacity: 0.5;
+  }
+  .reg-mark::before, .reg-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .reg-mark::before { left: 6px; top: 0; width: 1px; height: 14px; }
+  .reg-mark::after  { left: 0; top: 6px; width: 14px; height: 1px; }
+  .reg-tl { top: 8px;    left: 8px; }
+  .reg-tr { top: 8px;    right: 8px; }
+  .reg-bl { bottom: 8px; left: 8px; }
+  .reg-br { bottom: 8px; right: 8px; }
+
+  /* ── TOPBAR ──────────────────────────────── */
   #topbar {
-    height: 44px; min-height: 44px;
+    height: 52px; min-height: 52px;
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 0 16px; gap: 16px;
+    display: flex; align-items: stretch;
+    padding: 0 28px 0 28px;
     flex-shrink: 0; position: relative;
+    z-index: 10;
   }
-  #topbar::after {
-    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--purple) 30%, var(--teal) 70%, transparent 100%);
-    opacity: 0.4;
+  #topbar .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding-right: 24px;
   }
-  #topbar .logo {
-    font-family: var(--mono); font-size: 12px; font-weight: 500;
-    letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
-    background: linear-gradient(90deg, var(--purple) 0%, var(--teal) 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: transparent;
+  .brand-mark {
+    width: 12px; height: 12px;
+    background: var(--teal);
+    flex-shrink: 0;
   }
-  #topbar .title {
-    font-size: 13px; color: var(--text2); font-weight: 300; white-space: nowrap;
+  .brand-name {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text);
   }
+  .brand-divider {
+    width: 1px; background: var(--border2); margin: 12px 0;
+  }
+  #topbar .product {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #topbar .product .arrow { color: var(--text4); }
   #topbar .sep { flex: 1; }
-  #topbar .hint {
+  #topbar .meta {
+    display: flex; align-items: center; gap: 18px;
     font-family: var(--mono); font-size: 10px; color: var(--text3);
-    display: flex; gap: 14px;
+    letter-spacing: 0.1em; text-transform: uppercase;
   }
-  #topbar .hint span { display: flex; align-items: center; gap: 5px; }
-  #topbar .hint kbd {
-    background: var(--bg4); border: 1px solid var(--border2);
-    border-radius: 3px; padding: 1px 5px; font-size: 10px;
-    font-family: var(--mono); color: var(--text2);
+  #topbar .meta .label-pill {
+    background: var(--teal); color: var(--bg);
+    padding: 3px 7px; font-weight: 500;
   }
 
-  #workspace { display: flex; flex: 1; overflow: hidden; }
+  #workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-  /* SIDEBAR */
+  /* ── SIDEBAR ─────────────────────────────── */
   #sidebar {
-    width: 240px; min-width: 240px;
+    width: 280px; min-width: 280px;
     background: var(--bg2);
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
     overflow: hidden;
   }
-  .sidebar-section {
-    padding: 10px 12px 6px;
-    font-family: var(--mono); font-size: 10px;
-    color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase;
+
+  .panel {
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; flex-direction: column;
   }
-  .sidebar-section .count {
-    font-family: var(--mono); font-size: 10px;
-    color: var(--teal); letter-spacing: 0;
-  }
+  .panel-grow { flex: 1; min-height: 0; }
 
-  #stats-block, #materials-block {
-    overflow-y: auto;
-    padding: 10px 12px;
-    display: flex; flex-direction: column; gap: 6px;
+  .panel-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .panel-head .marker {
+    width: 8px; height: 8px; background: var(--teal);
     flex-shrink: 0;
   }
-  #stats-block::-webkit-scrollbar, #materials-block::-webkit-scrollbar { width: 3px; }
-  #stats-block::-webkit-scrollbar-thumb, #materials-block::-webkit-scrollbar-thumb {
-    background: var(--border2); border-radius: 2px;
+  .panel-head .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
   }
-  #materials-block { flex: 1; min-height: 0; }
+  .panel-body {
+    padding: 0 18px 14px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); }
 
+  /* Stat rows — terminal style */
   .stat-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 9px;
-    background: var(--bg4); border: 1px solid var(--border);
-    border-radius: 4px;
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 7px 0;
+    font-family: var(--mono); font-size: 11px;
+    border-bottom: 1px solid var(--border);
   }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .prefix { color: var(--text4); flex-shrink: 0; }
   .stat-row .lbl {
-    font-family: var(--mono); font-size: 10px; color: var(--text3);
-    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text3); flex: 1;
+    text-transform: uppercase; letter-spacing: 0.06em;
   }
   .stat-row .val {
-    font-family: var(--mono); font-size: 12px; color: var(--text);
+    color: var(--text); font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
+  .stat-row.accent .val { color: var(--teal2); }
 
+  /* Material cards */
   .mat-card {
-    padding: 9px 10px;
-    background: var(--bg4); border: 1px solid var(--border);
-    border-radius: 5px;
-    display: flex; flex-direction: column; gap: 5px;
-    transition: border-color 0.15s;
+    margin-top: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.12s;
   }
-  .mat-card:hover { border-color: rgba(139,92,246,0.3); }
-  .mat-card .mat-head { display: flex; align-items: center; gap: 7px; }
+  .mat-card:first-of-type { margin-top: 0; }
+  .mat-card:hover { border-color: var(--border3); }
+  .mat-card .mat-head {
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
   .mat-card .mat-swatch {
-    width: 10px; height: 10px; border-radius: 2px;
+    width: 10px; height: 10px;
     border: 1px solid var(--border2); flex-shrink: 0;
   }
   .mat-card .mat-name {
     font-size: 12px; color: var(--text); flex: 1;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 500;
   }
   .mat-card .mat-type {
     font-family: var(--mono); font-size: 9px; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.06em;
+    text-transform: uppercase; letter-spacing: 0.08em;
   }
   .mat-card .mat-props {
-    display: flex; flex-wrap: wrap; gap: 4px 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px;
     font-family: var(--mono); font-size: 10px; color: var(--text2);
   }
-  .mat-card .mat-props .k { color: var(--text3); }
+  .mat-card .mat-props .row { display: flex; gap: 6px; }
+  .mat-card .mat-props .k { color: var(--text4); }
   .mat-card .mat-tex-row {
-    display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px;
+    display: flex; flex-wrap: wrap; gap: 3px; padding-top: 4px;
+    border-top: 1px solid var(--border);
   }
   .mat-tex {
-    font-family: var(--mono); font-size: 9px; color: var(--lavender);
-    background: var(--purple-dim); border: 1px solid rgba(139,92,246,0.22);
-    padding: 1px 5px; border-radius: 2px; letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-family: var(--mono); font-size: 9px; color: var(--bg);
+    background: var(--teal); padding: 2px 5px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    font-weight: 500;
   }
 
   .empty-state {
-    padding: 14px 12px; text-align: center;
-    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    padding: 16px 0; text-align: center;
+    font-family: var(--mono); font-size: 10px; color: var(--text4);
     letter-spacing: 0.06em;
   }
-
-  /* ENV PICKER */
-  #env-block {
-    padding: 8px 10px 12px; border-top: 1px solid var(--border);
-    flex-shrink: 0; display: flex; flex-direction: column; gap: 6px;
+  .empty-state::before {
+    content: '> '; color: var(--text4);
   }
-  #env-block select {
-    background: var(--bg4); border: 1px solid var(--border2);
-    color: var(--text); border-radius: 4px; padding: 7px 9px;
-    font-size: 12px; font-family: var(--sans); outline: none; width: 100%;
+
+  /* Env select */
+  .form-group { padding: 0 18px 14px; }
+  .form-group select {
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); padding: 9px 12px;
+    font-size: 12px; font-family: var(--mono); outline: none; width: 100%;
     transition: border-color 0.15s; cursor: pointer;
     appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2314B8A6' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 9px center; padding-right: 26px;
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    text-transform: uppercase; letter-spacing: 0.06em;
   }
-  #env-block select:focus { border-color: var(--teal); }
-  #env-block select option { background: var(--bg4); }
+  .form-group select:focus { border-color: var(--teal); }
+  .form-group select option { background: var(--bg3); }
 
-  /* LOAD BLOCK */
-  #load-block {
-    padding: 10px; border-top: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+  /* Primary CTA — bracket-cornered teal */
+  .btn-primary {
+    background: var(--teal); border: none;
+    color: var(--bg); padding: 12px 16px;
+    font-size: 11px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.12em; transition: background 0.12s;
+    text-transform: uppercase; font-weight: 600;
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
   }
-  #load-block button {
-    background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
-    border: 1px solid rgba(139,92,246,0.35);
-    color: #fff; border-radius: 4px; padding: 9px;
-    font-size: 12px; font-family: var(--mono); cursor: pointer;
-    letter-spacing: 0.05em; transition: filter 0.15s, box-shadow 0.15s;
-    text-transform: uppercase; font-weight: 500;
+  .btn-primary::before, .btn-primary::after {
+    content: ''; position: absolute;
+    width: 6px; height: 6px;
+    border: 1px solid var(--bg);
   }
-  #load-block button:hover {
-    filter: brightness(1.12); box-shadow: 0 0 14px rgba(139,92,246,0.4);
-  }
-  #load-block .formats {
-    font-family: var(--mono); font-size: 9px; color: var(--text3);
-    text-align: center; letter-spacing: 0.06em; padding-top: 2px;
-  }
+  .btn-primary::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-primary::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-primary:hover { background: #1cc7b3; }
+  .btn-primary .arrow { font-family: var(--mono); }
 
-  /* CANVAS */
+  .formats-line {
+    padding: 10px 18px 14px;
+    font-family: var(--mono); font-size: 9px; color: var(--text4);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: center;
+  }
+  .formats-line::before { content: '> '; }
+
+  /* ── CANVAS ─────────────────────────────── */
   #canvas-wrap {
     flex: 1; position: relative; overflow: hidden;
     background: var(--bg);
-    background-image:
-      radial-gradient(circle at 20% 20%, rgba(139,92,246,0.05) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(20,184,166,0.04) 0%, transparent 55%),
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
   }
-  #canvas-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  /* Diagonal stripe top section */
+  #canvas-wrap::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 90px;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+    border-bottom: 1px solid var(--border);
+    pointer-events: none; z-index: 1;
+  }
+  #canvas-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; position: relative; z-index: 0; }
 
-  /* DROPZONE */
+  /* Canvas operation header — like "OPERATION 001" */
+  #op-header {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; z-index: 2;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,13,0.7);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  #op-header .op-marker { width: 6px; height: 6px; background: var(--teal); }
+  #op-header .op-status {
+    color: var(--teal); margin-left: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #op-header .op-status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── DROPZONE OVERLAY ────────────────────── */
   #dropzone {
-    position: absolute; inset: 0; z-index: 5;
+    position: absolute; inset: 38px 0 0 0; z-index: 5;
     display: flex; align-items: center; justify-content: center;
     flex-direction: column; padding: 24px;
-    transition: background 0.15s;
   }
-  #dropzone.dragover { background: rgba(139,92,246,0.06); }
-  #dropzone .drop-card {
-    border: 1px dashed var(--border2);
-    background: rgba(18,18,23,0.78); backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 8px; padding: 36px 32px;
-    max-width: 380px; width: 100%; text-align: center;
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-  }
-  #dropzone.dragover .drop-card {
-    border-color: var(--purple);
-    background: rgba(18,18,23,0.92);
-    box-shadow: 0 0 32px rgba(139,92,246,0.25);
-  }
-  .drop-eyebrow {
-    font-family: var(--mono); font-size: 10px;
-    background: linear-gradient(90deg, var(--purple) 0%, var(--teal) 100%);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: transparent;
-    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px;
-  }
-  .drop-title {
-    font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 6px;
-  }
-  .drop-sub {
-    font-size: 12px; color: var(--text2); font-weight: 300; margin-bottom: 22px;
-  }
-  .drop-btn {
-    background: linear-gradient(135deg, var(--purple) 0%, var(--purple3) 100%);
-    border: 1px solid rgba(139,92,246,0.4);
-    color: #fff; border-radius: 4px; padding: 9px 20px;
-    font-size: 11px; font-family: var(--mono); cursor: pointer;
-    letter-spacing: 0.06em; transition: filter 0.15s, box-shadow 0.15s;
-    text-transform: uppercase; font-weight: 500;
-  }
-  .drop-btn:hover { filter: brightness(1.15); box-shadow: 0 0 14px var(--purple-glow); }
-  .drop-formats {
-    font-family: var(--mono); font-size: 10px; color: var(--text3);
-    margin-top: 18px; letter-spacing: 0.04em;
-  }
-  .drop-formats span { color: var(--text2); margin: 0 3px; }
+  #dropzone.dragover { background: rgba(20,184,166,0.04); }
 
-  /* TOOLBAR */
+  .drop-frame {
+    width: 100%; max-width: 560px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    position: relative;
+  }
+  .drop-frame::before, .drop-frame::after,
+  .drop-frame > .corner-tl, .drop-frame > .corner-tr,
+  .drop-frame > .corner-bl, .drop-frame > .corner-br {
+    /* corners drawn via .corner spans */
+  }
+  .corner {
+    position: absolute; width: 10px; height: 10px;
+    color: var(--teal);
+  }
+  .corner::before, .corner::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .corner.tl { top: -1px; left: -1px; }
+  .corner.tl::before { top: 0; left: 0; width: 1px; height: 10px; }
+  .corner.tl::after  { top: 0; left: 0; height: 1px; width: 10px; }
+  .corner.tr { top: -1px; right: -1px; }
+  .corner.tr::before { top: 0; right: 0; width: 1px; height: 10px; }
+  .corner.tr::after  { top: 0; right: 0; height: 1px; width: 10px; }
+  .corner.bl { bottom: -1px; left: -1px; }
+  .corner.bl::before { bottom: 0; left: 0; width: 1px; height: 10px; }
+  .corner.bl::after  { bottom: 0; left: 0; height: 1px; width: 10px; }
+  .corner.br { bottom: -1px; right: -1px; }
+  .corner.br::before { bottom: 0; right: 0; width: 1px; height: 10px; }
+  .corner.br::after  { bottom: 0; right: 0; height: 1px; width: 10px; }
+
+  .drop-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .drop-section-label .marker {
+    width: 8px; height: 8px; background: var(--teal);
+  }
+
+  .drop-headline {
+    padding: 36px 32px 16px;
+    font-size: 36px; font-weight: 600; line-height: 1.05;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .drop-headline .hl { color: var(--teal2); }
+  .drop-sub {
+    padding: 0 32px 28px;
+    font-size: 14px; color: var(--text2); font-weight: 400;
+    max-width: 460px; line-height: 1.5;
+  }
+  .drop-actions {
+    padding: 0 32px 28px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-cta {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .btn-cta::before, .btn-cta::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  .btn-cta::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-cta::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-cta:hover { background: #1cc7b3; }
+  .btn-cta .arrow { font-family: var(--mono); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid var(--border3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+  .drop-readout {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px 20px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    line-height: 1.7;
+  }
+  .drop-readout .line-prefix { color: var(--text4); }
+  .drop-readout .line-cmd { color: var(--text2); }
+  .drop-readout .formats-list {
+    margin-top: 6px; color: var(--text2);
+  }
+  .drop-readout .formats-list .fmt {
+    color: var(--teal2); display: inline-block; margin-right: 14px;
+  }
+  .drop-readout .formats-list .fmt::before {
+    content: '└─ '; color: var(--text4);
+  }
+
+  /* ── TOOLBAR ─────────────────────────────── */
   #toolbar {
-    position: absolute; top: 12px; right: 12px;
-    display: flex; gap: 6px; z-index: 20;
+    position: absolute; top: 50px; right: 16px;
+    display: flex; gap: 1px;
+    z-index: 20;
+    background: var(--border2);
+    border: 1px solid var(--border2);
   }
   .tb-btn {
-    background: var(--bg2); border: 1px solid var(--border2);
-    color: var(--text2); border-radius: 4px; padding: 6px 12px;
-    font-size: 11px; font-family: var(--mono); cursor: pointer;
-    letter-spacing: 0.04em; transition: all 0.12s;
-    text-transform: uppercase;
-    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: none;
+    color: var(--text2); padding: 9px 14px;
+    font-size: 10px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.1em; transition: all 0.12s;
+    text-transform: uppercase; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 7px;
+    min-height: 36px;
   }
-  .tb-btn:hover { color: var(--text); border-color: rgba(139,92,246,0.3); background: var(--bg3); }
+  .tb-btn:hover { background: var(--bg4); color: var(--text); }
   .tb-btn.active {
-    color: var(--purple2); border-color: rgba(139,92,246,0.45);
-    background: var(--purple-dim);
-    box-shadow: 0 0 10px rgba(139,92,246,0.25);
+    background: var(--teal); color: var(--bg);
+    font-weight: 600;
   }
   .tb-btn svg { display: block; }
 
-  /* MEASURE READOUT */
+  /* ── BOTTOM READOUT ──────────────────────── */
   #measure-readout {
-    position: absolute; bottom: 12px; left: 12px;
+    position: absolute; bottom: 16px; left: 16px;
     background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: 4px; padding: 8px 12px;
+    padding: 12px 16px;
     z-index: 20; display: none;
-    font-family: var(--mono); font-size: 11px;
-    min-width: 200px;
+    font-family: var(--mono); min-width: 220px;
+    position: relative;
   }
   #measure-readout.show { display: block; }
   #measure-readout .mr-label {
+    display: flex; align-items: center; gap: 7px;
     color: var(--text3); font-size: 9px; text-transform: uppercase;
-    letter-spacing: 0.08em; margin-bottom: 3px;
+    letter-spacing: 0.14em; margin-bottom: 6px;
+  }
+  #measure-readout .mr-label::before {
+    content: ''; width: 6px; height: 6px; background: var(--teal);
   }
   #measure-readout .mr-val {
-    color: var(--teal2); font-size: 13px; font-variant-numeric: tabular-nums;
+    color: var(--teal2); font-size: 16px; font-weight: 500;
+    font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
   }
   #measure-readout .mr-hint {
-    color: var(--text3); font-size: 9px; margin-top: 4px;
-    letter-spacing: 0.04em;
+    color: var(--text4); font-size: 9px; margin-top: 6px;
+    letter-spacing: 0.06em; text-transform: uppercase;
   }
+  #measure-readout .mr-hint::before { content: '> '; }
 
-  /* LOADING */
+  /* ── LOADING / TOAST ─────────────────────── */
   #loading {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: 4px; padding: 12px 18px;
-    z-index: 100; display: none; align-items: center; gap: 10px;
-    font-family: var(--mono); font-size: 11px; color: var(--text2);
-    letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--bg2); border: 1px solid var(--teal);
+    padding: 14px 22px;
+    z-index: 100; display: none; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--text);
+    letter-spacing: 0.1em; text-transform: uppercase;
   }
   #loading.show { display: flex; }
   .spinner {
     width: 12px; height: 12px;
-    border: 1.5px solid var(--border2);
-    border-top-color: var(--purple); border-right-color: var(--teal);
+    border: 1.5px solid var(--bg3);
+    border-top-color: var(--teal); border-right-color: var(--teal2);
     border-radius: 50%; animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* TOAST */
   #toast {
     position: absolute; top: 56px; left: 50%;
     transform: translateX(-50%) translateY(-8px);
-    background: var(--bg2); border: 1px solid var(--border2);
-    color: var(--text); padding: 8px 14px; border-radius: 4px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+    background: var(--bg2); border: 1px solid var(--teal);
+    color: var(--text); padding: 10px 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
     opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 100;
     pointer-events: none; max-width: calc(100% - 24px); text-align: center;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* MOBILE */
+  /* ── MOBILE ──────────────────────────────── */
   @media (max-width: 720px) {
-    #topbar .hint, #topbar .title { display: none; }
+    #topbar { padding: 0 16px; height: 48px; min-height: 48px; }
+    #topbar .product { display: none; }
+    #topbar .meta { gap: 8px; font-size: 9px; }
+    #topbar .meta .label-pill { padding: 2px 5px; }
     #workspace { flex-direction: column; }
     #sidebar {
-      width: 100%; min-width: 0; max-height: 42%;
+      width: 100%; min-width: 0; max-height: 44%;
       border-right: none; border-top: 1px solid var(--border);
       order: 2;
     }
     #canvas-wrap { order: 1; min-height: 0; flex: 1; }
-    #toolbar { top: 8px; right: 8px; gap: 4px; }
-    .tb-btn { padding: 6px 9px; font-size: 10px; }
+    #toolbar { top: 46px; right: 8px; }
+    .tb-btn { padding: 8px 10px; font-size: 9px; }
     .tb-btn .label { display: none; }
-    .drop-card { padding: 28px 22px; }
-    .drop-title { font-size: 16px; }
+    .drop-headline { font-size: 26px; padding: 28px 22px 12px; }
+    .drop-sub, .drop-actions, .drop-readout { padding-left: 22px; padding-right: 22px; }
+    .reg-mark { display: none; }
   }
 </style>
 </head>
 <body>
+<div class="reg-mark reg-tl"></div>
+<div class="reg-mark reg-tr"></div>
+<div class="reg-mark reg-bl"></div>
+<div class="reg-mark reg-br"></div>
+
 <div id="root">
   <div id="topbar">
-    <div class="logo">[ TIKO ]</div>
-    <div class="title">3D Model Viewer</div>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">TIKO</div>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="product">
+      <span class="arrow">/</span>
+      <span>Tools</span>
+      <span class="arrow">/</span>
+      <span>3D Viewer</span>
+    </div>
     <div class="sep"></div>
-    <div class="hint">
-      <span><kbd>LMB</kbd> orbit</span>
-      <span><kbd>RMB</kbd> pan</span>
-      <span><kbd>Wheel</kbd> zoom</span>
+    <div class="meta">
+      <span class="label-pill">v1.0</span>
+      <span>Quick Preview</span>
     </div>
   </div>
 
   <div id="workspace">
     <div id="sidebar">
-      <div class="sidebar-section">
-        <span>// Model Stats</span>
-        <span class="count" id="stat-fps"></span>
-      </div>
-      <div id="stats-block">
-        <div class="stat-row"><span class="lbl">Triangles</span><span class="val" id="s-tris">—</span></div>
-        <div class="stat-row"><span class="lbl">Vertices</span><span class="val" id="s-verts">—</span></div>
-        <div class="stat-row"><span class="lbl">Meshes</span><span class="val" id="s-meshes">—</span></div>
-        <div class="stat-row"><span class="lbl">Materials</span><span class="val" id="s-mats">—</span></div>
-        <div class="stat-row"><span class="lbl">Textures</span><span class="val" id="s-tex">—</span></div>
-        <div class="stat-row"><span class="lbl">Draw Calls</span><span class="val" id="s-calls">—</span></div>
-        <div class="stat-row"><span class="lbl">Bounds</span><span class="val" id="s-bounds">—</span></div>
-      </div>
 
-      <div class="sidebar-section">
-        <span>// Materials</span>
-        <span class="count" id="mat-count"></span>
-      </div>
-      <div id="materials-block">
-        <div class="empty-state">// no model loaded</div>
-      </div>
-
-      <div id="env-block">
-        <div class="sidebar-section" style="border-bottom:none;padding:0 0 2px;">
-          <span>// Environment</span>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Telemetry</span>
+          <span class="count" id="stat-fps"></span>
         </div>
-        <select id="env-select">
-          <option value="studio">Studio</option>
-          <option value="sunset">Sunset</option>
-          <option value="dawn">Dawn</option>
-          <option value="night">Night</option>
-          <option value="warehouse">Warehouse</option>
-          <option value="neutral">Neutral</option>
-        </select>
+        <div class="panel-body">
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Triangles</span><span class="val" id="s-tris">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Vertices</span><span class="val" id="s-verts">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Meshes</span><span class="val" id="s-meshes">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Materials</span><span class="val" id="s-mats">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Textures</span><span class="val" id="s-tex">—</span></div>
+          <div class="stat-row accent"><span class="prefix">&gt;</span><span class="lbl">Draw Calls</span><span class="val" id="s-calls">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Bounds</span><span class="val" id="s-bounds">—</span></div>
+        </div>
       </div>
 
-      <div id="load-block">
-        <button id="btn-load">Load Model</button>
-        <div class="formats">.glb · .gltf · .obj · .fbx · .stl</div>
+      <div class="panel panel-grow">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Materials</span>
+          <span class="count" id="mat-count"></span>
+        </div>
+        <div class="panel-body" id="materials-block">
+          <div class="empty-state">no model loaded</div>
+        </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Environment</span>
+        </div>
+        <div class="form-group">
+          <select id="env-select">
+            <option value="studio">Studio</option>
+            <option value="sunset">Sunset</option>
+            <option value="dawn">Dawn</option>
+            <option value="night">Night</option>
+            <option value="warehouse">Warehouse</option>
+            <option value="neutral">Neutral</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Operations</span>
+        </div>
+        <div class="form-group">
+          <button class="btn-primary" id="btn-load">
+            <span>Load Model</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="formats-line">.glb · .gltf · .obj · .fbx · .stl</div>
+      </div>
+
     </div>
 
     <div id="canvas-wrap">
+      <div id="op-header">
+        <span class="op-marker"></span>
+        <span>Operation 001</span>
+        <span class="op-status">Standby</span>
+      </div>
+
       <div id="toolbar">
         <button class="tb-btn" id="btn-wireframe" title="Wireframe">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-            <path d="M2 4 L8 1 L14 4 L14 12 L8 15 L2 12 Z M2 4 L8 7 L14 4 M8 7 L8 15"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L8 1 L14 4 L14 12 L8 15 L2 12 Z M2 4 L8 7 L14 4 M8 7 L8 15"/></svg>
           <span class="label">Wires</span>
         </button>
         <button class="tb-btn active" id="btn-grid" title="Grid">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-            <rect x="2" y="2" width="12" height="12"/>
-            <line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/>
-            <line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/></svg>
           <span class="label">Grid</span>
         </button>
         <button class="tb-btn" id="btn-measure" title="Measure">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-            <path d="M1 11 L11 1 L15 5 L5 15 Z"/>
-            <line x1="4" y1="8" x2="6" y2="10"/><line x1="7" y1="5" x2="9" y2="7"/>
-            <line x1="10" y1="2" x2="12" y2="4"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 11 L11 1 L15 5 L5 15 Z"/><line x1="4" y1="8" x2="6" y2="10"/><line x1="7" y1="5" x2="9" y2="7"/><line x1="10" y1="2" x2="12" y2="4"/></svg>
           <span class="label">Measure</span>
         </button>
         <button class="tb-btn" id="btn-recenter" title="Recenter">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-            <circle cx="8" cy="8" r="3"/>
-            <line x1="8" y1="1" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="15"/>
-            <line x1="1" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="15" y2="8"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><line x1="8" y1="1" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="1" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="15" y2="8"/></svg>
           <span class="label">Recenter</span>
         </button>
         <button class="tb-btn" id="btn-screenshot" title="Capture">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
-            <rect x="1.5" y="4" width="13" height="9" rx="1"/>
-            <circle cx="8" cy="8.5" r="2.5"/>
-            <path d="M5 4 L6 2 L10 2 L11 4"/>
-          </svg>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="4" width="13" height="9" rx="0"/><circle cx="8" cy="8.5" r="2.5"/><path d="M5 4 L6 2 L10 2 L11 4"/></svg>
           <span class="label">Capture</span>
         </button>
       </div>
 
       <div id="dropzone">
-        <div class="drop-card">
-          <div class="drop-eyebrow">// Drop to begin</div>
-          <div class="drop-title">Quick 3D Preview</div>
-          <div class="drop-sub">Drag a model file in, or browse</div>
-          <button class="drop-btn" id="btn-load-2">Choose File</button>
-          <div class="drop-formats">
-            <span>.glb</span>·<span>.gltf</span>·<span>.obj</span>·<span>.fbx</span>·<span>.stl</span>
+        <div class="drop-frame">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+
+          <div class="drop-section-label">
+            <div class="marker"></div>
+            <span>Initialize Viewer</span>
+          </div>
+
+          <div class="drop-headline">
+            3D models <span class="hl">deserve</span> a fast, simple preview.
+          </div>
+          <div class="drop-sub">
+            Drag a model file onto this window or browse to begin. Optimized for quick inspection on desktop and mobile.
+          </div>
+          <div class="drop-actions">
+            <button class="btn-cta" id="btn-load-2">
+              <span>Choose File</span>
+              <span class="arrow">→</span>
+            </button>
+            <button class="btn-secondary" id="btn-info">
+              <span>Supported Formats</span>
+            </button>
+          </div>
+
+          <div class="drop-readout">
+            <div><span class="line-prefix">$ </span><span class="line-cmd">tiko-viewer --await-input</span></div>
+            <div class="formats-list">
+              <span class="fmt">.glb</span><span class="fmt">.gltf</span><span class="fmt">.obj</span><span class="fmt">.fbx</span><span class="fmt">.stl</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div id="measure-readout">
-        <div class="mr-label">Measure</div>
-        <div class="mr-val" id="mr-val">Click two points</div>
-        <div class="mr-hint" id="mr-hint">Tap on the model surface</div>
+        <div class="mr-label">Distance</div>
+        <div class="mr-val" id="mr-val">— units</div>
+        <div class="mr-hint" id="mr-hint">tap two points on model surface</div>
       </div>
 
       <div id="loading"><div class="spinner"></div><span id="loading-text">Loading</span></div>
@@ -530,8 +749,8 @@ pmrem.compileEquirectangularShader();
 let grid = null;
 function makeGrid(size) {
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
-  grid = new THREE.GridHelper(size, Math.min(40, Math.max(10, Math.ceil(size * 2))), 0x5b21b6, 0x2a2a33);
-  grid.material.transparent = true; grid.material.opacity = 0.5;
+  grid = new THREE.GridHelper(size, Math.min(40, Math.max(10, Math.ceil(size * 2))), 0x0F766E, 0x2A2A33);
+  grid.material.transparent = true; grid.material.opacity = 0.55;
   scene.add(grid);
 }
 makeGrid(10);
@@ -567,9 +786,9 @@ function makeGradientEnv(topHex, bottomHex, sunHex) {
 }
 const envPresets = {
   studio:    () => pmrem.fromScene(new RoomEnvironment(), 0.04).texture,
-  sunset:    () => pmrem.fromEquirectangular(makeGradientEnv('#8B5CF6', '#1a0a2a', '#F59E0B')).texture,
-  dawn:      () => pmrem.fromEquirectangular(makeGradientEnv('#22D3EE', '#5B21B6', '#C4B5FD')).texture,
-  night:     () => pmrem.fromEquirectangular(makeGradientEnv('#0A0A0D', '#000000', '#5B21B6')).texture,
+  sunset:    () => pmrem.fromEquirectangular(makeGradientEnv('#22D3EE', '#0a1a22', '#F59E0B')).texture,
+  dawn:      () => pmrem.fromEquirectangular(makeGradientEnv('#22D3EE', '#0F766E', '#a8d4e8')).texture,
+  night:     () => pmrem.fromEquirectangular(makeGradientEnv('#0A0A0D', '#000000', '#0F766E')).texture,
   warehouse: () => pmrem.fromEquirectangular(makeGradientEnv('#888899', '#2A2A33', null)).texture,
   neutral:   () => pmrem.fromEquirectangular(makeGradientEnv('#999999', '#555555', null)).texture,
 };
@@ -596,14 +815,14 @@ function animate() {
   const now = performance.now();
   if (now - lastFpsT >= 1000) {
     const fps = Math.round(frames * 1000 / (now - lastFpsT));
-    document.getElementById('stat-fps').textContent = currentModel ? `${fps} fps` : '';
+    document.getElementById('stat-fps').textContent = currentModel ? `${fps} FPS` : '';
     document.getElementById('s-calls').textContent = currentModel ? renderer.info.render.calls.toString() : '—';
     frames = 0; lastFpsT = now;
   }
 }
 animate();
 
-function toast(msg, ms = 2200) {
+function toast(msg, ms = 2400) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toast._t);
@@ -615,6 +834,11 @@ function setLoading(on, text = 'Loading') {
   el.classList.toggle('show', on);
 }
 function fmt(n) { return n.toLocaleString('en-US'); }
+
+function updateOpStatus(s) {
+  const el = document.querySelector('#op-header .op-status');
+  if (el) el.lastChild.textContent = s;
+}
 
 function frameObject(obj) {
   const box = new THREE.Box3().setFromObject(obj);
@@ -694,23 +918,23 @@ function renderStats() {
 }
 function renderMaterials() {
   const block = document.getElementById('materials-block');
-  document.getElementById('mat-count').textContent = materialsList.length ? `${materialsList.length}` : '';
+  document.getElementById('mat-count').textContent = materialsList.length ? `× ${materialsList.length}` : '';
   if (!materialsList.length) {
-    block.innerHTML = `<div class="empty-state">// no materials</div>`;
+    block.innerHTML = `<div class="empty-state">no materials</div>`;
     return;
   }
   block.innerHTML = materialsList.map(m => `
     <div class="mat-card">
       <div class="mat-head">
-        ${m.color ? `<span class="mat-swatch" style="background:${m.color}"></span>` : `<span class="mat-swatch" style="background:#333"></span>`}
+        <span class="mat-swatch" style="background:${m.color || '#333'}"></span>
         <span class="mat-name">${escapeHTML(m.name)}</span>
         <span class="mat-type">${escapeHTML(m.type || '—')}</span>
       </div>
       <div class="mat-props">
-        ${m.color ? `<span><span class="k">col</span> ${m.color}</span>` : ''}
-        ${m.metalness !== null ? `<span><span class="k">met</span> ${m.metalness}</span>` : ''}
-        ${m.roughness !== null ? `<span><span class="k">rgh</span> ${m.roughness}</span>` : ''}
-        ${m.opacity !== null ? `<span><span class="k">α</span> ${m.opacity}</span>` : ''}
+        ${m.color ? `<div class="row"><span class="k">col</span><span>${m.color}</span></div>` : ''}
+        ${m.metalness !== null ? `<div class="row"><span class="k">met</span><span>${m.metalness}</span></div>` : ''}
+        ${m.roughness !== null ? `<div class="row"><span class="k">rgh</span><span>${m.roughness}</span></div>` : ''}
+        ${m.opacity !== null ? `<div class="row"><span class="k">α</span><span>${m.opacity}</span></div>` : ''}
       </div>
       ${m.textures.length ? `<div class="mat-tex-row">${m.textures.map(t => `<span class="mat-tex">${t}</span>`).join('')}</div>` : ''}
     </div>
@@ -721,7 +945,7 @@ function escapeHTML(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;'
 function resetStats() {
   ['s-tris','s-verts','s-meshes','s-mats','s-tex','s-calls','s-bounds'].forEach(id => document.getElementById(id).textContent = '—');
   document.getElementById('mat-count').textContent = '';
-  document.getElementById('materials-block').innerHTML = `<div class="empty-state">// no model loaded</div>`;
+  document.getElementById('materials-block').innerHTML = `<div class="empty-state">no model loaded</div>`;
   document.getElementById('stat-fps').textContent = '';
 }
 
@@ -734,6 +958,7 @@ async function loadFiles(fileList) {
   if (!primary) { toast('No supported model file'); return; }
 
   setLoading(true, `Loading ${primary.name}`);
+  updateOpStatus('Processing');
   try {
     const ext = primary.name.split('.').pop().toLowerCase();
     let object;
@@ -752,9 +977,11 @@ async function loadFiles(fileList) {
     frameObject(currentModel);
     inspectModel(currentModel);
     document.getElementById('dropzone').style.display = 'none';
+    updateOpStatus('Active');
     toast(`Loaded ${primary.name}`);
   } catch (e) {
     console.error(e);
+    updateOpStatus('Error');
     toast('Failed: ' + (e.message || 'unknown error'), 3500);
   } finally {
     setLoading(false);
@@ -849,12 +1076,12 @@ function updateMeasureReadout() {
   const val = document.getElementById('mr-val');
   const hint = document.getElementById('mr-hint');
   if (measurePoints.length === 0) {
-    val.textContent = 'Click two points'; hint.textContent = 'Tap on the model surface';
+    val.textContent = '— units'; hint.textContent = 'tap two points on model surface';
   } else if (measurePoints.length === 1) {
-    val.textContent = '1 point set'; hint.textContent = 'Tap second point';
+    val.textContent = '1 / 2'; hint.textContent = 'tap second point';
   } else {
     const d = measurePoints[0].distanceTo(measurePoints[1]);
-    val.textContent = `${d.toFixed(4)} units`; hint.textContent = 'Tap again to reset';
+    val.textContent = `${d.toFixed(4)} units`; hint.textContent = 'tap again to reset';
   }
 }
 function addMeasurePoint(pt) {
@@ -893,6 +1120,7 @@ const fileInput = document.getElementById('file-input');
 fileInput.addEventListener('change', e => loadFiles(e.target.files));
 document.getElementById('btn-load').addEventListener('click', () => fileInput.click());
 document.getElementById('btn-load-2').addEventListener('click', () => fileInput.click());
+document.getElementById('btn-info').addEventListener('click', () => toast('Supported: GLB · GLTF · OBJ · FBX · STL'));
 
 const dz = document.getElementById('dropzone');
 ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
