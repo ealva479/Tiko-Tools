@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seamless Texture Maker — Tiko Developments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0A0A0D;
+    --bg2:       #121217;
+    --bg3:       #16161c;
+    --bg4:       #2A2A33;
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.12);
+    --border3:   rgba(255,255,255,0.20);
+    --text:      #F1F1F5;
+    --text2:     #A1A1AA;
+    --text3:     #6B7280;
+    --text4:     #4a4a52;
+
+    --teal:      #14B8A6;
+    --teal2:     #22D3EE;
+    --teal3:     #0F766E;
+    --teal-dim:  rgba(20,184,166,0.12);
+
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+
+    --red:       #EF4444;
+    --gold:      #F59E0B;
+
+    --mono: 'JetBrains Mono', 'DM Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body {
+    height: 100%; background: var(--bg);
+    font-family: var(--sans); color: var(--text);
+    overflow: hidden;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root { display: flex; height: 100vh; flex-direction: column; }
+
+  /* ── REGISTRATION MARKS ──────────────────── */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px;
+    pointer-events: none; z-index: 1000;
+    color: var(--teal); opacity: 0.5;
+  }
+  .reg-mark::before, .reg-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .reg-mark::before { left: 6px; top: 0; width: 1px; height: 14px; }
+  .reg-mark::after  { left: 0; top: 6px; width: 14px; height: 1px; }
+  .reg-tl { top: 8px;    left: 8px; }
+  .reg-tr { top: 8px;    right: 8px; }
+  .reg-bl { bottom: 8px; left: 8px; }
+  .reg-br { bottom: 8px; right: 8px; }
+
+  /* ── TOPBAR ──────────────────────────────── */
+  #topbar {
+    height: 52px; min-height: 52px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    padding: 0 28px;
+    flex-shrink: 0; position: relative;
+    z-index: 10;
+  }
+  #topbar .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding-right: 24px;
+  }
+  .brand-mark {
+    width: 12px; height: 12px;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text);
+  }
+  .brand-divider {
+    width: 1px; background: var(--border2); margin: 12px 0;
+  }
+  #topbar .product {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #topbar .product .arrow { color: var(--text4); }
+  #topbar .sep { flex: 1; }
+  #topbar .meta {
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  #topbar .meta .label-pill {
+    background: var(--teal); color: var(--bg);
+    padding: 3px 7px; font-weight: 500;
+  }
+
+  #workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+  /* ── SIDEBAR ─────────────────────────────── */
+  #sidebar {
+    width: 300px; min-width: 300px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .panel {
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+
+  .panel-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .panel-head .marker {
+    width: 8px; height: 8px; background: var(--teal);
+    flex-shrink: 0;
+  }
+  .panel-head .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
+  }
+  .panel-body {
+    padding: 0 18px 14px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+
+  /* Stat rows */
+  .stat-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 7px 0;
+    font-family: var(--mono); font-size: 11px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .prefix { color: var(--text4); flex-shrink: 0; }
+  .stat-row .lbl {
+    color: var(--text3); flex: 1;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .stat-row .val {
+    color: var(--text); font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-row.accent .val { color: var(--teal2); }
+
+  /* Method rows */
+  .method-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    margin-top: 4px;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .method-row:first-child { margin-top: 0; }
+  .method-row:hover { border-color: var(--border3); }
+  .method-row.active {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+  .method-row .mr-marker {
+    width: 8px; height: 8px;
+    background: var(--text4);
+    flex-shrink: 0; margin-top: 3px;
+    transition: background 0.12s;
+  }
+  .method-row.active .mr-marker { background: var(--teal); }
+  .method-row .mr-info { flex: 1; min-width: 0; }
+  .method-row .mr-name {
+    font-size: 12px; color: var(--text); font-weight: 500;
+    line-height: 1.2;
+  }
+  .method-row .mr-desc {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.04em; margin-top: 3px;
+    text-transform: uppercase;
+  }
+  .method-row.active .mr-desc { color: var(--teal2); }
+
+  /* Sliders */
+  .slider-group {
+    padding: 12px 18px 14px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .slider-item {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .slider-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .slider-label .sl-name { color: var(--text2); }
+  .slider-label .sl-val { color: var(--teal2); font-variant-numeric: tabular-nums; }
+  .slider-item input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px;
+    background: var(--bg4);
+    outline: none;
+    cursor: pointer;
+  }
+  .slider-item input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px;
+    background: var(--teal);
+    cursor: pointer;
+    border: none;
+  }
+  .slider-item input[type=range]::-moz-range-thumb {
+    width: 12px; height: 12px;
+    background: var(--teal);
+    cursor: pointer;
+    border: none;
+    border-radius: 0;
+  }
+  .slider-item input[type=range]:disabled { opacity: 0.35; cursor: not-allowed; }
+  .slider-item.disabled .slider-label { opacity: 0.4; }
+
+  /* Form group */
+  .form-group { padding: 0 18px 14px; }
+
+  /* Primary CTA — bracket-cornered teal */
+  .btn-primary {
+    background: var(--teal); border: none;
+    color: var(--bg); padding: 12px 16px;
+    font-size: 11px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.12em; transition: background 0.12s;
+    text-transform: uppercase; font-weight: 600;
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
+  }
+  .btn-primary::before, .btn-primary::after {
+    content: ''; position: absolute;
+    width: 6px; height: 6px;
+    border: 1px solid var(--bg);
+  }
+  .btn-primary::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-primary::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-primary:hover:not(:disabled) { background: #1cc7b3; }
+  .btn-primary:disabled { background: var(--bg4); color: var(--text4); cursor: not-allowed; }
+  .btn-primary:disabled::before, .btn-primary:disabled::after { border-color: var(--text4); }
+  .btn-primary .arrow { font-family: var(--mono); }
+
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    padding: 11px 16px;
+    font-size: 11px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+    border: 1px solid var(--border2);
+    width: 100%;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-ghost:hover { border-color: var(--text3); color: var(--text); }
+
+  .formats-line {
+    padding: 10px 18px 14px;
+    font-family: var(--mono); font-size: 9px; color: var(--text4);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: center;
+  }
+  .formats-line::before { content: '> '; }
+
+  /* ── MAIN AREA ─────────────────────────── */
+  #main {
+    flex: 1; position: relative; overflow: hidden;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+  }
+  #main::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 90px;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+    border-bottom: 1px solid var(--border);
+    pointer-events: none; z-index: 1;
+  }
+
+  #op-header {
+    position: relative;
+    height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; z-index: 2;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,13,0.7);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    flex-shrink: 0;
+  }
+  #op-header .op-marker { width: 6px; height: 6px; background: var(--teal); }
+  #op-header .op-status {
+    color: var(--teal); margin-left: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #op-header .op-status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  #content {
+    flex: 1; overflow-y: auto; position: relative;
+    z-index: 2;
+    padding: 24px 32px 40px;
+  }
+  #content::-webkit-scrollbar { width: 6px; }
+  #content::-webkit-scrollbar-track { background: var(--bg); }
+  #content::-webkit-scrollbar-thumb { background: var(--border2); }
+  #content::-webkit-scrollbar-thumb:hover { background: var(--border3); }
+
+  /* ── DROPZONE / EMPTY STATE ────────────── */
+  .drop-frame {
+    width: 100%; max-width: 720px;
+    margin: 8px auto 24px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    position: relative;
+  }
+  .corner {
+    position: absolute; width: 10px; height: 10px;
+    color: var(--teal);
+  }
+  .corner::before, .corner::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .corner.tl { top: -1px; left: -1px; }
+  .corner.tl::before { top: 0; left: 0; width: 1px; height: 10px; }
+  .corner.tl::after  { top: 0; left: 0; height: 1px; width: 10px; }
+  .corner.tr { top: -1px; right: -1px; }
+  .corner.tr::before { top: 0; right: 0; width: 1px; height: 10px; }
+  .corner.tr::after  { top: 0; right: 0; height: 1px; width: 10px; }
+  .corner.bl { bottom: -1px; left: -1px; }
+  .corner.bl::before { bottom: 0; left: 0; width: 1px; height: 10px; }
+  .corner.bl::after  { bottom: 0; left: 0; height: 1px; width: 10px; }
+  .corner.br { bottom: -1px; right: -1px; }
+  .corner.br::before { bottom: 0; right: 0; width: 1px; height: 10px; }
+  .corner.br::after  { bottom: 0; right: 0; height: 1px; width: 10px; }
+
+  .drop-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .drop-section-label .marker {
+    width: 8px; height: 8px; background: var(--teal);
+  }
+
+  .drop-headline {
+    padding: 32px 32px 14px;
+    font-size: 32px; font-weight: 600; line-height: 1.1;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .drop-headline .hl { color: var(--teal2); }
+  .drop-sub {
+    padding: 0 32px 24px;
+    font-size: 14px; color: var(--text2); font-weight: 400;
+    max-width: 560px; line-height: 1.5;
+  }
+  .drop-actions {
+    padding: 0 32px 24px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-cta {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .btn-cta::before, .btn-cta::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  .btn-cta::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-cta::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-cta:hover:not(:disabled) { background: #1cc7b3; }
+  .btn-cta:disabled {
+    background: var(--bg4); color: var(--text4); cursor: not-allowed;
+  }
+  .btn-cta:disabled::before, .btn-cta:disabled::after {
+    border-color: var(--text4);
+  }
+  .btn-cta .arrow { font-family: var(--mono); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid var(--border3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+  .drop-readout {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    line-height: 1.7;
+  }
+  .drop-readout .line-prefix { color: var(--text4); }
+  .drop-readout .line-cmd { color: var(--text2); }
+  .drop-readout .formats-list {
+    margin-top: 6px; color: var(--text2);
+  }
+  .drop-readout .formats-list .fmt {
+    color: var(--teal2); display: inline-block; margin-right: 14px;
+  }
+  .drop-readout .formats-list .fmt::before {
+    content: '└─ '; color: var(--text4);
+  }
+
+  .drop-frame.drag-over {
+    border-color: var(--teal);
+    background: rgba(20,184,166,0.04);
+  }
+  .drop-frame.drag-over .corner { color: var(--teal2); }
+
+  /* ── WORK AREA ─────────────────────────── */
+  .work-section {
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .work-section .section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .work-section .section-label .marker {
+    width: 8px; height: 8px; background: var(--teal); flex-shrink: 0;
+  }
+  .work-section .section-label .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+  }
+  .stat-block {
+    background: var(--bg2);
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .stat-block .sb-head {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .stat-block .sb-head::before {
+    content: ''; width: 5px; height: 5px; background: var(--teal);
+    flex-shrink: 0;
+  }
+  .stat-block .sb-val {
+    font-family: var(--mono); font-size: 28px; font-weight: 500;
+    color: var(--text); letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .stat-block.accent .sb-val { color: var(--teal2); }
+
+  /* Texture list */
+  .tex-list { display: flex; flex-direction: column; }
+
+  .tex-item {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: background 0.12s;
+  }
+  .tex-item:last-child { border-bottom: none; }
+  .tex-item:hover { background: rgba(255,255,255,0.015); }
+
+  .tex-thumb {
+    width: 72px; height: 72px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .tex-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .tex-thumb .thumb-status {
+    position: absolute; top: 4px; right: 4px;
+    width: 8px; height: 8px;
+    border: 1px solid var(--text4);
+    background: var(--bg);
+  }
+  .tex-item.processed .thumb-status {
+    background: var(--teal); border-color: var(--teal);
+  }
+  .tex-item.processing .thumb-status {
+    background: var(--gold); border-color: var(--gold);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .tex-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .tex-name {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tex-meta {
+    display: flex; gap: 14px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .tex-meta .m-item { display: flex; gap: 4px; }
+  .tex-meta .m-item .mk { color: var(--text4); }
+  .tex-meta .m-item .mv { color: var(--text2); }
+
+  .tex-method-select {
+    display: flex; gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    width: fit-content;
+    margin-top: 4px;
+  }
+  .tex-method-select button {
+    background: var(--bg3); border: none;
+    color: var(--text3);
+    padding: 5px 10px;
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tex-method-select button:hover { color: var(--text); background: var(--bg4); }
+  .tex-method-select button.active {
+    background: var(--teal); color: var(--bg); font-weight: 600;
+  }
+
+  .tex-actions {
+    display: flex; flex-direction: column; gap: 6px;
+    flex-shrink: 0;
+  }
+  .tex-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    padding: 6px 12px;
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+    min-width: 80px;
+    text-align: center;
+  }
+  .tex-btn:hover { color: var(--text); border-color: var(--border3); }
+  .tex-btn.preview-btn:hover { color: var(--teal); border-color: var(--teal); }
+  .tex-btn.remove-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* Progress */
+  .progress-section {
+    display: none;
+    border: 1px solid var(--teal);
+    background: var(--bg2);
+    margin-bottom: 16px;
+    padding: 16px 18px;
+  }
+  .progress-section.visible { display: block; }
+  .progress-header {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .progress-header .ph-text { display: flex; align-items: center; gap: 8px; }
+  .progress-header .ph-text::before {
+    content: ''; width: 6px; height: 6px; background: var(--teal);
+    box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .progress-header .ph-pct {
+    color: var(--teal2); font-variant-numeric: tabular-nums;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    transition: width 0.3s ease;
+    width: 0%;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: flex; gap: 10px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .action-bar .btn-cta { flex: 2; justify-content: space-between; }
+  .action-bar .btn-secondary { flex: 1; justify-content: center; }
+
+  /* Info readout */
+  .info-readout {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 16px 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    line-height: 1.7;
+  }
+  .info-readout .ir-head {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text2); font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-readout .ir-head::before {
+    content: ''; width: 8px; height: 8px; background: var(--teal);
+  }
+  .info-readout .ir-line { display: block; padding: 2px 0; }
+  .info-readout .ir-line .pfx { color: var(--text4); }
+  .info-readout .ir-line .cmd { color: var(--text); }
+  .info-readout .ir-tags {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    margin-top: 8px;
+  }
+  .info-readout .ir-tag { color: var(--teal2); font-size: 10px; }
+  .info-readout .ir-tag::before { content: '└─ '; color: var(--text4); }
+
+  /* ── PREVIEW MODAL ─────────────────────── */
+  #modal {
+    position: fixed; inset: 0;
+    background: rgba(10,10,13,0.85);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 32px 24px;
+  }
+  #modal.show { display: flex; }
+
+  .modal-frame {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    max-width: 1100px; width: 100%;
+    max-height: calc(100vh - 64px);
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .modal-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text2);
+    flex-shrink: 0;
+  }
+  .modal-head .mh-marker { width: 8px; height: 8px; background: var(--teal); }
+  .modal-head .mh-name { color: var(--text); }
+  .modal-head .mh-sep { color: var(--text4); }
+  .modal-head .mh-close {
+    margin-left: auto;
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--text3);
+    padding: 6px 12px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  .modal-head .mh-close:hover { color: var(--text); border-color: var(--border3); }
+
+  .modal-tabs {
+    display: flex; gap: 1px;
+    background: var(--border);
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-tabs button {
+    background: var(--bg2); border: none;
+    color: var(--text3);
+    padding: 11px 18px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.12s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .modal-tabs button:hover { color: var(--text); }
+  .modal-tabs button.active {
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+  }
+
+  .modal-body {
+    padding: 24px;
+    overflow: auto;
+    flex: 1;
+  }
+  .modal-body::-webkit-scrollbar { width: 6px; height: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .compare-col {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .compare-col .cc-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .compare-col .cc-label::before {
+    content: ''; width: 5px; height: 5px; background: var(--teal);
+  }
+  .compare-col .cc-image {
+    border: 1px solid var(--border2);
+    background:
+      linear-gradient(45deg, #1a1a20 25%, transparent 25%),
+      linear-gradient(-45deg, #1a1a20 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1a1a20 75%),
+      linear-gradient(-45deg, transparent 75%, #1a1a20 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, 10px 0;
+    background-color: var(--bg3);
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+  .compare-col .cc-image img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .tile-preview {
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    aspect-ratio: 1;
+    max-width: 600px; margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+  }
+  .tile-preview .tile-canvas {
+    width: 100%; height: 100%;
+    display: block;
+    image-rendering: auto;
+  }
+  .tile-preview .tile-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to right, transparent calc(100%/3 - 1px), rgba(20,184,166,0.25) calc(100%/3 - 1px), rgba(20,184,166,0.25) calc(100%/3), transparent calc(100%/3)),
+      linear-gradient(to right, transparent calc(200%/3 - 1px), rgba(20,184,166,0.25) calc(200%/3 - 1px), rgba(20,184,166,0.25) calc(200%/3), transparent calc(200%/3)),
+      linear-gradient(to bottom, transparent calc(100%/3 - 1px), rgba(20,184,166,0.25) calc(100%/3 - 1px), rgba(20,184,166,0.25) calc(100%/3), transparent calc(100%/3)),
+      linear-gradient(to bottom, transparent calc(200%/3 - 1px), rgba(20,184,166,0.25) calc(200%/3 - 1px), rgba(20,184,166,0.25) calc(200%/3), transparent calc(200%/3));
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .tile-preview.no-grid .tile-overlay { opacity: 0; }
+
+  .tile-controls {
+    display: flex; justify-content: center; gap: 10px;
+    margin-top: 14px;
+  }
+  .tile-controls .tile-btn {
+    background: transparent; border: 1px solid var(--border2);
+    color: var(--text3);
+    padding: 6px 14px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tile-controls .tile-btn:hover { color: var(--text); border-color: var(--border3); }
+  .tile-controls .tile-btn.active { color: var(--teal); border-color: var(--teal); }
+
+  /* Toast */
+  #toast {
+    position: fixed; top: 64px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--bg2); border: 1px solid var(--teal);
+    color: var(--text); padding: 10px 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 600;
+    pointer-events: none; max-width: calc(100% - 24px); text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── MOBILE ──────────────────────────────── */
+  @media (max-width: 900px) {
+    #topbar { padding: 0 16px; height: 48px; min-height: 48px; }
+    #topbar .product { display: none; }
+    #topbar .meta { gap: 8px; font-size: 9px; }
+    #workspace { flex-direction: column; }
+    #sidebar {
+      width: 100%; min-width: 0; max-height: 42%;
+      border-right: none; border-bottom: 1px solid var(--border);
+      order: 1;
+    }
+    #main { order: 2; min-height: 0; }
+    #content { padding: 18px 16px 32px; }
+    .drop-headline { font-size: 24px; padding: 24px 22px 12px; }
+    .drop-sub, .drop-actions, .drop-readout { padding-left: 22px; padding-right: 22px; }
+    .reg-mark { display: none; }
+    .tex-item { flex-wrap: wrap; }
+    .tex-actions { flex-direction: row; flex: 1 1 100%; }
+    .tex-actions .tex-btn { flex: 1; }
+    .compare-grid { grid-template-columns: 1fr; }
+    #modal { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="reg-mark reg-tl"></div>
+<div class="reg-mark reg-tr"></div>
+<div class="reg-mark reg-bl"></div>
+<div class="reg-mark reg-br"></div>
+
+<div id="root">
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">TIKO</div>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="product">
+      <span class="arrow">/</span>
+      <span>Tools</span>
+      <span class="arrow">/</span>
+      <span>Seamless Texture Maker</span>
+    </div>
+    <div class="sep"></div>
+    <div class="meta">
+      <span class="label-pill">v1.0</span>
+      <span>Tile Generator</span>
+    </div>
+  </div>
+
+  <div id="workspace">
+    <div id="sidebar">
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Default Method</span>
+        </div>
+        <div class="panel-body" id="methodList">
+          <div class="method-row active" data-method="offset">
+            <div class="mr-marker"></div>
+            <div class="mr-info">
+              <div class="mr-name">Offset + Edge Blend</div>
+              <div class="mr-desc">Classic · Fast · Preserves detail</div>
+            </div>
+          </div>
+          <div class="method-row" data-method="mirror">
+            <div class="mr-marker"></div>
+            <div class="mr-info">
+              <div class="mr-name">Mirror / Kaleidoscope</div>
+              <div class="mr-desc">Instant seamless · Can add symmetry</div>
+            </div>
+          </div>
+          <div class="method-row" data-method="frequency">
+            <div class="mr-marker"></div>
+            <div class="mr-info">
+              <div class="mr-name">Frequency Blend</div>
+              <div class="mr-desc">Smoothest · Slower · Best for organic</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Parameters</span>
+        </div>
+        <div class="slider-group">
+          <div class="slider-item" id="sld-blend">
+            <div class="slider-label">
+              <span class="sl-name">Blend Width</span>
+              <span class="sl-val"><span id="val-blend">15</span>%</span>
+            </div>
+            <input type="range" id="inp-blend" min="5" max="50" value="15" step="1">
+          </div>
+          <div class="slider-item" id="sld-feather">
+            <div class="slider-label">
+              <span class="sl-name">Feather</span>
+              <span class="sl-val"><span id="val-feather">50</span>%</span>
+            </div>
+            <input type="range" id="inp-feather" min="0" max="100" value="50" step="1">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Telemetry</span>
+        </div>
+        <div class="panel-body">
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Loaded</span><span class="val" id="s-loaded">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Processed</span><span class="val" id="s-processed">—</span></div>
+          <div class="stat-row accent"><span class="prefix">&gt;</span><span class="lbl">Ready</span><span class="val" id="s-ready">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Size</span><span class="val" id="s-size">—</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Operations</span>
+        </div>
+        <div class="form-group">
+          <button class="btn-primary" id="btn-load">
+            <span>Load Textures</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="form-group" style="padding-top:0;">
+          <button class="btn-ghost" id="btn-clear">Clear All</button>
+        </div>
+        <div class="formats-line">.png · .jpg · .jpeg · .webp</div>
+      </div>
+
+    </div>
+
+    <div id="main">
+      <div id="op-header">
+        <span class="op-marker"></span>
+        <span>Operation 001</span>
+        <span class="op-status" id="opStatus">Standby</span>
+      </div>
+
+      <div id="content">
+
+        <!-- Empty state / dropzone -->
+        <div id="emptyState">
+          <div class="drop-frame" id="dropzone">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+
+            <div class="drop-section-label">
+              <div class="marker"></div>
+              <span>Initialize Tiler</span>
+            </div>
+
+            <div class="drop-headline">
+              Make textures tile <span class="hl">seamlessly</span>, at scale.
+            </div>
+            <div class="drop-sub">
+              Drop one or many images onto this window or browse to begin. Each texture can be processed with a different method — offset blend, mirror, or frequency blend. Results export as a zip.
+            </div>
+            <div class="drop-actions">
+              <button class="btn-cta" id="btn-load-2">
+                <span>Choose Files</span>
+                <span class="arrow">→</span>
+              </button>
+              <button class="btn-secondary" id="btn-info">
+                <span>About Methods</span>
+              </button>
+            </div>
+
+            <div class="drop-readout">
+              <div><span class="line-prefix">$ </span><span class="line-cmd">tiko-tiler --await-input</span></div>
+              <div class="formats-list">
+                <span class="fmt">offset blend</span><span class="fmt">mirror tile</span><span class="fmt">frequency blend</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work area -->
+        <div id="workArea" style="display:none;">
+          <div class="work-section">
+            <div class="section-label">
+              <div class="marker"></div>
+              <span>Batch Summary</span>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-block">
+                <div class="sb-head">Loaded</div>
+                <div class="sb-val" id="statLoaded">0</div>
+              </div>
+              <div class="stat-block">
+                <div class="sb-head">Processed</div>
+                <div class="sb-val" id="statProcessed">0</div>
+              </div>
+              <div class="stat-block accent">
+                <div class="sb-head">Pending</div>
+                <div class="sb-val" id="statPending">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+              <span class="ph-text" id="progressText">Processing</span>
+              <span class="ph-pct" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn-cta" id="processBtn" disabled>
+              <span>Process &amp; Export Zip</span>
+              <span class="arrow">→</span>
+            </button>
+            <button class="btn-secondary" id="addMoreBtn">
+              <span>Add More</span>
+            </button>
+          </div>
+
+          <div class="work-section">
+            <div class="section-label">
+              <div class="marker"></div>
+              <span>Texture Queue</span>
+              <span class="count" id="queue-count"></span>
+            </div>
+            <div class="tex-list" id="texList"></div>
+          </div>
+
+          <div class="info-readout">
+            <div class="ir-head">Method Guide</div>
+            <div class="ir-line"><span class="pfx">$ </span><span class="cmd">choose per texture</span></div>
+            <div class="ir-tags">
+              <span class="ir-tag">offset — shifts by 50% and blends the visible seam</span>
+              <span class="ir-tag">mirror — reflects the image into a 2×2 tile</span>
+              <span class="ir-tag">frequency — soft radial falloff on edges for organic textures</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
+<div id="toast"></div>
+
+<!-- Preview modal -->
+<div id="modal">
+  <div class="modal-frame">
+    <div class="modal-head">
+      <div class="mh-marker"></div>
+      <span>Preview</span>
+      <span class="mh-sep">·</span>
+      <span class="mh-name" id="modalName">—</span>
+      <button class="mh-close" id="modalClose">Close</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="active" data-tab="compare">Side by Side</button>
+      <button data-tab="tile">3×3 Tiled</button>
+    </div>
+    <div class="modal-body">
+      <div id="tabCompare">
+        <div class="compare-grid">
+          <div class="compare-col">
+            <div class="cc-label">Original</div>
+            <div class="cc-image"><img id="imgOriginal" alt=""></div>
+          </div>
+          <div class="compare-col">
+            <div class="cc-label">Seamless</div>
+            <div class="cc-image"><img id="imgSeamless" alt=""></div>
+          </div>
+        </div>
+      </div>
+      <div id="tabTile" style="display:none;">
+        <div class="tile-preview" id="tilePreview">
+          <canvas class="tile-canvas" id="tileCanvas"></canvas>
+          <div class="tile-overlay"></div>
+        </div>
+        <div class="tile-controls">
+          <button class="tile-btn active" id="btnGridToggle">Show Tile Grid</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+  // ── State ─────────────────────────────────
+  const textures = new Map();        // id -> { id, file, img, width, height, method, seamless (blob), seamlessURL }
+  let currentMethod = 'offset';
+  let blendPct = 15;
+  let featherPct = 50;
+  let idCounter = 0;
+  let currentPreviewId = null;
+
+  // ── Toast ─────────────────────────────────
+  let toastTimer = null;
+  function toast(msg, ms = 2200) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+  }
+  function setOpStatus(s) { document.getElementById('opStatus').textContent = s; }
+
+  // ── Method selection ──────────────────────
+  document.querySelectorAll('.method-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.method-row').forEach(c => c.classList.remove('active'));
+      row.classList.add('active');
+      currentMethod = row.dataset.method;
+      renderQueue();
+    });
+  });
+
+  // ── Sliders ───────────────────────────────
+  const blendInput = document.getElementById('inp-blend');
+  const featherInput = document.getElementById('inp-feather');
+  blendInput.addEventListener('input', e => {
+    blendPct = parseInt(e.target.value, 10);
+    document.getElementById('val-blend').textContent = blendPct;
+    invalidateAllProcessed();
+  });
+  featherInput.addEventListener('input', e => {
+    featherPct = parseInt(e.target.value, 10);
+    document.getElementById('val-feather').textContent = featherPct;
+    invalidateAllProcessed();
+  });
+
+  function invalidateAllProcessed() {
+    let any = false;
+    textures.forEach(t => {
+      if (t.seamless) {
+        if (t.seamlessURL) URL.revokeObjectURL(t.seamlessURL);
+        t.seamless = null; t.seamlessURL = null;
+        any = true;
+      }
+    });
+    if (any) renderQueue();
+  }
+
+  // ── File loading ──────────────────────────
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('btn-load').addEventListener('click', () => fileInput.click());
+  document.getElementById('btn-load-2').addEventListener('click', () => fileInput.click());
+  document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+  document.getElementById('btn-info').addEventListener('click', () => {
+    toast('Offset · Mirror · Frequency — pick per texture from the queue', 3200);
+  });
+
+  fileInput.addEventListener('change', e => {
+    handleFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  const dz = document.getElementById('dropzone');
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); dz.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+  }));
+  dz.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+  window.addEventListener('dragover', e => {
+    if (textures.size > 0) e.preventDefault();
+  });
+  window.addEventListener('drop', e => {
+    if (textures.size === 0) return;
+    e.preventDefault();
+    if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files);
+  });
+
+  function handleFiles(files) {
+    let queued = 0;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      queued++;
+      const id = 'tex_' + (++idCounter);
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          textures.set(id, {
+            id, file, img,
+            width: img.width, height: img.height,
+            method: currentMethod,
+            seamless: null, seamlessURL: null,
+            processing: false
+          });
+          renderQueue();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (queued > 0) {
+      setOpStatus('Active');
+      toast(`Loaded ${queued} file${queued !== 1 ? 's' : ''}`);
+    } else {
+      toast('No images found', 2500);
+    }
+  }
+
+  // ── Render queue ──────────────────────────
+  function renderQueue() {
+    const empty = document.getElementById('emptyState');
+    const work  = document.getElementById('workArea');
+
+    if (textures.size === 0) {
+      empty.style.display = 'block';
+      work.style.display = 'none';
+      ['s-loaded','s-processed','s-ready','s-size'].forEach(id =>
+        document.getElementById(id).textContent = '—');
+      setOpStatus('Standby');
+      return;
+    }
+
+    empty.style.display = 'none';
+    work.style.display = 'block';
+
+    let processed = 0;
+    let totalPixels = 0;
+
+    const listHTML = Array.from(textures.values()).map(t => {
+      const isProcessed = !!t.seamless;
+      if (isProcessed) processed++;
+      totalPixels += t.width * t.height;
+      const kb = Math.round(t.file.size / 1024);
+      const statusClass = t.processing ? 'processing' : (isProcessed ? 'processed' : '');
+      return `
+        <div class="tex-item ${statusClass}" data-id="${t.id}">
+          <div class="tex-thumb">
+            <img src="${t.img.src}" alt="">
+            <div class="thumb-status"></div>
+          </div>
+          <div class="tex-info">
+            <div class="tex-name">${escapeHtml(t.file.name)}</div>
+            <div class="tex-meta">
+              <div class="m-item"><span class="mk">DIM</span><span class="mv">${t.width}×${t.height}</span></div>
+              <div class="m-item"><span class="mk">SIZE</span><span class="mv">${kb} KB</span></div>
+              <div class="m-item"><span class="mk">STATE</span><span class="mv">${t.processing ? 'processing' : (isProcessed ? 'ready' : 'queued')}</span></div>
+            </div>
+            <div class="tex-method-select" data-id="${t.id}">
+              <button data-m="offset" class="${t.method === 'offset' ? 'active' : ''}">Offset</button>
+              <button data-m="mirror" class="${t.method === 'mirror' ? 'active' : ''}">Mirror</button>
+              <button data-m="frequency" class="${t.method === 'frequency' ? 'active' : ''}">Frequency</button>
+            </div>
+          </div>
+          <div class="tex-actions">
+            <button class="tex-btn preview-btn" data-action="preview" ${isProcessed ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}>Preview</button>
+            <button class="tex-btn" data-action="download" ${isProcessed ? '' : 'disabled style="opacity:0.35;cursor:not-allowed;"'}>Download</button>
+            <button class="tex-btn remove-btn" data-action="remove">Remove</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const container = document.getElementById('texList');
+    container.innerHTML = listHTML;
+    document.getElementById('queue-count').textContent = `${textures.size} item${textures.size !== 1 ? 's' : ''}`;
+
+    // Wire method selectors
+    container.querySelectorAll('.tex-method-select').forEach(sel => {
+      const id = sel.dataset.id;
+      sel.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = textures.get(id); if (!t) return;
+          if (t.method === btn.dataset.m) return;
+          t.method = btn.dataset.m;
+          if (t.seamless) {
+            if (t.seamlessURL) URL.revokeObjectURL(t.seamlessURL);
+            t.seamless = null; t.seamlessURL = null;
+          }
+          renderQueue();
+        });
+      });
+    });
+
+    // Wire per-texture actions
+    container.querySelectorAll('.tex-btn').forEach(btn => {
+      const parent = btn.closest('.tex-item');
+      const id = parent.dataset.id;
+      const action = btn.dataset.action;
+      btn.addEventListener('click', () => {
+        if (action === 'remove') removeTexture(id);
+        else if (action === 'preview') openPreview(id);
+        else if (action === 'download') downloadSingle(id);
+      });
+    });
+
+    // Stats
+    document.getElementById('statLoaded').textContent    = textures.size;
+    document.getElementById('statProcessed').textContent = processed;
+    document.getElementById('statPending').textContent   = textures.size - processed;
+
+    document.getElementById('s-loaded').textContent    = textures.size;
+    document.getElementById('s-processed').textContent = processed;
+    document.getElementById('s-ready').textContent     = processed;
+    document.getElementById('s-size').textContent      = formatPixels(totalPixels);
+
+    document.getElementById('processBtn').disabled = textures.size === 0;
+  }
+
+  function formatPixels(n) {
+    if (n === 0) return '—';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + ' MP';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + ' KP';
+    return n + ' px';
+  }
+
+  function removeTexture(id) {
+    const t = textures.get(id);
+    if (!t) return;
+    if (t.seamlessURL) URL.revokeObjectURL(t.seamlessURL);
+    textures.delete(id);
+    renderQueue();
+  }
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    if (textures.size === 0) return;
+    textures.forEach(t => { if (t.seamlessURL) URL.revokeObjectURL(t.seamlessURL); });
+    textures.clear();
+    fileInput.value = '';
+    renderQueue();
+    toast('Cleared');
+  });
+
+  // ── SEAMLESS ALGORITHMS ───────────────────
+  // Shared: load source image into a canvas
+  function imgToCanvas(img) {
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    return c;
+  }
+
+  // Offset + edge blend
+  // 1) Shift the image by 50% (wrap). This puts the original seams in the middle.
+  // 2) Blend a cross-shaped band over the central seams using feathered alpha.
+  function makeOffsetSeamless(img, blendPctV, featherPctV) {
+    const w = img.width, h = img.height;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    // Step 1: offset by 50% with wrap
+    const halfW = Math.floor(w / 2), halfH = Math.floor(h / 2);
+    // Draw four quadrants swapped:
+    //  source: [TL TR / BL BR]  ->  out: [BR BL / TR TL]
+    ctx.drawImage(img, 0, 0, w - halfW, h - halfH, halfW, halfH, w - halfW, h - halfH); // TL -> BR
+    ctx.drawImage(img, w - halfW, 0, halfW, h - halfH, 0, halfH, halfW, h - halfH);     // TR -> BL
+    ctx.drawImage(img, 0, h - halfH, w - halfW, halfH, halfW, 0, w - halfW, halfH);     // BL -> TR
+    ctx.drawImage(img, w - halfW, h - halfH, halfW, halfH, 0, 0, halfW, halfH);         // BR -> TL
+
+    // Step 2: sample blend band pixels and feather them across the central seams.
+    // Band thickness (total, centered on the seam)
+    const bandW = Math.max(2, Math.round(w * blendPctV / 100));
+    const bandH = Math.max(2, Math.round(h * blendPctV / 100));
+
+    // Read current (offset) pixels
+    const offsetData = ctx.getImageData(0, 0, w, h);
+
+    // Read source original pixels (for the opposite-edge content we blend in)
+    const srcCanvas = imgToCanvas(img);
+    const srcData = srcCanvas.getContext('2d').getImageData(0, 0, w, h);
+
+    // feather controls how quickly alpha ramps up from the seam toward the center
+    // featherPct 0 -> very sharp blend (near-binary), 100 -> very smooth
+    const feather = Math.max(0.01, featherPctV / 100);
+
+    // For each pixel in the band, compute a weight based on its distance to the
+    // nearest vertical or horizontal central seam. Higher weight = more blending
+    // of the "opposite half" from the source (which reintroduces smooth gradient
+    // across the seam that was created by the offset).
+    const seamX = halfW; // x at central vertical seam (in offset image)
+    const seamY = halfH; // y at central horizontal seam
+
+    const data = offsetData.data;
+    const src  = srcData.data;
+
+    // Precompute weights along x and y: 1 at seam center, 0 at band edge
+    function triWeight(d, halfBand) {
+      if (d >= halfBand) return 0;
+      const t = 1 - (d / halfBand); // 0..1
+      // apply feather curve: higher feather = smoother falloff (cosine)
+      const smooth = 0.5 - 0.5 * Math.cos(t * Math.PI);
+      return smooth * feather + t * (1 - feather);
+    }
+
+    const halfBandX = bandW / 2;
+    const halfBandY = bandH / 2;
+
+    // Source pixel lookup: we blend with the pixel from the *source* image
+    // shifted by (-halfW, -halfH) (i.e., the version of this location in the
+    // un-offset source). That means:
+    //   srcX = (x + halfW) % w
+    //   srcY = (y + halfH) % h
+    for (let y = 0; y < h; y++) {
+      const dy = Math.abs(y - seamY);
+      const wy = triWeight(dy, halfBandY);
+      for (let x = 0; x < w; x++) {
+        const dx = Math.abs(x - seamX);
+        const wx = triWeight(dx, halfBandX);
+        if (wx <= 0 && wy <= 0) continue;
+        // Combine weights: use max so the cross shape fades properly
+        const w0 = Math.max(wx, wy);
+        // Map to a gentler half-weight so it's a blend, not a replace
+        const mix = w0 * 0.5;
+
+        const srcX = (x + halfW) % w;
+        const srcY = (y + halfH) % h;
+        const si = (srcY * w + srcX) * 4;
+        const di = (y * w + x) * 4;
+
+        data[di]   = data[di]   * (1 - mix) + src[si]   * mix;
+        data[di+1] = data[di+1] * (1 - mix) + src[si+1] * mix;
+        data[di+2] = data[di+2] * (1 - mix) + src[si+2] * mix;
+        // alpha left as-is (assume 255)
+      }
+    }
+
+    ctx.putImageData(offsetData, 0, 0);
+    return out;
+  }
+
+  // Mirror / kaleidoscope: reflect the source into a 2x2 quad.
+  // Output is the full 2x2 mirrored tile scaled back down to the original
+  // dimensions, keeping the same output size as the input.
+  function makeMirrorSeamless(img) {
+    const w = img.width, h = img.height;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Build the 2x2 mirrored tile at double size, then draw into output scaled.
+    const big = document.createElement('canvas');
+    big.width = w * 2; big.height = h * 2;
+    const bctx = big.getContext('2d');
+
+    // TL: original
+    bctx.drawImage(img, 0, 0, w, h);
+    // TR: horizontally flipped
+    bctx.save();
+    bctx.translate(w * 2, 0); bctx.scale(-1, 1);
+    bctx.drawImage(img, 0, 0, w, h);
+    bctx.restore();
+    // BL: vertically flipped
+    bctx.save();
+    bctx.translate(0, h * 2); bctx.scale(1, -1);
+    bctx.drawImage(img, 0, 0, w, h);
+    bctx.restore();
+    // BR: both flipped
+    bctx.save();
+    bctx.translate(w * 2, h * 2); bctx.scale(-1, -1);
+    bctx.drawImage(img, 0, 0, w, h);
+    bctx.restore();
+
+    // Scale the 2x2 result back down to original size
+    ctx.drawImage(big, 0, 0, w * 2, h * 2, 0, 0, w, h);
+    return out;
+  }
+
+  // Frequency-domain-ish blend — approximation via radial feather.
+  // A true 2D FFT blend is overkill for the web; instead we do a soft radial
+  // falloff where the pixel near the edges is crossfaded with its wrapped
+  // opposite-edge counterpart. This preserves mid/low-frequency content while
+  // smoothly resolving seams. Feather controls how aggressive the falloff is.
+  function makeFrequencySeamless(img, blendPctV, featherPctV) {
+    const w = img.width, h = img.height;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ctx = out.getContext('2d');
+
+    const srcCanvas = imgToCanvas(img);
+    const srcData = srcCanvas.getContext('2d').getImageData(0, 0, w, h);
+    const src = srcData.data;
+
+    const outData = ctx.createImageData(w, h);
+    const data = outData.data;
+
+    // Edge bandwidth: larger blend = wider soft zone
+    const edge = Math.max(2, Math.round(Math.min(w, h) * blendPctV / 100));
+    const feather = Math.max(0.2, featherPctV / 100 + 0.2); // 0.2..1.2
+
+    // Compute per-pixel weight: 1 in center, 0 at the very edge, falling off
+    // smoothly within `edge` pixels of any border.
+    function edgeWeight(x, y) {
+      const dx = Math.min(x, w - 1 - x);
+      const dy = Math.min(y, h - 1 - y);
+      const d = Math.min(dx, dy);
+      if (d >= edge) return 1;
+      const t = d / edge; // 0 at edge, 1 at band inner
+      // smootherstep with feather shaping
+      const s = t * t * (3 - 2 * t);
+      return Math.pow(s, 1 / feather);
+    }
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const wgt = edgeWeight(x, y);
+        // "opposite" pixel: wrap around by half the image so edges align with
+        // what would be on the other side when tiling
+        const ox = (x + (w >> 1)) % w;
+        const oy = (y + (h >> 1)) % h;
+        const i  = (y * w + x) * 4;
+        const oi = (oy * w + ox) * 4;
+
+        // Blend: center-weight keeps interior detail, edges take opposite-side
+        // content so they seam match.
+        data[i]   = src[i]   * wgt + src[oi]   * (1 - wgt);
+        data[i+1] = src[i+1] * wgt + src[oi+1] * (1 - wgt);
+        data[i+2] = src[i+2] * wgt + src[oi+2] * (1 - wgt);
+        data[i+3] = 255;
+      }
+    }
+
+    ctx.putImageData(outData, 0, 0);
+    return out;
+  }
+
+  async function processTexture(t) {
+    t.processing = true;
+    renderQueue();
+    // Let UI paint
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+
+    let canvas;
+    if (t.method === 'offset') {
+      canvas = makeOffsetSeamless(t.img, blendPct, featherPct);
+    } else if (t.method === 'mirror') {
+      canvas = makeMirrorSeamless(t.img);
+    } else {
+      canvas = makeFrequencySeamless(t.img, blendPct, featherPct);
+    }
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    t.seamless = blob;
+    t.seamlessURL = URL.createObjectURL(blob);
+    t.processing = false;
+    renderQueue();
+  }
+
+  // ── Batch process + zip ───────────────────
+  document.getElementById('processBtn').addEventListener('click', async () => {
+    const progressSection = document.getElementById('progressSection');
+    const progressFill    = document.getElementById('progressFill');
+    const progressText    = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    const processBtn      = document.getElementById('processBtn');
+
+    const queue = Array.from(textures.values());
+    if (queue.length === 0) return;
+
+    progressSection.classList.add('visible');
+    processBtn.disabled = true;
+    setOpStatus('Processing');
+
+    let done = 0;
+    for (const t of queue) {
+      const pct = (done / queue.length) * 100;
+      progressFill.style.width = pct + '%';
+      progressText.textContent = `Processing ${t.file.name}`;
+      progressPercent.textContent = Math.round(pct) + '%';
+
+      // Always reprocess to reflect any param changes
+      if (t.seamlessURL) URL.revokeObjectURL(t.seamlessURL);
+      t.seamless = null; t.seamlessURL = null;
+      await processTexture(t);
+      done++;
+    }
+
+    // Build zip
+    progressText.textContent = 'Packing zip';
+    progressPercent.textContent = '100%';
+    progressFill.style.width = '100%';
+
+    const zip = new JSZip();
+    queue.forEach(t => {
+      const base = t.file.name.replace(/\.[^/.]+$/, '');
+      const suffix = '_seamless_' + t.method;
+      zip.file(`${base}${suffix}.png`, t.seamless);
+    });
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.href = url;
+    a.download = `tiko-seamless-${stamp}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    progressSection.classList.remove('visible');
+    progressFill.style.width = '0%';
+    processBtn.disabled = false;
+    setOpStatus('Active');
+
+    toast(`Exported ${queue.length} texture${queue.length !== 1 ? 's' : ''}`);
+  });
+
+  // Single download
+  async function downloadSingle(id) {
+    const t = textures.get(id);
+    if (!t || !t.seamless) return;
+    const base = t.file.name.replace(/\.[^/.]+$/, '');
+    const a = document.createElement('a');
+    a.href = t.seamlessURL;
+    a.download = `${base}_seamless_${t.method}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  // ── Preview modal ─────────────────────────
+  const modal = document.getElementById('modal');
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+  });
+
+  document.querySelectorAll('.modal-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.modal-tabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.getElementById('tabCompare').style.display = tab === 'compare' ? 'block' : 'none';
+      document.getElementById('tabTile').style.display    = tab === 'tile' ? 'block' : 'none';
+      if (tab === 'tile' && currentPreviewId) drawTilePreview(currentPreviewId);
+    });
+  });
+
+  document.getElementById('btnGridToggle').addEventListener('click', e => {
+    const preview = document.getElementById('tilePreview');
+    preview.classList.toggle('no-grid');
+    e.currentTarget.classList.toggle('active', !preview.classList.contains('no-grid'));
+    e.currentTarget.textContent = preview.classList.contains('no-grid') ? 'Show Tile Grid' : 'Hide Tile Grid';
+  });
+
+  function openPreview(id) {
+    const t = textures.get(id);
+    if (!t || !t.seamless) return;
+    currentPreviewId = id;
+
+    document.getElementById('modalName').textContent = t.file.name;
+    document.getElementById('imgOriginal').src = t.img.src;
+    document.getElementById('imgSeamless').src = t.seamlessURL;
+
+    // Reset to compare tab
+    document.querySelectorAll('.modal-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelector('.modal-tabs button[data-tab="compare"]').classList.add('active');
+    document.getElementById('tabCompare').style.display = 'block';
+    document.getElementById('tabTile').style.display    = 'none';
+
+    modal.classList.add('show');
+  }
+
+  function closeModal() {
+    modal.classList.remove('show');
+    currentPreviewId = null;
+  }
+
+  function drawTilePreview(id) {
+    const t = textures.get(id);
+    if (!t || !t.seamless) return;
+    const canvas = document.getElementById('tileCanvas');
+    // Fit canvas to its container's actual size (keep it a power-of-two friendly size)
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const size = Math.max(300, Math.min(900, Math.floor(rect.width)));
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const tile = size / 3;
+    const img = new Image();
+    img.onload = () => {
+      for (let ty = 0; ty < 3; ty++) {
+        for (let tx = 0; tx < 3; tx++) {
+          ctx.drawImage(img, tx * tile, ty * tile, tile, tile);
+        }
+      }
+    };
+    img.src = t.seamlessURL;
+  }
+
+  // ── Helpers ───────────────────────────────
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Initial
+  renderQueue();
+</script>
+</body>
+</html>
