@@ -1,1098 +1,1324 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Texture Channel Packer Pro - Tiko Tools</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            /* Foundation */
-            --bg-primary: #0A0A0D;
-            --bg-secondary: #121217;
-            --bg-tertiary: #2A2A33;
-            
-            /* Primary Accent - Teal (Main brand color) */
-            --teal-main: #14B8A6;
-            --teal-bright: #22D3EE;
-            --teal-deep: #0F766E;
-            
-            /* Secondary Accent - Purple (Minimal use) */
-            --purple-main: #8B5CF6;
-            --purple-hover: #A855F7;
-            --purple-deep: #5B21B6;
-            
-            /* Text */
-            --white: #F1F1F5;
-            --gray-text: #A1A1AA;
-            --gray-light: #E5E7EB;
-            
-            /* Atmospheric */
-            --chrome-silver: #C0C0C8;
-            --cool-fog: #6B7280;
-            
-            /* Gradients - Teal dominant */
-            --gradient-primary: linear-gradient(135deg, #14B8A6 0%, #22D3EE 100%);
-            --gradient-neon: linear-gradient(135deg, #22D3EE 0%, #14B8A6 100%);
-            --gradient-dark: linear-gradient(135deg, #0A0A0D 0%, #121217 50%, #2A2A33 100%);
-            --gradient-card: linear-gradient(135deg, #121217 0%, #0F0F12 100%);
-            --gradient-accent: linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #22D3EE 100%);
-            
-            /* Chrome gradient */
-            --chrome: linear-gradient(135deg, #C0C0C8 0%, #F1F1F5 50%, #C0C0C8 100%);
-            
-            /* Glows - Teal dominant */
-            --glow-teal: 0 0 30px rgba(20, 184, 166, 0.5);
-            --glow-teal-strong: 0 0 40px rgba(34, 211, 238, 0.6);
-            --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
-            
-            /* Shadows */
-            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
-            --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.7);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--white);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--gradient-card);
-            border-radius: 20px;
-            border: 1px solid rgba(20, 184, 166, 0.1);
-            padding: 48px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        h1 {
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.02em;
-        }
-
-        .subtitle {
-            color: var(--gray-text);
-            font-size: 16px;
-            font-weight: 400;
-        }
-
-        .section {
-            background: var(--bg-secondary);
-            border: 1px solid rgba(20, 184, 166, 0.15);
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--white);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-icon {
-            font-size: 24px;
-            filter: drop-shadow(0 0 10px rgba(20, 184, 166, 0.4));
-        }
-
-        .engine-presets {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .preset-card {
-            background: var(--bg-tertiary);
-            border: 2px solid rgba(20, 184, 166, 0.2);
-            border-radius: 12px;
-            padding: 24px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .preset-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .preset-card:hover {
-            border-color: var(--teal-main);
-            transform: translateY(-4px);
-            box-shadow: var(--glow-teal);
-        }
-
-        .preset-card:hover::before {
-            left: 100%;
-        }
-
-        .preset-card.active {
-            border-color: var(--teal-bright);
-            background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(34, 211, 238, 0.1));
-            box-shadow: var(--glow-teal);
-        }
-
-        .preset-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .preset-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--white);
-            margin-bottom: 8px;
-        }
-
-        .preset-mapping {
-            font-size: 12px;
-            color: var(--gray-text);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .upload-zone {
-            border: 2px dashed rgba(20, 184, 166, 0.3);
-            border-radius: 16px;
-            padding: 56px;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(20, 184, 166, 0.02), rgba(34, 211, 238, 0.01));
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 32px;
-            position: relative;
-        }
-
-        .upload-zone::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 2px;
-            background: var(--gradient-primary);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .upload-zone:hover::before,
-        .upload-zone.drag-over::before {
-            opacity: 1;
-        }
-
-        .upload-zone:hover,
-        .upload-zone.drag-over {
-            background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(34, 211, 238, 0.05));
-            box-shadow: var(--glow-teal);
-            transform: scale(1.01);
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            filter: drop-shadow(0 0 20px rgba(20, 184, 166, 0.4));
-        }
-
-        .upload-text {
-            color: var(--white);
-            font-size: 18px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .upload-subtext {
-            color: var(--gray-text);
-            font-size: 14px;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .texture-sets {
-            display: none;
-        }
-
-        .texture-sets.visible {
-            display: block;
-        }
-
-        .texture-set {
-            background: var(--bg-tertiary);
-            border: 1px solid rgba(20, 184, 166, 0.15);
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .texture-set:hover {
-            border-color: rgba(20, 184, 166, 0.3);
-            box-shadow: 0 4px 20px rgba(20, 184, 166, 0.1);
-        }
-
-        .set-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(20, 184, 166, 0.1);
-        }
-
-        .set-name {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--white);
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .remove-set {
-            background: transparent;
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #EF4444;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: 500;
-        }
-
-        .remove-set:hover {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: #EF4444;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .channel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .channel-card {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(20, 184, 166, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .channel-card.detected {
-            border-color: var(--teal-main);
-            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(34, 211, 238, 0.05));
-            box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
-        }
-
-        .channel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .channel-name {
-            font-weight: 500;
-            color: var(--white);
-            font-size: 13px;
-        }
-
-        .channel-badge {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .badge-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .badge-green { background: rgba(20, 184, 166, 0.15); color: var(--teal-bright); border: 1px solid rgba(20, 184, 166, 0.3); }
-        .badge-blue { background: rgba(34, 211, 238, 0.15); color: var(--teal-bright); border: 1px solid rgba(34, 211, 238, 0.3); }
-        .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
-
-        .channel-file {
-            font-size: 12px;
-            color: var(--gray-text);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .channel-file.empty {
-            font-style: italic;
-            color: var(--cool-fog);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-item {
-            background: var(--bg-tertiary);
-            border: 1px solid rgba(20, 184, 166, 0.2);
-            border-radius: 16px;
-            padding: 28px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .stat-item:hover {
-            border-color: var(--teal-main);
-            box-shadow: var(--glow-teal);
-            transform: translateY(-2px);
-        }
-
-        .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: var(--gray-text);
-            font-weight: 500;
-        }
-
-        .controls {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 18px 36px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: var(--gradient-primary);
-            color: var(--bg-primary);
-            box-shadow: var(--glow-teal);
-        }
-
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn-primary:hover:not(:disabled)::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--gradient-neon);
-            box-shadow: var(--glow-teal-strong);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--white);
-            border: 1px solid rgba(20, 184, 166, 0.3);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--teal-deep);
-            border-color: var(--teal-main);
-            box-shadow: var(--glow-teal);
-        }
-
-        .progress-section {
-            display: none;
-            margin: 32px 0;
-        }
-
-        .progress-section.visible {
-            display: block;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: var(--gray-text);
-        }
-
-        .progress-bar {
-            height: 12px;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid rgba(20, 184, 166, 0.2);
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            transition: width 0.3s ease;
-            width: 0%;
-            box-shadow: var(--glow-teal);
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .info-box {
-            background: var(--bg-tertiary);
-            border-left: 3px solid var(--teal-main);
-            padding: 24px;
-            border-radius: 12px;
-            margin-top: 32px;
-            font-size: 14px;
-            color: var(--gray-text);
-            border: 1px solid rgba(20, 184, 166, 0.15);
-        }
-
-        .info-box strong {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--white);
-            font-size: 15px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--gray-text);
-        }
-
-        .empty-state-icon {
-            font-size: 72px;
-            margin-bottom: 24px;
-            opacity: 0.3;
-            filter: drop-shadow(0 0 20px rgba(20, 184, 166, 0.2));
-        }
-
-        .empty-state-text {
-            font-size: 18px;
-            color: var(--white);
-            margin-bottom: 8px;
-        }
-
-        .success-toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--gradient-primary);
-            color: var(--bg-primary);
-            padding: 20px 32px;
-            border-radius: 12px;
-            box-shadow: var(--glow-teal-strong);
-            font-weight: 600;
-            font-size: 15px;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
-        }
-
-        .success-toast.visible {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 32px 24px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
-
-            .channel-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .engine-presets {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Texture Channel Packer — Tiko Developments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0A0A0D;
+    --bg2:       #121217;
+    --bg3:       #16161c;
+    --bg4:       #2A2A33;
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.12);
+    --border3:   rgba(255,255,255,0.20);
+    --text:      #F1F1F5;
+    --text2:     #A1A1AA;
+    --text3:     #6B7280;
+    --text4:     #4a4a52;
+
+    --teal:      #14B8A6;
+    --teal2:     #22D3EE;
+    --teal3:     #0F766E;
+    --teal-dim:  rgba(20,184,166,0.12);
+
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+    --purple3:   #5B21B6;
+    --purple-dim: rgba(139,92,246,0.12);
+
+    --red:       #EF4444;
+    --gold:      #F59E0B;
+
+    --mono: 'JetBrains Mono', 'DM Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body {
+    height: 100%; background: var(--bg);
+    font-family: var(--sans); color: var(--text);
+    overflow: hidden;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Stripe pattern utility */
+  .stripes {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+
+  #root { display: flex; height: 100vh; flex-direction: column; }
+
+  /* ── REGISTRATION MARKS ──────────────────── */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px;
+    pointer-events: none; z-index: 1000;
+    color: var(--teal); opacity: 0.5;
+  }
+  .reg-mark::before, .reg-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .reg-mark::before { left: 6px; top: 0; width: 1px; height: 14px; }
+  .reg-mark::after  { left: 0; top: 6px; width: 14px; height: 1px; }
+  .reg-tl { top: 8px;    left: 8px; }
+  .reg-tr { top: 8px;    right: 8px; }
+  .reg-bl { bottom: 8px; left: 8px; }
+  .reg-br { bottom: 8px; right: 8px; }
+
+  /* ── TOPBAR ──────────────────────────────── */
+  #topbar {
+    height: 52px; min-height: 52px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    padding: 0 28px;
+    flex-shrink: 0; position: relative;
+    z-index: 10;
+  }
+  #topbar .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding-right: 24px;
+  }
+  .brand-mark {
+    width: 12px; height: 12px;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text);
+  }
+  .brand-divider {
+    width: 1px; background: var(--border2); margin: 12px 0;
+  }
+  #topbar .product {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #topbar .product .arrow { color: var(--text4); }
+  #topbar .sep { flex: 1; }
+  #topbar .meta {
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  #topbar .meta .label-pill {
+    background: var(--teal); color: var(--bg);
+    padding: 3px 7px; font-weight: 500;
+  }
+
+  #workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+  /* ── SIDEBAR ─────────────────────────────── */
+  #sidebar {
+    width: 300px; min-width: 300px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .panel {
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+
+  .panel-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .panel-head .marker {
+    width: 8px; height: 8px; background: var(--teal);
+    flex-shrink: 0;
+  }
+  .panel-head .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
+  }
+  .panel-body {
+    padding: 0 18px 14px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+
+  /* Stat rows — terminal style */
+  .stat-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 7px 0;
+    font-family: var(--mono); font-size: 11px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .prefix { color: var(--text4); flex-shrink: 0; }
+  .stat-row .lbl {
+    color: var(--text3); flex: 1;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .stat-row .val {
+    color: var(--text); font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-row.accent .val { color: var(--teal2); }
+
+  /* Preset list rows */
+  .preset-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    margin-top: 4px;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .preset-row:first-child { margin-top: 0; }
+  .preset-row:hover { border-color: var(--border3); }
+  .preset-row.active {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+  .preset-row .pr-marker {
+    width: 8px; height: 8px;
+    background: var(--text4);
+    flex-shrink: 0;
+    transition: background 0.12s;
+  }
+  .preset-row.active .pr-marker { background: var(--teal); }
+  .preset-row .pr-info { flex: 1; min-width: 0; }
+  .preset-row .pr-name {
+    font-size: 12px; color: var(--text); font-weight: 500;
+    line-height: 1.2;
+  }
+  .preset-row .pr-map {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.04em; margin-top: 3px;
+    text-transform: uppercase;
+  }
+  .preset-row.active .pr-map { color: var(--teal2); }
+
+  /* Form group + select (kept for any future use) */
+  .form-group { padding: 0 18px 14px; }
+
+  /* Primary CTA — bracket-cornered teal */
+  .btn-primary {
+    background: var(--teal); border: none;
+    color: var(--bg); padding: 12px 16px;
+    font-size: 11px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.12em; transition: background 0.12s;
+    text-transform: uppercase; font-weight: 600;
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative;
+  }
+  .btn-primary::before, .btn-primary::after {
+    content: ''; position: absolute;
+    width: 6px; height: 6px;
+    border: 1px solid var(--bg);
+  }
+  .btn-primary::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-primary::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-primary:hover:not(:disabled) { background: #1cc7b3; }
+  .btn-primary:disabled { background: var(--bg4); color: var(--text4); cursor: not-allowed; }
+  .btn-primary:disabled::before, .btn-primary:disabled::after { border-color: var(--text4); }
+  .btn-primary .arrow { font-family: var(--mono); }
+
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    padding: 11px 16px;
+    font-size: 11px; font-family: var(--mono); cursor: pointer;
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+    border: 1px solid var(--border2);
+    width: 100%;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-ghost:hover { border-color: var(--text3); color: var(--text); }
+
+  .formats-line {
+    padding: 10px 18px 14px;
+    font-family: var(--mono); font-size: 9px; color: var(--text4);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: center;
+  }
+  .formats-line::before { content: '> '; }
+
+  /* ── MAIN AREA ─────────────────────────── */
+  #main {
+    flex: 1; position: relative; overflow: hidden;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+  }
+  /* Diagonal stripe top section */
+  #main::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 90px;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+    border-bottom: 1px solid var(--border);
+    pointer-events: none; z-index: 1;
+  }
+
+  /* Operation header */
+  #op-header {
+    position: relative;
+    height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; z-index: 2;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,13,0.7);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    flex-shrink: 0;
+  }
+  #op-header .op-marker { width: 6px; height: 6px; background: var(--teal); }
+  #op-header .op-status {
+    color: var(--teal); margin-left: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #op-header .op-status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Scroll wrapper */
+  #content {
+    flex: 1; overflow-y: auto; position: relative;
+    z-index: 2;
+    padding: 24px 32px 40px;
+  }
+  #content::-webkit-scrollbar { width: 6px; }
+  #content::-webkit-scrollbar-track { background: var(--bg); }
+  #content::-webkit-scrollbar-thumb { background: var(--border2); }
+  #content::-webkit-scrollbar-thumb:hover { background: var(--border3); }
+
+  /* ── DROPZONE / EMPTY STATE ────────────── */
+  .drop-frame {
+    width: 100%; max-width: 720px;
+    margin: 8px auto 24px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    position: relative;
+  }
+  .corner {
+    position: absolute; width: 10px; height: 10px;
+    color: var(--teal);
+  }
+  .corner::before, .corner::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .corner.tl { top: -1px; left: -1px; }
+  .corner.tl::before { top: 0; left: 0; width: 1px; height: 10px; }
+  .corner.tl::after  { top: 0; left: 0; height: 1px; width: 10px; }
+  .corner.tr { top: -1px; right: -1px; }
+  .corner.tr::before { top: 0; right: 0; width: 1px; height: 10px; }
+  .corner.tr::after  { top: 0; right: 0; height: 1px; width: 10px; }
+  .corner.bl { bottom: -1px; left: -1px; }
+  .corner.bl::before { bottom: 0; left: 0; width: 1px; height: 10px; }
+  .corner.bl::after  { bottom: 0; left: 0; height: 1px; width: 10px; }
+  .corner.br { bottom: -1px; right: -1px; }
+  .corner.br::before { bottom: 0; right: 0; width: 1px; height: 10px; }
+  .corner.br::after  { bottom: 0; right: 0; height: 1px; width: 10px; }
+
+  .drop-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .drop-section-label .marker {
+    width: 8px; height: 8px; background: var(--teal);
+  }
+
+  .drop-headline {
+    padding: 32px 32px 14px;
+    font-size: 32px; font-weight: 600; line-height: 1.1;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .drop-headline .hl { color: var(--teal2); }
+  .drop-sub {
+    padding: 0 32px 24px;
+    font-size: 14px; color: var(--text2); font-weight: 400;
+    max-width: 560px; line-height: 1.5;
+  }
+  .drop-actions {
+    padding: 0 32px 24px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-cta {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .btn-cta::before, .btn-cta::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  .btn-cta::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-cta::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-cta:hover { background: #1cc7b3; }
+  .btn-cta .arrow { font-family: var(--mono); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid var(--border3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+  .drop-readout {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    line-height: 1.7;
+  }
+  .drop-readout .line-prefix { color: var(--text4); }
+  .drop-readout .line-cmd { color: var(--text2); }
+  .drop-readout .formats-list {
+    margin-top: 6px; color: var(--text2);
+  }
+  .drop-readout .formats-list .fmt {
+    color: var(--teal2); display: inline-block; margin-right: 14px;
+  }
+  .drop-readout .formats-list .fmt::before {
+    content: '└─ '; color: var(--text4);
+  }
+
+  /* Drop overlay state */
+  .drop-frame.drag-over {
+    border-color: var(--teal);
+    background: rgba(20,184,166,0.04);
+  }
+  .drop-frame.drag-over .corner { color: var(--teal2); }
+
+  /* ── CONTENT SECTIONS ──────────────────── */
+  .work-section {
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .work-section .section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .work-section .section-label .marker {
+    width: 8px; height: 8px; background: var(--teal); flex-shrink: 0;
+  }
+  .work-section .section-label .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
+  }
+
+  /* Stats grid — terminal blocks */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+  }
+  .stat-block {
+    background: var(--bg2);
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .stat-block .sb-head {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .stat-block .sb-head::before {
+    content: ''; width: 5px; height: 5px; background: var(--teal);
+    flex-shrink: 0;
+  }
+  .stat-block .sb-val {
+    font-family: var(--mono); font-size: 28px; font-weight: 500;
+    color: var(--text); letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .stat-block.accent .sb-val { color: var(--teal2); }
+
+  /* Texture sets */
+  .set-list { display: flex; flex-direction: column; }
+
+  .texture-set {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px 18px;
+    transition: background 0.12s;
+  }
+  .texture-set:last-child { border-bottom: none; }
+  .texture-set:hover { background: rgba(255,255,255,0.015); }
+
+  .set-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .set-header .set-marker {
+    width: 8px; height: 8px;
+    border: 1px solid var(--teal);
+    flex-shrink: 0;
+  }
+  .set-header .set-marker.complete {
+    background: var(--teal);
+  }
+  .set-name {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; min-width: 0;
+  }
+  .set-status {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    padding: 3px 7px;
+    border: 1px solid var(--border2);
+  }
+  .set-status.ready { color: var(--teal); border-color: var(--teal); }
+  .remove-set {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    padding: 5px 10px;
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .remove-set:hover {
+    color: var(--red);
+    border-color: var(--red);
+  }
+
+  .channel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .channel-card {
+    background: var(--bg3);
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: background 0.12s;
+  }
+  .channel-card.detected {
+    background: var(--bg4);
+  }
+
+  .channel-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .channel-badge {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+  .badge-r { background: #EF4444; }
+  .badge-g { background: var(--teal); }
+  .badge-b { background: var(--teal2); }
+  .badge-a { background: var(--gold); }
+  .channel-name {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    flex: 1;
+  }
+  .channel-status {
+    width: 8px; height: 8px;
+    border: 1px solid var(--text4);
+    flex-shrink: 0;
+  }
+  .channel-card.detected .channel-status {
+    background: var(--teal); border-color: var(--teal);
+  }
+  .channel-file {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding-left: 30px;
+    line-height: 1.3;
+  }
+  .channel-file.empty {
+    color: var(--text4);
+  }
+  .channel-file.empty::before {
+    content: '> ';
+    color: var(--text4);
+  }
+
+  /* Progress section */
+  .progress-section {
+    display: none;
+    border: 1px solid var(--teal);
+    background: var(--bg2);
+    margin-bottom: 16px;
+    padding: 16px 18px;
+  }
+  .progress-section.visible { display: block; }
+  .progress-header {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .progress-header .ph-text { display: flex; align-items: center; gap: 8px; }
+  .progress-header .ph-text::before {
+    content: ''; width: 6px; height: 6px; background: var(--teal);
+    box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .progress-header .ph-pct {
+    color: var(--teal2); font-variant-numeric: tabular-nums;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    transition: width 0.3s ease;
+    width: 0%;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: flex; gap: 10px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .action-bar .btn-cta { flex: 2; justify-content: space-between; }
+  .action-bar .btn-secondary { flex: 1; justify-content: center; }
+  .btn-cta:disabled {
+    background: var(--bg4); color: var(--text4); cursor: not-allowed;
+  }
+  .btn-cta:disabled::before, .btn-cta:disabled::after {
+    border-color: var(--text4);
+  }
+  .btn-cta:disabled:hover { background: var(--bg4); }
+
+  /* Info readout */
+  .info-readout {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 16px 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    line-height: 1.7;
+  }
+  .info-readout .ir-head {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text2); font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-readout .ir-head::before {
+    content: ''; width: 8px; height: 8px; background: var(--teal);
+  }
+  .info-readout .ir-line { display: block; padding: 2px 0; }
+  .info-readout .ir-line .pfx { color: var(--text4); }
+  .info-readout .ir-line .cmd { color: var(--text); }
+  .info-readout .ir-tags {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    margin-top: 8px;
+  }
+  .info-readout .ir-tag { color: var(--teal2); font-size: 10px; }
+  .info-readout .ir-tag::before { content: '└─ '; color: var(--text4); }
+
+  /* Toast */
+  #toast {
+    position: fixed; top: 64px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--bg2); border: 1px solid var(--teal);
+    color: var(--text); padding: 10px 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 100;
+    pointer-events: none; max-width: calc(100% - 24px); text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── MOBILE ──────────────────────────────── */
+  @media (max-width: 900px) {
+    #topbar { padding: 0 16px; height: 48px; min-height: 48px; }
+    #topbar .product { display: none; }
+    #topbar .meta { gap: 8px; font-size: 9px; }
+    #topbar .meta .label-pill { padding: 2px 5px; }
+    #workspace { flex-direction: column; }
+    #sidebar {
+      width: 100%; min-width: 0; max-height: 42%;
+      border-right: none; border-bottom: 1px solid var(--border);
+      order: 1;
+    }
+    #main { order: 2; min-height: 0; }
+    #content { padding: 18px 16px 32px; }
+    .drop-headline { font-size: 24px; padding: 24px 22px 12px; }
+    .drop-sub, .drop-actions, .drop-readout { padding-left: 22px; padding-right: 22px; }
+    .channel-grid { grid-template-columns: 1fr; }
+    .reg-mark { display: none; }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Texture Channel Packer Pro</h1>
-            <p class="subtitle">Pack textures for Unreal Engine, Unity, Godot, and more</p>
+<div class="reg-mark reg-tl"></div>
+<div class="reg-mark reg-tr"></div>
+<div class="reg-mark reg-bl"></div>
+<div class="reg-mark reg-br"></div>
+
+<div id="root">
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">TIKO</div>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="product">
+      <span class="arrow">/</span>
+      <span>Tools</span>
+      <span class="arrow">/</span>
+      <span>Texture Channel Packer</span>
+    </div>
+    <div class="sep"></div>
+    <div class="meta">
+      <span class="label-pill">v1.0</span>
+      <span>Channel Pack</span>
+    </div>
+  </div>
+
+  <div id="workspace">
+    <div id="sidebar">
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Target Format</span>
         </div>
-
-        <div class="section">
-            <div class="section-title">
-                <span class="section-icon">🎮</span>
-                Select Engine/Format
+        <div class="panel-body" id="presetList">
+          <div class="preset-row active" data-preset="unreal">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">Unreal Engine</div>
+              <div class="pr-map">R AO · G ROUGH · B METAL</div>
             </div>
-            
-            <div class="engine-presets">
-                <div class="preset-card active" data-preset="unreal">
-                    <div class="preset-icon">⚙️</div>
-                    <div class="preset-name">Unreal Engine</div>
-                    <div class="preset-mapping">ORM Format<br>R=AO G=Rough B=Metal</div>
-                </div>
-
-                <div class="preset-card" data-preset="unity-hdrp">
-                    <div class="preset-icon">🎯</div>
-                    <div class="preset-name">Unity HDRP</div>
-                    <div class="preset-mapping">Mask Map<br>R=Metal G=AO B=Detail A=Smooth</div>
-                </div>
-
-                <div class="preset-card" data-preset="unity-standard">
-                    <div class="preset-icon">🔷</div>
-                    <div class="preset-name">Unity Standard</div>
-                    <div class="preset-mapping">R=Metal G=AO B=Height A=Smooth</div>
-                </div>
-
-                <div class="preset-card" data-preset="godot">
-                    <div class="preset-icon">🤖</div>
-                    <div class="preset-name">Godot</div>
-                    <div class="preset-mapping">ORM Format<br>R=AO G=Rough B=Metal</div>
-                </div>
-
-                <div class="preset-card" data-preset="gltf">
-                    <div class="preset-icon">📦</div>
-                    <div class="preset-name">glTF/PBR</div>
-                    <div class="preset-mapping">R=AO G=Rough B=Metal</div>
-                </div>
-
-                <div class="preset-card" data-preset="custom">
-                    <div class="preset-icon">⚡</div>
-                    <div class="preset-name">Custom</div>
-                    <div class="preset-mapping">Manual Mapping</div>
-                </div>
+          </div>
+          <div class="preset-row" data-preset="unity-hdrp">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">Unity HDRP</div>
+              <div class="pr-map">R METAL · G AO · B DETAIL · A SMOOTH</div>
             </div>
+          </div>
+          <div class="preset-row" data-preset="unity-standard">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">Unity Standard</div>
+              <div class="pr-map">R METAL · G AO · B HEIGHT · A SMOOTH</div>
+            </div>
+          </div>
+          <div class="preset-row" data-preset="godot">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">Godot</div>
+              <div class="pr-map">R AO · G ROUGH · B METAL</div>
+            </div>
+          </div>
+          <div class="preset-row" data-preset="gltf">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">glTF / PBR</div>
+              <div class="pr-map">R AO · G ROUGH · B METAL</div>
+            </div>
+          </div>
+          <div class="preset-row" data-preset="custom">
+            <div class="pr-marker"></div>
+            <div class="pr-info">
+              <div class="pr-name">Custom</div>
+              <div class="pr-map">R METAL · G ROUGH · B AO · A OPACITY</div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="section">
-            <div class="section-title">
-                <span class="section-icon">📁</span>
-                Upload Textures
-            </div>
-
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon">🖼️</div>
-                <div class="upload-text">Drop all texture files here or click to browse</div>
-                <div class="upload-subtext">Auto-groups by name • Supports PNG, JPG, TGA</div>
-                <input type="file" id="fileInput" multiple accept="image/*">
-            </div>
-
-            <div id="statsContainer" style="display: none;">
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="statSets">0</div>
-                        <div class="stat-label">Texture Sets</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="statFiles">0</div>
-                        <div class="stat-label">Total Files</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="statReady">0</div>
-                        <div class="stat-label">Ready to Pack</div>
-                    </div>
-                </div>
-            </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Telemetry</span>
         </div>
-
-        <div class="texture-sets" id="textureSets">
-            <div class="section">
-                <div class="section-title">
-                    <span class="section-icon">🎨</span>
-                    Detected Texture Sets
-                </div>
-                <div id="setsContainer"></div>
-            </div>
+        <div class="panel-body">
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Sets</span><span class="val" id="s-sets">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Files</span><span class="val" id="s-files">—</span></div>
+          <div class="stat-row accent"><span class="prefix">&gt;</span><span class="lbl">Ready</span><span class="val" id="s-ready">—</span></div>
+          <div class="stat-row"><span class="prefix">&gt;</span><span class="lbl">Output</span><span class="val" id="s-output">—</span></div>
         </div>
+      </div>
 
-        <div id="emptyState" class="empty-state">
-            <div class="empty-state-icon">🎨</div>
-            <div class="empty-state-text">No textures loaded</div>
-            <div style="font-size: 14px;">Upload textures to automatically group and pack them</div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Operations</span>
         </div>
+        <div class="form-group">
+          <button class="btn-primary" id="btn-load">
+            <span>Load Textures</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <div class="form-group" style="padding-top:0;">
+          <button class="btn-ghost" id="btn-clear">Clear All</button>
+        </div>
+        <div class="formats-line">.png · .jpg · .jpeg · .tga</div>
+      </div>
 
-        <div class="progress-section" id="progressSection">
-            <div class="progress-header">
-                <span id="progressText">Processing...</span>
-                <span id="progressPercent">0%</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
-
-        <div class="controls" id="controls" style="display: none;">
-            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
-            <button class="btn btn-primary" id="packBtn" disabled>Pack All & Download</button>
-        </div>
-
-        <div class="info-box">
-            <strong>📝 How it works:</strong>
-            1. Choose your target engine/format<br>
-            2. Upload all textures at once (auto-grouped by name)<br>
-            3. Click "Pack All" to process and download<br><br>
-            <strong>Supported patterns:</strong> metal, metallic, rough, roughness, ao, ambient, occlusion, opacity, alpha, smooth, smoothness
-        </div>
     </div>
 
-    <div class="success-toast" id="successToast">✓ All textures packed!</div>
+    <div id="main">
+      <div id="op-header">
+        <span class="op-marker"></span>
+        <span>Operation 001</span>
+        <span class="op-status" id="opStatus">Standby</span>
+      </div>
 
-    <script>
-        const textureSets = new Map();
-        let currentPreset = 'unreal';
+      <div id="content">
 
-        const presetConfigs = {
-            'unreal': {
-                r: 'ao',
-                g: 'roughness',
-                b: 'metallic',
-                a: 'opacity',
-                suffix: '_ORM'
-            },
-            'unity-hdrp': {
-                r: 'metallic',
-                g: 'ao',
-                b: 'detail',
-                a: 'smoothness',
-                suffix: '_MaskMap'
-            },
-            'unity-standard': {
-                r: 'metallic',
-                g: 'ao',
-                b: 'height',
-                a: 'smoothness',
-                suffix: '_Packed'
-            },
-            'godot': {
-                r: 'ao',
-                g: 'roughness',
-                b: 'metallic',
-                a: 'opacity',
-                suffix: '_ORM'
-            },
-            'gltf': {
-                r: 'ao',
-                g: 'roughness',
-                b: 'metallic',
-                a: 'opacity',
-                suffix: '_ORM'
-            },
-            'custom': {
-                r: 'metallic',
-                g: 'roughness',
-                b: 'ao',
-                a: 'opacity',
-                suffix: '_Packed'
-            }
+        <!-- Empty state / dropzone -->
+        <div id="emptyState">
+          <div class="drop-frame" id="dropzone">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+
+            <div class="drop-section-label">
+              <div class="marker"></div>
+              <span>Initialize Pack</span>
+            </div>
+
+            <div class="drop-headline">
+              Pack channels for <span class="hl">faster</span>, leaner shaders.
+            </div>
+            <div class="drop-sub">
+              Drop a folder of texture maps onto this window or browse to begin. Files are auto-grouped by base name and matched to channels for your target engine.
+            </div>
+            <div class="drop-actions">
+              <button class="btn-cta" id="btn-load-2">
+                <span>Choose Files</span>
+                <span class="arrow">→</span>
+              </button>
+              <button class="btn-secondary" id="btn-info">
+                <span>Naming Patterns</span>
+              </button>
+            </div>
+
+            <div class="drop-readout">
+              <div><span class="line-prefix">$ </span><span class="line-cmd">tiko-packer --await-input</span></div>
+              <div class="formats-list">
+                <span class="fmt">metallic</span><span class="fmt">roughness</span><span class="fmt">ao</span><span class="fmt">opacity</span><span class="fmt">smoothness</span><span class="fmt">height</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Working area (hidden until files loaded) -->
+        <div id="workArea" style="display:none;">
+          <div class="work-section">
+            <div class="section-label">
+              <div class="marker"></div>
+              <span>Pack Summary</span>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-block">
+                <div class="sb-head">Texture Sets</div>
+                <div class="sb-val" id="statSets">0</div>
+              </div>
+              <div class="stat-block">
+                <div class="sb-head">Total Files</div>
+                <div class="sb-val" id="statFiles">0</div>
+              </div>
+              <div class="stat-block accent">
+                <div class="sb-head">Ready to Pack</div>
+                <div class="sb-val" id="statReady">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+              <span class="ph-text" id="progressText">Processing</span>
+              <span class="ph-pct" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn-cta" id="packBtn" disabled>
+              <span>Pack All &amp; Download</span>
+              <span class="arrow">→</span>
+            </button>
+            <button class="btn-secondary" id="addMoreBtn">
+              <span>Add More</span>
+            </button>
+          </div>
+
+          <div class="work-section">
+            <div class="section-label">
+              <div class="marker"></div>
+              <span>Detected Sets</span>
+              <span class="count" id="detected-count"></span>
+            </div>
+            <div class="set-list" id="setsContainer"></div>
+          </div>
+
+          <div class="info-readout">
+            <div class="ir-head">Naming Patterns</div>
+            <div class="ir-line"><span class="pfx">$ </span><span class="cmd">recognized suffixes</span></div>
+            <div class="ir-tags">
+              <span class="ir-tag">metal · metallic</span>
+              <span class="ir-tag">rough · roughness</span>
+              <span class="ir-tag">smooth · smoothness</span>
+              <span class="ir-tag">ao · ambient · occlusion</span>
+              <span class="ir-tag">opacity · alpha · transparent</span>
+              <span class="ir-tag">height · disp · displacement</span>
+              <span class="ir-tag">detail · mask</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none" />
+<div id="toast"></div>
+
+<script>
+  const textureSets = new Map();
+  let currentPreset = 'unreal';
+
+  const presetConfigs = {
+    'unreal':         { r: 'ao',       g: 'roughness', b: 'metallic', a: 'opacity',    suffix: '_ORM' },
+    'unity-hdrp':     { r: 'metallic', g: 'ao',        b: 'detail',   a: 'smoothness', suffix: '_MaskMap' },
+    'unity-standard': { r: 'metallic', g: 'ao',        b: 'height',   a: 'smoothness', suffix: '_Packed' },
+    'godot':          { r: 'ao',       g: 'roughness', b: 'metallic', a: 'opacity',    suffix: '_ORM' },
+    'gltf':           { r: 'ao',       g: 'roughness', b: 'metallic', a: 'opacity',    suffix: '_ORM' },
+    'custom':         { r: 'metallic', g: 'roughness', b: 'ao',       a: 'opacity',    suffix: '_Packed' }
+  };
+
+  const patterns = {
+    metallic:   /[_\-\s](metal|metallic)[_\-\s]?/i,
+    roughness:  /[_\-\s](rough|roughness)[_\-\s]?/i,
+    smoothness: /[_\-\s](smooth|smoothness)[_\-\s]?/i,
+    ao:         /[_\-\s](ao|ambient|occlusion)[_\-\s]?/i,
+    opacity:    /[_\-\s](opacity|alpha|transparent)[_\-\s]?/i,
+    height:     /[_\-\s](height|disp|displacement)[_\-\s]?/i,
+    detail:     /[_\-\s](detail|mask)[_\-\s]?/i
+  };
+
+  // ── Toast helper ────────────────────────────
+  let toastTimer = null;
+  function toast(msg, ms = 2200) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+  }
+  function setOpStatus(s) { document.getElementById('opStatus').textContent = s; }
+
+  // ── Preset selection ────────────────────────
+  document.querySelectorAll('.preset-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.preset-row').forEach(c => c.classList.remove('active'));
+      row.classList.add('active');
+      currentPreset = row.dataset.preset;
+      renderSets();
+    });
+  });
+
+  // ── File loading ────────────────────────────
+  const fileInput = document.getElementById('fileInput');
+  document.getElementById('btn-load').addEventListener('click', () => fileInput.click());
+  document.getElementById('btn-load-2').addEventListener('click', () => fileInput.click());
+  document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+  document.getElementById('btn-info').addEventListener('click', () => {
+    toast('Patterns: metallic · roughness · ao · opacity · smoothness · height · detail', 3500);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  // Dropzone (empty-state frame)
+  const dz = document.getElementById('dropzone');
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); dz.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+  }));
+  dz.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+  // Window-level drop once files are loaded
+  window.addEventListener('dragover', e => {
+    if (textureSets.size > 0) e.preventDefault();
+  });
+  window.addEventListener('drop', e => {
+    if (textureSets.size === 0) return;
+    e.preventDefault();
+    if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files);
+  });
+
+  function handleFiles(files) {
+    let unmatched = 0;
+    let queued = 0;
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const fileName = file.name;
+      const { baseName, type } = parseFileName(fileName);
+
+      if (!baseName || !type) {
+        unmatched++;
+        return;
+      }
+
+      if (!textureSets.has(baseName)) {
+        textureSets.set(baseName, {
+          name: baseName,
+          metallic: null, roughness: null, smoothness: null,
+          ao: null, opacity: null, height: null, detail: null
+        });
+      }
+
+      queued++;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const set = textureSets.get(baseName);
+          set[type] = { img, fileName };
+          textureSets.set(baseName, set);
+          renderSets();
         };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
 
-        const patterns = {
-            metallic: /[_\-\s](metal|metallic)[_\-\s]?/i,
-            roughness: /[_\-\s](rough|roughness)[_\-\s]?/i,
-            smoothness: /[_\-\s](smooth|smoothness)[_\-\s]?/i,
-            ao: /[_\-\s](ao|ambient|occlusion)[_\-\s]?/i,
-            opacity: /[_\-\s](opacity|alpha|transparent)[_\-\s]?/i,
-            height: /[_\-\s](height|disp|displacement)[_\-\s]?/i,
-            detail: /[_\-\s](detail|mask)[_\-\s]?/i
-        };
+    if (queued > 0) {
+      setOpStatus('Active');
+      toast(`Loaded ${queued} file${queued !== 1 ? 's' : ''}${unmatched ? ` · ${unmatched} skipped` : ''}`);
+    } else if (unmatched > 0) {
+      toast(`No matching textures · ${unmatched} skipped`, 3000);
+    }
+  }
 
-        // Preset selection
-        document.querySelectorAll('.preset-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                currentPreset = card.dataset.preset;
-                updateChannelLabels();
-            });
-        });
+  function parseFileName(fileName) {
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+    for (const [type, pattern] of Object.entries(patterns)) {
+      if (pattern.test(nameWithoutExt)) {
+        const baseName = nameWithoutExt
+          .replace(pattern, '')
+          .replace(/[_\-\s]+$/, '')
+          .replace(/^[_\-\s]+/, '');
+        return { baseName, type };
+      }
+    }
+    return { baseName: null, type: null };
+  }
 
-        // Upload handling
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
+  function getChannelLabel(channelType) {
+    const labels = {
+      metallic: 'Metallic', roughness: 'Roughness', smoothness: 'Smoothness',
+      ao: 'Ambient Occlusion', opacity: 'Opacity', height: 'Height', detail: 'Detail Mask'
+    };
+    return labels[channelType] || channelType;
+  }
 
-        uploadZone.addEventListener('click', () => fileInput.click());
+  // ── Render ──────────────────────────────────
+  function renderSets() {
+    const empty = document.getElementById('emptyState');
+    const work  = document.getElementById('workArea');
 
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('drag-over');
-        });
+    // Sidebar telemetry always reflects state
+    if (textureSets.size === 0) {
+      empty.style.display = 'block';
+      work.style.display = 'none';
+      ['s-sets','s-files','s-ready','s-output'].forEach(id =>
+        document.getElementById(id).textContent = '—');
+      setOpStatus('Standby');
+      return;
+    }
 
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('drag-over');
-        });
+    empty.style.display = 'none';
+    work.style.display = 'block';
 
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
-            handleFiles(e.dataTransfer.files);
-        });
+    const config = presetConfigs[currentPreset];
+    const channels = [config.r, config.g, config.b, config.a];
+    const badges = ['r', 'g', 'b', 'a'];
+    const channelLetters = ['R','G','B','A'];
 
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
+    let totalFiles = 0;
+    let readySets = 0;
 
-        function handleFiles(files) {
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
+    const setsHTML = Array.from(textureSets.entries()).map(([name, set]) => {
+      const hasRequired = channels.some(ch => set[ch] !== null);
+      if (hasRequired) readySets++;
+      const presentCount = channels.filter(ch => set[ch] !== null).length;
+      const fileCount = Object.values(set).filter(t => t !== null && typeof t === 'object').length;
+      totalFiles += fileCount;
+      const isComplete = presentCount === 4;
 
-                const fileName = file.name;
-                const { baseName, type } = parseFileName(fileName);
+      return `
+        <div class="texture-set">
+          <div class="set-header">
+            <div class="set-marker ${isComplete ? 'complete' : ''}"></div>
+            <div class="set-name">${escapeHtml(name)}</div>
+            <div class="set-status ${hasRequired ? 'ready' : ''}">${presentCount} / 4 channels</div>
+            <button class="remove-set" onclick="removeSet('${escapeAttr(name)}')">Remove</button>
+          </div>
+          <div class="channel-grid">
+            ${channels.map((channelType, idx) => {
+              const detected = set[channelType] !== null;
+              return `
+                <div class="channel-card ${detected ? 'detected' : ''}">
+                  <div class="channel-header">
+                    <div class="channel-badge badge-${badges[idx]}">${channelLetters[idx]}</div>
+                    <div class="channel-name">${getChannelLabel(channelType)}</div>
+                    <div class="channel-status"></div>
+                  </div>
+                  <div class="channel-file ${detected ? '' : 'empty'}">
+                    ${detected ? escapeHtml(set[channelType].fileName) : 'not detected'}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
 
-                if (!baseName || !type) {
-                    console.log(`Could not parse: ${fileName}`);
-                    return;
-                }
+    document.getElementById('setsContainer').innerHTML = setsHTML;
+    document.getElementById('detected-count').textContent = `${textureSets.size} set${textureSets.size !== 1 ? 's' : ''}`;
 
-                if (!textureSets.has(baseName)) {
-                    textureSets.set(baseName, {
-                        name: baseName,
-                        metallic: null,
-                        roughness: null,
-                        smoothness: null,
-                        ao: null,
-                        opacity: null,
-                        height: null,
-                        detail: null
-                    });
-                }
+    // Stat blocks
+    document.getElementById('statSets').textContent  = textureSets.size;
+    document.getElementById('statFiles').textContent = totalFiles;
+    document.getElementById('statReady').textContent = readySets;
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const set = textureSets.get(baseName);
-                        set[type] = { img, fileName };
-                        textureSets.set(baseName, set);
-                        renderSets();
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
+    // Sidebar telemetry
+    document.getElementById('s-sets').textContent   = textureSets.size;
+    document.getElementById('s-files').textContent  = totalFiles;
+    document.getElementById('s-ready').textContent  = readySets;
+    document.getElementById('s-output').textContent = config.suffix.replace(/^_/, '');
+
+    document.getElementById('packBtn').disabled = readySets === 0;
+  }
+
+  window.removeSet = function(name) {
+    textureSets.delete(name);
+    renderSets();
+  };
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    if (textureSets.size === 0) return;
+    textureSets.clear();
+    fileInput.value = '';
+    renderSets();
+    toast('Cleared');
+  });
+
+  document.getElementById('packBtn').addEventListener('click', async () => {
+    const progressSection = document.getElementById('progressSection');
+    const progressFill    = document.getElementById('progressFill');
+    const progressText    = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+    const packBtn         = document.getElementById('packBtn');
+
+    progressSection.classList.add('visible');
+    packBtn.disabled = true;
+    setOpStatus('Packing');
+
+    const setsArray = Array.from(textureSets.entries());
+    let processed = 0;
+    const config = presetConfigs[currentPreset];
+    const channels = [config.r, config.g, config.b, config.a];
+
+    for (const [name, set] of setsArray) {
+      const hasAnyTexture = channels.some(ch => set[ch] !== null);
+      if (!hasAnyTexture) continue;
+
+      const progress = ((processed + 1) / setsArray.length) * 100;
+      progressFill.style.width = progress + '%';
+      progressText.textContent = `Packing ${name}`;
+      progressPercent.textContent = Math.round(progress) + '%';
+
+      await packTextureSet(name, set, config);
+      processed++;
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    progressSection.classList.remove('visible');
+    progressFill.style.width = '0%';
+    packBtn.disabled = false;
+    setOpStatus('Active');
+
+    toast(`Packed ${processed} set${processed !== 1 ? 's' : ''}`);
+  });
+
+  async function packTextureSet(name, set, config) {
+    return new Promise((resolve) => {
+      const textureData = {
+        r: set[config.r], g: set[config.g],
+        b: set[config.b], a: set[config.a]
+      };
+
+      let maxWidth = 0, maxHeight = 0;
+      Object.values(textureData).forEach(t => {
+        if (t) {
+          maxWidth  = Math.max(maxWidth,  t.img.width);
+          maxHeight = Math.max(maxHeight, t.img.height);
         }
+      });
+      if (maxWidth === 0 || maxHeight === 0) { resolve(); return; }
 
-        function parseFileName(fileName) {
-            const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-            
-            for (const [type, pattern] of Object.entries(patterns)) {
-                if (pattern.test(nameWithoutExt)) {
-                    const baseName = nameWithoutExt.replace(pattern, '').replace(/[_\-\s]+$/, '').replace(/^[_\-\s]+/, '');
-                    return { baseName, type };
-                }
-            }
+      const canvas = document.createElement('canvas');
+      canvas.width = maxWidth; canvas.height = maxHeight;
+      const ctx = canvas.getContext('2d');
 
-            return { baseName: null, type: null };
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = maxWidth; tempCanvas.height = maxHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      const outputData = ctx.createImageData(maxWidth, maxHeight);
+
+      function getGrayscaleData(texture) {
+        if (!texture) return null;
+        tempCtx.clearRect(0, 0, maxWidth, maxHeight);
+        tempCtx.drawImage(texture.img, 0, 0, maxWidth, maxHeight);
+        return tempCtx.getImageData(0, 0, maxWidth, maxHeight).data;
+      }
+
+      function processChannel(channelName, texture) {
+        if (!texture) return null;
+        const data = getGrayscaleData(texture);
+        if (channelName === 'smoothness' && (config.g === 'smoothness' || config.a === 'smoothness')) {
+          const inverted = new Uint8ClampedArray(data.length);
+          for (let i = 0; i < data.length; i += 4) {
+            inverted[i]     = 255 - data[i];
+            inverted[i + 1] = 255 - data[i + 1];
+            inverted[i + 2] = 255 - data[i + 2];
+            inverted[i + 3] = data[i + 3];
+          }
+          return inverted;
         }
+        return data;
+      }
 
-        function getChannelLabel(channelType) {
-            const labels = {
-                metallic: 'Metallic',
-                roughness: 'Roughness',
-                smoothness: 'Smoothness',
-                ao: 'Ambient Occlusion',
-                opacity: 'Opacity',
-                height: 'Height',
-                detail: 'Detail Mask'
-            };
-            return labels[channelType] || channelType;
-        }
+      const rData = processChannel(config.r, textureData.r);
+      const gData = processChannel(config.g, textureData.g);
+      const bData = processChannel(config.b, textureData.b);
+      const aData = processChannel(config.a, textureData.a);
 
-        function updateChannelLabels() {
-            renderSets();
-        }
+      const defaults = {
+        metallic: 0, roughness: 255, smoothness: 0,
+        ao: 255, opacity: 255, height: 128, detail: 255
+      };
 
-        function renderSets() {
-            if (textureSets.size === 0) {
-                document.getElementById('emptyState').style.display = 'block';
-                document.getElementById('textureSets').classList.remove('visible');
-                document.getElementById('statsContainer').style.display = 'none';
-                document.getElementById('controls').style.display = 'none';
-                return;
-            }
+      for (let i = 0; i < outputData.data.length; i += 4) {
+        outputData.data[i]     = rData ? rData[i]     : defaults[config.r];
+        outputData.data[i + 1] = gData ? gData[i + 1] : defaults[config.g];
+        outputData.data[i + 2] = bData ? bData[i + 2] : defaults[config.b];
+        outputData.data[i + 3] = aData ? aData[i]     : defaults[config.a];
+      }
 
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('textureSets').classList.add('visible');
-            document.getElementById('statsContainer').style.display = 'block';
-            document.getElementById('controls').style.display = 'flex';
+      ctx.putImageData(outputData, 0, 0);
 
-            const config = presetConfigs[currentPreset];
-            let totalFiles = 0;
-            let readySets = 0;
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name}${config.suffix}.png`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve();
+      }, 'image/png');
+    });
+  }
 
-            const setsHTML = Array.from(textureSets.entries()).map(([name, set]) => {
-                const channels = [config.r, config.g, config.b, config.a];
-                const hasRequiredChannels = channels.some(ch => set[ch] !== null);
-                if (hasRequiredChannels) readySets++;
+  // ── Helpers ────────────────────────────────
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
 
-                const fileCount = Object.values(set).filter(t => t !== null && typeof t === 'object').length;
-                totalFiles += fileCount;
-
-                const badges = ['red', 'green', 'blue', 'yellow'];
-
-                return `
-                    <div class="texture-set">
-                        <div class="set-header">
-                            <div class="set-name">${name}</div>
-                            <button class="remove-set" onclick="removeSet('${name}')">Remove</button>
-                        </div>
-                        <div class="channel-grid">
-                            ${channels.map((channelType, idx) => `
-                                <div class="channel-card ${set[channelType] ? 'detected' : ''}">
-                                    <div class="channel-header">
-                                        <span class="channel-name">${getChannelLabel(channelType)}</span>
-                                        <span class="channel-badge badge-${badges[idx]}">${['R','G','B','A'][idx]}</span>
-                                    </div>
-                                    <div class="channel-file ${set[channelType] ? '' : 'empty'}">
-                                        ${set[channelType] ? '✅ ' + set[channelType].fileName : '⚪ Not detected'}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('setsContainer').innerHTML = setsHTML;
-            document.getElementById('statSets').textContent = textureSets.size;
-            document.getElementById('statFiles').textContent = totalFiles;
-            document.getElementById('statReady').textContent = readySets;
-            document.getElementById('packBtn').disabled = readySets === 0;
-        }
-
-        window.removeSet = function(name) {
-            textureSets.delete(name);
-            renderSets();
-        };
-
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            textureSets.clear();
-            fileInput.value = '';
-            renderSets();
-        });
-
-        document.getElementById('packBtn').addEventListener('click', async () => {
-            const progressSection = document.getElementById('progressSection');
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            const progressPercent = document.getElementById('progressPercent');
-            const packBtn = document.getElementById('packBtn');
-
-            progressSection.classList.add('visible');
-            packBtn.disabled = true;
-
-            const setsArray = Array.from(textureSets.entries());
-            let processed = 0;
-
-            for (const [name, set] of setsArray) {
-                const config = presetConfigs[currentPreset];
-                const channels = [config.r, config.g, config.b, config.a];
-                const hasAnyTexture = channels.some(ch => set[ch] !== null);
-                
-                if (!hasAnyTexture) continue;
-
-                const progress = ((processed + 1) / setsArray.length) * 100;
-                progressFill.style.width = progress + '%';
-                progressText.textContent = `Packing ${name}...`;
-                progressPercent.textContent = Math.round(progress) + '%';
-
-                await packTextureSet(name, set, config);
-                processed++;
-
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
-
-            progressSection.classList.remove('visible');
-            packBtn.disabled = false;
-
-            const toast = document.getElementById('successToast');
-            toast.textContent = `✓ Packed ${processed} texture set${processed !== 1 ? 's' : ''}!`;
-            toast.classList.add('visible');
-            setTimeout(() => toast.classList.remove('visible'), 3000);
-        });
-
-        async function packTextureSet(name, set, config) {
-            return new Promise((resolve) => {
-                const textureData = {
-                    r: set[config.r],
-                    g: set[config.g],
-                    b: set[config.b],
-                    a: set[config.a]
-                };
-
-                let maxWidth = 0;
-                let maxHeight = 0;
-
-                Object.values(textureData).forEach(texture => {
-                    if (texture) {
-                        maxWidth = Math.max(maxWidth, texture.img.width);
-                        maxHeight = Math.max(maxHeight, texture.img.height);
-                    }
-                });
-
-                if (maxWidth === 0 || maxHeight === 0) {
-                    resolve();
-                    return;
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = maxWidth;
-                canvas.height = maxHeight;
-                const ctx = canvas.getContext('2d');
-
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = maxWidth;
-                tempCanvas.height = maxHeight;
-                const tempCtx = tempCanvas.getContext('2d');
-
-                const outputData = ctx.createImageData(maxWidth, maxHeight);
-
-                function getGrayscaleData(texture) {
-                    if (!texture) return null;
-                    tempCtx.clearRect(0, 0, maxWidth, maxHeight);
-                    tempCtx.drawImage(texture.img, 0, 0, maxWidth, maxHeight);
-                    const imageData = tempCtx.getImageData(0, 0, maxWidth, maxHeight);
-                    return imageData.data;
-                }
-
-                // Handle smoothness (invert to roughness if needed)
-                function processChannel(channelName, texture) {
-                    if (!texture) return null;
-                    const data = getGrayscaleData(texture);
-                    
-                    // If this is smoothness and we need roughness, invert it
-                    if (channelName === 'smoothness' && (config.g === 'smoothness' || config.a === 'smoothness')) {
-                        const inverted = new Uint8ClampedArray(data.length);
-                        for (let i = 0; i < data.length; i += 4) {
-                            inverted[i] = 255 - data[i];
-                            inverted[i + 1] = 255 - data[i + 1];
-                            inverted[i + 2] = 255 - data[i + 2];
-                            inverted[i + 3] = data[i + 3];
-                        }
-                        return inverted;
-                    }
-                    
-                    return data;
-                }
-
-                const rData = processChannel(config.r, textureData.r);
-                const gData = processChannel(config.g, textureData.g);
-                const bData = processChannel(config.b, textureData.b);
-                const aData = processChannel(config.a, textureData.a);
-
-                const defaults = {
-                    metallic: 0,
-                    roughness: 255,
-                    smoothness: 0,
-                    ao: 255,
-                    opacity: 255,
-                    height: 128,
-                    detail: 255
-                };
-
-                for (let i = 0; i < outputData.data.length; i += 4) {
-                    outputData.data[i] = rData ? rData[i] : defaults[config.r];
-                    outputData.data[i + 1] = gData ? gData[i + 1] : defaults[config.g];
-                    outputData.data[i + 2] = bData ? bData[i + 2] : defaults[config.b];
-                    outputData.data[i + 3] = aData ? aData[i] : defaults[config.a];
-                }
-
-                ctx.putImageData(outputData, 0, 0);
-
-                canvas.toBlob((blob) => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${name}${config.suffix}.png`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    resolve();
-                }, 'image/png');
-            });
-        }
-    </script>
+  // Initial render
+  renderSets();
+</script>
 </body>
 </html>

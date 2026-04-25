@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batch Renamer — Tiko Developments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0A0A0D;
+    --bg2:       #121217;
+    --bg3:       #16161c;
+    --bg4:       #2A2A33;
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.12);
+    --border3:   rgba(255,255,255,0.20);
+    --text:      #F1F1F5;
+    --text2:     #A1A1AA;
+    --text3:     #6B7280;
+    --text4:     #4a4a52;
+
+    --teal:      #14B8A6;
+    --teal2:     #22D3EE;
+    --teal3:     #0F766E;
+    --teal-dim:  rgba(20,184,166,0.12);
+
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+    --purple3:   #5B21B6;
+    --purple-dim: rgba(139,92,246,0.12);
+
+    --red:       #EF4444;
+    --gold:      #F59E0B;
+
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body {
+    height: 100%; background: var(--bg);
+    font-family: var(--sans); color: var(--text);
+    overflow: hidden; user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root { display: flex; height: 100vh; flex-direction: column; }
+
+  /* REGISTRATION MARKS */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px;
+    pointer-events: none; z-index: 1000;
+    color: var(--teal); opacity: 0.5;
+  }
+  .reg-mark::before, .reg-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .reg-mark::before { left: 6px; top: 0; width: 1px; height: 14px; }
+  .reg-mark::after  { left: 0; top: 6px; width: 14px; height: 1px; }
+  .reg-tl { top: 8px; left: 8px; }
+  .reg-tr { top: 8px; right: 8px; }
+  .reg-bl { bottom: 8px; left: 8px; }
+  .reg-br { bottom: 8px; right: 8px; }
+
+  /* TOPBAR */
+  #topbar {
+    height: 52px; min-height: 52px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    padding: 0 28px; flex-shrink: 0; position: relative; z-index: 10;
+  }
+  #topbar .brand { display: flex; align-items: center; gap: 10px; padding-right: 24px; }
+  .brand-mark { width: 12px; height: 12px; background: var(--teal); flex-shrink: 0; }
+  .brand-name {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--text);
+  }
+  .brand-divider { width: 1px; background: var(--border2); margin: 12px 0; }
+  #topbar .product {
+    display: flex; align-items: center; gap: 10px; padding: 0 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #topbar .product .arrow { color: var(--text4); }
+  #topbar .sep { flex: 1; }
+  #topbar .meta {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  #topbar .label-pill {
+    background: var(--teal); color: var(--bg);
+    padding: 3px 7px; font-weight: 500;
+  }
+
+  #workspace { display: flex; flex: 1; overflow: hidden; }
+
+  /* SIDEBAR — operations */
+  #sidebar {
+    width: 340px; min-width: 340px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .panel { border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
+  .panel-grow { flex: 1; min-height: 0; }
+  .panel-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .panel-head .marker { width: 8px; height: 8px; background: var(--teal); flex-shrink: 0; }
+  .panel-head .count { margin-left: auto; color: var(--text3); font-size: 10px; letter-spacing: 0.04em; }
+  .panel-head .action {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: none; border: none; cursor: pointer;
+    padding: 3px 6px; border: 1px solid var(--border);
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .panel-head .action:hover { color: var(--teal); border-color: var(--teal); }
+
+  #sidebar-scroll {
+    overflow-y: auto;
+    flex: 1;
+    display: flex; flex-direction: column;
+  }
+  #sidebar-scroll::-webkit-scrollbar { width: 4px; }
+  #sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* PRESETS */
+  .preset-group {
+    padding: 0 18px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .preset-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .preset-label {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    width: 52px; flex-shrink: 0;
+  }
+  .preset-btn {
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text2); padding: 7px 10px;
+    font-family: var(--mono); font-size: 10px; cursor: pointer;
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500;
+    flex: 1; transition: all 0.12s;
+    min-width: 0;
+  }
+  .preset-btn:hover { color: var(--text); border-color: var(--border3); }
+  .preset-btn.active {
+    background: var(--teal); color: var(--bg);
+    border-color: var(--teal); font-weight: 600;
+  }
+
+  /* OPERATIONS LIST */
+  #ops-list {
+    padding: 0 18px 14px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .op-card {
+    background: var(--bg3); border: 1px solid var(--border2);
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .op-card.disabled { opacity: 0.4; }
+  .op-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .op-toggle {
+    width: 14px; height: 14px; flex-shrink: 0;
+    background: var(--bg); border: 1px solid var(--border3);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .op-toggle::after {
+    content: ''; width: 6px; height: 6px;
+    background: transparent; transition: background 0.12s;
+  }
+  .op-card.enabled .op-toggle { background: var(--teal); border-color: var(--teal); }
+  .op-card.enabled .op-toggle::after { background: var(--bg); }
+  .op-num {
+    font-family: var(--mono); font-size: 9px; color: var(--text4);
+    letter-spacing: 0.06em;
+  }
+  .op-name {
+    font-family: var(--mono); font-size: 10px; color: var(--text);
+    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500;
+    flex: 1;
+  }
+  .op-card.enabled .op-name { color: var(--teal); }
+  .op-chevron {
+    color: var(--text4); font-family: var(--mono); font-size: 10px;
+    transition: transform 0.15s;
+  }
+  .op-card.expanded .op-chevron { transform: rotate(90deg); }
+
+  .op-body {
+    padding: 10px 10px 12px;
+    display: none; flex-direction: column; gap: 8px;
+  }
+  .op-card.expanded .op-body { display: flex; }
+
+  .op-field { display: flex; flex-direction: column; gap: 4px; }
+  .op-field label {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .op-field input[type="text"],
+  .op-field input[type="number"],
+  .op-field select {
+    background: var(--bg); border: 1px solid var(--border2);
+    color: var(--text); padding: 7px 9px;
+    font-size: 12px; font-family: var(--mono); outline: none; width: 100%;
+    transition: border-color 0.15s;
+  }
+  .op-field input:focus, .op-field select:focus { border-color: var(--teal); }
+  .op-field input::placeholder { color: var(--text4); }
+  .op-field select {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2314B8A6' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .op-field select option { background: var(--bg); }
+  .op-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .op-checkbox {
+    display: flex; align-items: center; gap: 7px;
+    cursor: pointer; padding: 2px 0;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.04em;
+  }
+  .op-checkbox input { display: none; }
+  .op-checkbox .cb {
+    width: 12px; height: 12px; background: var(--bg); border: 1px solid var(--border3);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .op-checkbox .cb::after { content: ''; width: 5px; height: 5px; background: transparent; }
+  .op-checkbox input:checked + .cb { background: var(--teal); border-color: var(--teal); }
+  .op-checkbox input:checked + .cb::after { background: var(--bg); }
+
+  /* MAIN AREA */
+  #main {
+    flex: 1; position: relative; display: flex; flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #op-header {
+    height: 38px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: relative;
+  }
+  #op-header::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.022) 0px,
+      rgba(255,255,255,0.022) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+    pointer-events: none; z-index: -1;
+  }
+  #op-header .op-marker { width: 6px; height: 6px; background: var(--teal); }
+  #op-header .op-status {
+    color: var(--teal); margin-left: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #op-header .op-status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* FILE LIST AREA */
+  #file-area {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .list-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 22px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .list-head .marker { width: 8px; height: 8px; background: var(--teal); flex-shrink: 0; }
+  .list-head .count { color: var(--text3); letter-spacing: 0.04em; }
+  .list-head .spacer { flex: 1; }
+  .list-head .filter-btn {
+    background: none; border: 1px solid var(--border2); color: var(--text3);
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; padding: 4px 8px;
+    transition: all 0.12s;
+  }
+  .list-head .filter-btn:hover { color: var(--teal); border-color: var(--teal); }
+  .list-head .filter-btn.danger:hover { color: var(--red); border-color: var(--red); }
+
+  #file-table {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+  }
+  #file-table::-webkit-scrollbar { width: 4px; }
+  #file-table::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .file-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 14px 1fr;
+    align-items: center;
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .file-row:hover { background: var(--bg2); }
+  .file-row.changed .new-name { color: var(--teal2); }
+  .file-row.collision .new-name {
+    color: var(--red); text-decoration: line-through; text-decoration-thickness: 1px;
+  }
+  .file-row.collision::after {
+    content: 'COLLISION'; grid-column: 1/-1; margin-top: -2px;
+    font-family: var(--mono); font-size: 8px; color: var(--red);
+    letter-spacing: 0.12em; padding: 0 22px 8px 62px;
+  }
+  .file-idx {
+    font-family: var(--mono); font-size: 10px; color: var(--text4);
+    text-align: right; padding: 10px 8px 10px 22px;
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+  .old-name, .new-name {
+    font-family: var(--mono); font-size: 11px;
+    padding: 10px 16px 10px 0;
+    color: var(--text2); overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; min-width: 0;
+  }
+  .old-name {
+    border-right: 1px solid var(--border);
+    padding-right: 14px;
+  }
+  .arrow-col {
+    font-family: var(--mono); font-size: 10px; color: var(--text4);
+    text-align: center; padding: 10px 0;
+  }
+  .file-row.changed .arrow-col { color: var(--teal); }
+  .new-name {
+    padding-left: 14px;
+    color: var(--text);
+  }
+  .new-name.unchanged { color: var(--text4); }
+
+  /* EMPTY / DROPZONE */
+  #dropzone {
+    position: absolute; inset: 38px 0 0 0; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    transition: background 0.15s;
+  }
+  #dropzone.dragover { background: rgba(20,184,166,0.04); }
+  #dropzone.hidden { display: none; }
+
+  .drop-frame {
+    width: 100%; max-width: 560px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    position: relative;
+  }
+  .corner {
+    position: absolute; width: 10px; height: 10px; color: var(--teal);
+  }
+  .corner::before, .corner::after { content: ''; position: absolute; background: currentColor; }
+  .corner.tl { top: -1px; left: -1px; }
+  .corner.tl::before { top: 0; left: 0; width: 1px; height: 10px; }
+  .corner.tl::after  { top: 0; left: 0; height: 1px; width: 10px; }
+  .corner.tr { top: -1px; right: -1px; }
+  .corner.tr::before { top: 0; right: 0; width: 1px; height: 10px; }
+  .corner.tr::after  { top: 0; right: 0; height: 1px; width: 10px; }
+  .corner.bl { bottom: -1px; left: -1px; }
+  .corner.bl::before { bottom: 0; left: 0; width: 1px; height: 10px; }
+  .corner.bl::after  { bottom: 0; left: 0; height: 1px; width: 10px; }
+  .corner.br { bottom: -1px; right: -1px; }
+  .corner.br::before { bottom: 0; right: 0; width: 1px; height: 10px; }
+  .corner.br::after  { bottom: 0; right: 0; height: 1px; width: 10px; }
+
+  .drop-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .drop-section-label .marker { width: 8px; height: 8px; background: var(--teal); }
+
+  .drop-headline {
+    padding: 32px 32px 14px;
+    font-size: 32px; font-weight: 600; line-height: 1.05;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .drop-headline .hl { color: var(--teal2); }
+  .drop-sub {
+    padding: 0 32px 24px;
+    font-size: 14px; color: var(--text2); font-weight: 400;
+    max-width: 460px; line-height: 1.5;
+  }
+  .drop-actions {
+    padding: 0 32px 28px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .btn-cta {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .btn-cta::before, .btn-cta::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  .btn-cta::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-cta::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-cta:hover { background: #1cc7b3; }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid var(--border3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+
+  .drop-readout {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px 20px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    line-height: 1.7;
+  }
+  .drop-readout .line-prefix { color: var(--text4); }
+  .drop-readout .line-cmd { color: var(--text2); }
+  .drop-readout .hint {
+    margin-top: 4px;
+  }
+  .drop-readout .hint::before { content: '└─ '; color: var(--text4); }
+
+  /* EXPORT BAR */
+  #export-bar {
+    height: 58px; flex-shrink: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 22px;
+    gap: 16px;
+  }
+  #export-bar .summary {
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  #export-bar .summary .stat-val {
+    color: var(--text); font-weight: 500; margin-left: 5px;
+  }
+  #export-bar .summary .stat-val.accent { color: var(--teal2); }
+  #export-bar .summary .stat-val.danger { color: var(--red); }
+  #export-bar .summary .divider {
+    width: 1px; height: 16px; background: var(--border2);
+  }
+  #export-bar .sep { flex: 1; }
+  #export-bar .btn-primary {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 24px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  #export-bar .btn-primary::before, #export-bar .btn-primary::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  #export-bar .btn-primary::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  #export-bar .btn-primary::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  #export-bar .btn-primary:hover { background: #1cc7b3; }
+  #export-bar .btn-primary:disabled {
+    background: var(--bg4); color: var(--text4); cursor: not-allowed;
+  }
+  #export-bar .btn-primary:disabled::before, #export-bar .btn-primary:disabled::after {
+    border-color: var(--text4);
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed; top: 68px; left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: var(--bg2); border: 1px solid var(--teal);
+    color: var(--text); padding: 10px 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 200;
+    pointer-events: none; text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { border-color: var(--red); }
+
+  /* MOBILE */
+  @media (max-width: 860px) {
+    #topbar { padding: 0 16px; height: 48px; min-height: 48px; }
+    #topbar .product { display: none; }
+    #topbar .meta .label-pill:not(:first-child) { display: none; }
+    #workspace { flex-direction: column; }
+    #sidebar {
+      width: 100%; min-width: 0; max-height: 50%;
+      border-right: none; order: 2;
+      border-top: 1px solid var(--border);
+    }
+    #main { order: 1; min-height: 0; flex: 1; }
+    .file-row { grid-template-columns: 30px 1fr 14px 1fr; }
+    .file-idx { padding-left: 14px; }
+    .drop-headline { font-size: 24px; padding: 24px 22px 12px; }
+    .drop-sub, .drop-actions, .drop-readout { padding-left: 22px; padding-right: 22px; }
+    .reg-mark { display: none; }
+    #export-bar { flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 10px; }
+    #export-bar .summary { gap: 10px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="reg-mark reg-tl"></div>
+<div class="reg-mark reg-tr"></div>
+<div class="reg-mark reg-bl"></div>
+<div class="reg-mark reg-br"></div>
+
+<div id="root">
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">TIKO</div>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="product">
+      <span class="arrow">/</span>
+      <span>Tools</span>
+      <span class="arrow">/</span>
+      <span>Batch Renamer</span>
+    </div>
+    <div class="sep"></div>
+    <div class="meta">
+      <span class="label-pill">v1.0</span>
+      <span>Multi-Engine Naming</span>
+    </div>
+  </div>
+
+  <div id="workspace">
+
+    <div id="sidebar">
+      <div id="sidebar-scroll">
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="marker"></div>
+            <span>Engine Preset</span>
+          </div>
+          <div class="preset-group">
+            <div class="preset-row">
+              <span class="preset-label">Target</span>
+              <button class="preset-btn active" data-engine="unreal">Unreal</button>
+              <button class="preset-btn" data-engine="unity">Unity</button>
+              <button class="preset-btn" data-engine="godot">Godot</button>
+            </div>
+            <div class="preset-row" id="preset-asset-row">
+              <span class="preset-label">Asset</span>
+              <select class="op-field" id="asset-preset" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2314B8A6' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;">
+                <!-- populated by JS -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="marker"></div>
+            <span>Operations</span>
+            <button class="action" id="btn-reset-ops">Reset</button>
+          </div>
+          <div id="ops-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="main">
+      <div id="op-header">
+        <span class="op-marker"></span>
+        <span>Operation 003 · Batch Rename</span>
+        <span class="op-status" id="op-status-text">Standby</span>
+      </div>
+
+      <div id="file-area">
+        <div class="list-head" id="list-head" style="display:none;">
+          <div class="marker"></div>
+          <span>File Queue</span>
+          <span class="count" id="file-count"></span>
+          <div class="spacer"></div>
+          <button class="filter-btn" id="btn-add-more">+ Add More</button>
+          <button class="filter-btn danger" id="btn-clear-all">Clear</button>
+        </div>
+        <div id="file-table"></div>
+      </div>
+
+      <div id="dropzone">
+        <div class="drop-frame">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+
+          <div class="drop-section-label">
+            <div class="marker"></div>
+            <span>Initialize Queue</span>
+          </div>
+
+          <div class="drop-headline">
+            Files deserve a <span class="hl">consistent</span> naming convention.
+          </div>
+          <div class="drop-sub">
+            Drop files or a folder onto this window to preview rename operations. Nothing uploads — everything runs locally in your browser.
+          </div>
+          <div class="drop-actions">
+            <button class="btn-cta" id="btn-load-files">
+              <span>Choose Files</span>
+              <span>→</span>
+            </button>
+            <button class="btn-secondary" id="btn-load-folder">
+              <span>Choose Folder</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <div class="drop-readout">
+            <div><span class="line-prefix">$ </span><span class="line-cmd">tiko-renamer --await-input</span></div>
+            <div class="hint">chain operations in the sidebar</div>
+            <div class="hint">preview updates in real time</div>
+            <div class="hint">download renamed copies as a zip</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="export-bar">
+        <div class="summary">
+          <div><span>Total</span><span class="stat-val" id="sum-total">0</span></div>
+          <div class="divider"></div>
+          <div><span>Changed</span><span class="stat-val accent" id="sum-changed">0</span></div>
+          <div class="divider"></div>
+          <div><span>Unchanged</span><span class="stat-val" id="sum-unchanged">0</span></div>
+          <div class="divider"></div>
+          <div><span>Collisions</span><span class="stat-val" id="sum-collisions">0</span></div>
+        </div>
+        <div class="sep"></div>
+        <button class="btn-primary" id="btn-export" disabled>
+          <span>Download Renamed</span>
+          <span>↓</span>
+        </button>
+      </div>
+
+      <div id="toast"></div>
+    </div>
+
+  </div>
+</div>
+
+<input type="file" id="file-input" multiple style="display:none" />
+<input type="file" id="folder-input" webkitdirectory directory multiple style="display:none" />
+
+<!-- JSZip for batch download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+/* ─────────────────────────────────────────────
+   DATA STRUCTURES
+───────────────────────────────────────────── */
+
+// Engine presets — assetType → { prefix, suffix, case, note }
+const ENGINE_PRESETS = {
+  unreal: {
+    name: 'Unreal Engine',
+    options: [
+      { v: 'none',    label: '— No Preset —' },
+      { v: 'texture', label: 'Texture (T_)',            prefix: 'T_',   case: 'PascalCase' },
+      { v: 'tex_bc',  label: 'Texture / BaseColor',     prefix: 'T_',   suffix: '_BC',      case: 'PascalCase' },
+      { v: 'tex_n',   label: 'Texture / Normal',        prefix: 'T_',   suffix: '_N',       case: 'PascalCase' },
+      { v: 'tex_r',   label: 'Texture / Roughness',     prefix: 'T_',   suffix: '_R',       case: 'PascalCase' },
+      { v: 'tex_orm', label: 'Texture / ORM Packed',    prefix: 'T_',   suffix: '_ORM',     case: 'PascalCase' },
+      { v: 'sm',      label: 'Static Mesh (SM_)',       prefix: 'SM_',  case: 'PascalCase' },
+      { v: 'sk',      label: 'Skeletal Mesh (SK_)',     prefix: 'SK_',  case: 'PascalCase' },
+      { v: 'mat',     label: 'Material (M_)',           prefix: 'M_',   case: 'PascalCase' },
+      { v: 'mi',      label: 'Material Instance (MI_)', prefix: 'MI_',  case: 'PascalCase' },
+      { v: 'a',       label: 'Animation (A_)',          prefix: 'A_',   case: 'PascalCase' },
+      { v: 'bp',      label: 'Blueprint (BP_)',         prefix: 'BP_',  case: 'PascalCase' },
+      { v: 's',       label: 'Sound (S_)',              prefix: 'S_',   case: 'PascalCase' },
+      { v: 'p',       label: 'Particle (P_)',           prefix: 'P_',   case: 'PascalCase' },
+    ],
+  },
+  unity: {
+    name: 'Unity',
+    options: [
+      { v: 'none',    label: '— No Preset —' },
+      { v: 'tex_alb', label: 'Texture / _Albedo',       suffix: '_Albedo',     case: 'PascalCase' },
+      { v: 'tex_n',   label: 'Texture / _Normal',       suffix: '_Normal',     case: 'PascalCase' },
+      { v: 'tex_m',   label: 'Texture / _Metallic',     suffix: '_Metallic',   case: 'PascalCase' },
+      { v: 'tex_r',   label: 'Texture / _Roughness',    suffix: '_Roughness',  case: 'PascalCase' },
+      { v: 'tex_ao',  label: 'Texture / _AO',           suffix: '_AO',         case: 'PascalCase' },
+      { v: 'tex_h',   label: 'Texture / _Height',       suffix: '_Height',     case: 'PascalCase' },
+      { v: 'tex_e',   label: 'Texture / _Emission',     suffix: '_Emission',   case: 'PascalCase' },
+      { v: 'mat',     label: 'Material (_Mat)',         suffix: '_Mat',        case: 'PascalCase' },
+      { v: 'prefab',  label: 'Prefab',                  case: 'PascalCase' },
+      { v: 'anim',    label: 'Animation',               case: 'PascalCase' },
+    ],
+  },
+  godot: {
+    name: 'Godot',
+    options: [
+      { v: 'none',    label: '— No Preset —' },
+      { v: 'resource',label: 'Resource (snake_case)',   case: 'snake_case' },
+      { v: 'tex_alb', label: 'Texture / _albedo',       suffix: '_albedo',     case: 'snake_case' },
+      { v: 'tex_n',   label: 'Texture / _normal',       suffix: '_normal',     case: 'snake_case' },
+      { v: 'tex_r',   label: 'Texture / _roughness',    suffix: '_roughness',  case: 'snake_case' },
+      { v: 'tex_m',   label: 'Texture / _metallic',     suffix: '_metallic',   case: 'snake_case' },
+      { v: 'tex_orm', label: 'Texture / _orm',          suffix: '_orm',        case: 'snake_case' },
+      { v: 'mat',     label: 'Material / _mat',         suffix: '_mat',        case: 'snake_case' },
+      { v: 'scene',   label: 'Scene (.tscn style)',     case: 'snake_case' },
+      { v: 'script',  label: 'Script (.gd style)',      case: 'snake_case' },
+    ],
+  },
+};
+
+// Operation definitions (order matters — this is the execution order)
+const OP_DEFS = [
+  { id: 'strip',    name: 'Strip Duplicates & Clean' },
+  { id: 'find',     name: 'Find & Replace' },
+  { id: 'remove',   name: 'Remove Characters' },
+  { id: 'case',     name: 'Case Transform' },
+  { id: 'affix',    name: 'Prefix / Suffix' },
+  { id: 'number',   name: 'Sequential Numbering' },
+];
+
+// State
+let files = [];            // [{ id, file, path, origName, ext, basename }]
+let ops = {};              // { opId: { enabled, expanded, ...params } }
+let currentEngine = 'unreal';
+let currentAssetPreset = 'none';
+let fileIdSeq = 1;
+
+/* ─────────────────────────────────────────────
+   OP DEFAULT STATE
+───────────────────────────────────────────── */
+function defaultOpState() {
+  return {
+    strip:  { enabled: false, expanded: false, trimSpaces: true, collapseUnderscores: true, collapseDashes: true, removeBracketed: false, trimEnds: true },
+    find:   { enabled: false, expanded: false, find: '', replace: '', regex: false, caseSensitive: false },
+    remove: { enabled: false, expanded: false, mode: 'first', count: 0, from: '', to: '' },
+    case:   { enabled: false, expanded: false, mode: 'PascalCase' },
+    affix:  { enabled: false, expanded: false, prefix: '', suffix: '' },
+    number: { enabled: false, expanded: false, start: 1, step: 1, pad: 3, pos: 'suffix', separator: '_' },
+  };
+}
+ops = defaultOpState();
+
+/* ─────────────────────────────────────────────
+   UI BUILDERS
+───────────────────────────────────────────── */
+
+function buildOpsList() {
+  const list = document.getElementById('ops-list');
+  list.innerHTML = '';
+  OP_DEFS.forEach((def, i) => {
+    const state = ops[def.id];
+    const card = document.createElement('div');
+    card.className = 'op-card' + (state.enabled ? ' enabled' : '') + (state.expanded ? ' expanded' : '');
+    card.dataset.opid = def.id;
+
+    const head = document.createElement('div');
+    head.className = 'op-head';
+    head.innerHTML = `
+      <div class="op-toggle" data-toggle></div>
+      <span class="op-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="op-name">${def.name}</span>
+      <span class="op-chevron">›</span>
+    `;
+    card.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'op-body';
+    body.innerHTML = getOpBody(def.id, state);
+    card.appendChild(body);
+
+    list.appendChild(card);
+
+    // Listeners
+    head.addEventListener('click', e => {
+      if (e.target.closest('[data-toggle]')) {
+        state.enabled = !state.enabled;
+        if (state.enabled && !state.expanded) state.expanded = true;
+        buildOpsList(); rerunPreview();
+      } else {
+        state.expanded = !state.expanded;
+        buildOpsList();
+      }
+    });
+
+    body.querySelectorAll('[data-field]').forEach(input => {
+      const field = input.dataset.field;
+      const type = input.type;
+      input.addEventListener('input', () => {
+        if (type === 'checkbox') state[field] = input.checked;
+        else if (type === 'number') state[field] = parseInt(input.value) || 0;
+        else state[field] = input.value;
+        rerunPreview();
+      });
+      input.addEventListener('change', () => {
+        if (type === 'checkbox') state[field] = input.checked;
+        else if (type === 'number') state[field] = parseInt(input.value) || 0;
+        else state[field] = input.value;
+        rerunPreview();
+      });
+    });
+  });
+}
+
+function getOpBody(opId, s) {
+  switch (opId) {
+    case 'strip':
+      return `
+        <label class="op-checkbox"><input type="checkbox" data-field="trimSpaces" ${s.trimSpaces?'checked':''}/><span class="cb"></span>Collapse multiple spaces</label>
+        <label class="op-checkbox"><input type="checkbox" data-field="collapseUnderscores" ${s.collapseUnderscores?'checked':''}/><span class="cb"></span>Collapse _ and __ repeats</label>
+        <label class="op-checkbox"><input type="checkbox" data-field="collapseDashes" ${s.collapseDashes?'checked':''}/><span class="cb"></span>Collapse dash repeats</label>
+        <label class="op-checkbox"><input type="checkbox" data-field="trimEnds" ${s.trimEnds?'checked':''}/><span class="cb"></span>Trim _/-/space from ends</label>
+        <label class="op-checkbox"><input type="checkbox" data-field="removeBracketed" ${s.removeBracketed?'checked':''}/><span class="cb"></span>Remove (parentheses) and [brackets]</label>
+      `;
+    case 'find':
+      return `
+        <div class="op-field">
+          <label>Find</label>
+          <input type="text" data-field="find" value="${esc(s.find)}" placeholder="text to find…"/>
+        </div>
+        <div class="op-field">
+          <label>Replace With</label>
+          <input type="text" data-field="replace" value="${esc(s.replace)}" placeholder="replacement…"/>
+        </div>
+        <div class="op-field-row">
+          <label class="op-checkbox"><input type="checkbox" data-field="regex" ${s.regex?'checked':''}/><span class="cb"></span>Regex</label>
+          <label class="op-checkbox"><input type="checkbox" data-field="caseSensitive" ${s.caseSensitive?'checked':''}/><span class="cb"></span>Case-sensitive</label>
+        </div>
+      `;
+    case 'remove':
+      return `
+        <div class="op-field">
+          <label>Mode</label>
+          <select data-field="mode">
+            <option value="first" ${s.mode==='first'?'selected':''}>Remove N From Start</option>
+            <option value="last"  ${s.mode==='last'?'selected':''}>Remove N From End</option>
+            <option value="range" ${s.mode==='range'?'selected':''}>Remove Character Range</option>
+          </select>
+        </div>
+        ${s.mode === 'range' ? `
+          <div class="op-field-row">
+            <div class="op-field"><label>From (0-idx)</label><input type="number" data-field="from" min="0" value="${s.from}"/></div>
+            <div class="op-field"><label>To (exclusive)</label><input type="number" data-field="to" min="0" value="${s.to}"/></div>
+          </div>
+        ` : `
+          <div class="op-field">
+            <label>Count</label>
+            <input type="number" data-field="count" min="0" value="${s.count}"/>
+          </div>
+        `}
+      `;
+    case 'case':
+      return `
+        <div class="op-field">
+          <label>Transform</label>
+          <select data-field="mode">
+            <option value="UPPER"      ${s.mode==='UPPER'?'selected':''}>UPPERCASE</option>
+            <option value="lower"      ${s.mode==='lower'?'selected':''}>lowercase</option>
+            <option value="Title"      ${s.mode==='Title'?'selected':''}>Title Case</option>
+            <option value="camelCase"  ${s.mode==='camelCase'?'selected':''}>camelCase</option>
+            <option value="PascalCase" ${s.mode==='PascalCase'?'selected':''}>PascalCase</option>
+            <option value="snake_case" ${s.mode==='snake_case'?'selected':''}>snake_case</option>
+            <option value="kebab-case" ${s.mode==='kebab-case'?'selected':''}>kebab-case</option>
+            <option value="SCREAMING"  ${s.mode==='SCREAMING'?'selected':''}>SCREAMING_SNAKE</option>
+          </select>
+        </div>
+      `;
+    case 'affix':
+      return `
+        <div class="op-field">
+          <label>Prefix</label>
+          <input type="text" data-field="prefix" value="${esc(s.prefix)}" placeholder="e.g. T_"/>
+        </div>
+        <div class="op-field">
+          <label>Suffix (before extension)</label>
+          <input type="text" data-field="suffix" value="${esc(s.suffix)}" placeholder="e.g. _Normal"/>
+        </div>
+      `;
+    case 'number':
+      return `
+        <div class="op-field-row">
+          <div class="op-field"><label>Start</label><input type="number" data-field="start" min="0" value="${s.start}"/></div>
+          <div class="op-field"><label>Step</label><input type="number" data-field="step" min="1" value="${s.step}"/></div>
+        </div>
+        <div class="op-field-row">
+          <div class="op-field"><label>Pad Digits</label><input type="number" data-field="pad" min="1" max="8" value="${s.pad}"/></div>
+          <div class="op-field"><label>Position</label>
+            <select data-field="pos">
+              <option value="suffix" ${s.pos==='suffix'?'selected':''}>Suffix</option>
+              <option value="prefix" ${s.pos==='prefix'?'selected':''}>Prefix</option>
+            </select>
+          </div>
+        </div>
+        <div class="op-field">
+          <label>Separator</label>
+          <input type="text" data-field="separator" value="${esc(s.separator)}" maxlength="3" placeholder="_"/>
+        </div>
+      `;
+  }
+  return '';
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ─────────────────────────────────────────────
+   PRESET APPLICATION
+───────────────────────────────────────────── */
+function buildPresetDropdown() {
+  const sel = document.getElementById('asset-preset');
+  const preset = ENGINE_PRESETS[currentEngine];
+  sel.innerHTML = preset.options.map(o =>
+    `<option value="${o.v}" ${o.v===currentAssetPreset?'selected':''}>${esc(o.label)}</option>`
+  ).join('');
+}
+
+function applyAssetPreset() {
+  const preset = ENGINE_PRESETS[currentEngine].options.find(o => o.v === currentAssetPreset);
+  if (!preset || preset.v === 'none') return;
+
+  // Apply prefix/suffix
+  if (preset.prefix !== undefined || preset.suffix !== undefined) {
+    ops.affix.prefix = preset.prefix || '';
+    ops.affix.suffix = preset.suffix || '';
+    ops.affix.enabled = true;
+    ops.affix.expanded = false;
+  }
+  // Apply case
+  if (preset.case) {
+    ops.case.mode = preset.case;
+    ops.case.enabled = true;
+    ops.case.expanded = false;
+  }
+  buildOpsList();
+  rerunPreview();
+  toast(`Applied: ${preset.label}`);
+}
+
+/* ─────────────────────────────────────────────
+   FILENAME TRANSFORMATIONS
+───────────────────────────────────────────── */
+
+function splitExt(name) {
+  const m = name.match(/^(.*?)((?:\.[^.]+)?)$/);
+  // Treat only the last dot-segment as an extension, and only if >0 chars after dot
+  const idx = name.lastIndexOf('.');
+  if (idx <= 0 || idx === name.length - 1) return { base: name, ext: '' };
+  return { base: name.slice(0, idx), ext: name.slice(idx) };
+}
+
+function applyStrip(base, opts) {
+  let s = base;
+  if (opts.removeBracketed) {
+    s = s.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '');
+  }
+  if (opts.trimSpaces) s = s.replace(/ {2,}/g, ' ');
+  if (opts.collapseUnderscores) s = s.replace(/_{2,}/g, '_');
+  if (opts.collapseDashes) s = s.replace(/-{2,}/g, '-');
+  if (opts.trimEnds) s = s.replace(/^[-_\s]+|[-_\s]+$/g, '');
+  return s;
+}
+
+function applyFind(base, opts) {
+  if (!opts.find) return base;
+  try {
+    if (opts.regex) {
+      const flags = opts.caseSensitive ? 'g' : 'gi';
+      const re = new RegExp(opts.find, flags);
+      return base.replace(re, opts.replace ?? '');
+    } else {
+      if (opts.caseSensitive) {
+        return base.split(opts.find).join(opts.replace ?? '');
+      } else {
+        const esc = opts.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return base.replace(new RegExp(esc, 'gi'), opts.replace ?? '');
+      }
+    }
+  } catch {
+    return base;
+  }
+}
+
+function applyRemove(base, opts) {
+  if (opts.mode === 'first') return base.slice(Math.min(opts.count || 0, base.length));
+  if (opts.mode === 'last')  return base.slice(0, Math.max(0, base.length - (opts.count || 0)));
+  if (opts.mode === 'range') {
+    const f = Math.max(0, opts.from || 0);
+    const t = Math.max(f, opts.to || 0);
+    return base.slice(0, f) + base.slice(Math.min(t, base.length));
+  }
+  return base;
+}
+
+function splitTokens(s) {
+  // Split on _, -, whitespace, and camelCase boundaries
+  return s
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .split(/[_\-\s]+/)
+    .filter(Boolean);
+}
+
+function applyCase(base, mode) {
+  if (!base) return base;
+  const tokens = splitTokens(base);
+  switch (mode) {
+    case 'UPPER':      return base.toUpperCase();
+    case 'lower':      return base.toLowerCase();
+    case 'Title':      return tokens.map(t => t[0].toUpperCase() + t.slice(1).toLowerCase()).join(' ');
+    case 'camelCase':  return tokens.map((t,i) => i===0 ? t.toLowerCase() : t[0].toUpperCase() + t.slice(1).toLowerCase()).join('');
+    case 'PascalCase': return tokens.map(t => t[0].toUpperCase() + t.slice(1).toLowerCase()).join('');
+    case 'snake_case': return tokens.map(t => t.toLowerCase()).join('_');
+    case 'kebab-case': return tokens.map(t => t.toLowerCase()).join('-');
+    case 'SCREAMING':  return tokens.map(t => t.toUpperCase()).join('_');
+    default: return base;
+  }
+}
+
+function applyAffix(base, opts) {
+  return (opts.prefix || '') + base + (opts.suffix || '');
+}
+
+function applyNumber(base, opts, idx) {
+  const n = (opts.start || 0) + idx * (opts.step || 1);
+  const padded = String(n).padStart(opts.pad || 3, '0');
+  const sep = opts.separator ?? '_';
+  if (opts.pos === 'prefix') return padded + sep + base;
+  return base + sep + padded;
+}
+
+/* ─────────────────────────────────────────────
+   PREVIEW / RENDER
+───────────────────────────────────────────── */
+
+function computeNewName(file, idx) {
+  const { base, ext } = splitExt(file.origName);
+  let b = base;
+
+  // Execute in OP_DEFS order (that's the pipeline order)
+  for (const def of OP_DEFS) {
+    const s = ops[def.id];
+    if (!s.enabled) continue;
+    switch (def.id) {
+      case 'strip':  b = applyStrip(b, s); break;
+      case 'find':   b = applyFind(b, s); break;
+      case 'remove': b = applyRemove(b, s); break;
+      case 'case':   b = applyCase(b, s.mode); break;
+      case 'affix':  b = applyAffix(b, s); break;
+      case 'number': b = applyNumber(b, s, idx); break;
+    }
+  }
+  return b + ext;
+}
+
+function rerunPreview() {
+  const nameCounts = new Map();
+  const computed = files.map((f, i) => {
+    const newName = computeNewName(f, i);
+    nameCounts.set(newName, (nameCounts.get(newName) || 0) + 1);
+    return newName;
+  });
+
+  const table = document.getElementById('file-table');
+  if (!files.length) { table.innerHTML = ''; updateSummary(0,0,0,0); return; }
+
+  let changed = 0, unchanged = 0, collisions = 0;
+  const html = files.map((f, i) => {
+    const newName = computed[i];
+    const isChanged = newName !== f.origName;
+    const isCollision = nameCounts.get(newName) > 1;
+    if (isCollision) collisions++;
+    else if (isChanged) changed++;
+    else unchanged++;
+    const cls = isCollision ? 'collision' : (isChanged ? 'changed' : '');
+    const newCls = isChanged ? '' : 'unchanged';
+    return `
+      <div class="file-row ${cls}" data-id="${f.id}">
+        <div class="file-idx">${String(i+1).padStart(3,'0')}</div>
+        <div class="old-name" title="${esc(f.origName)}">${esc(f.origName)}</div>
+        <div class="arrow-col">→</div>
+        <div class="new-name ${newCls}" title="${esc(newName)}">${esc(newName)}</div>
+      </div>
+    `;
+  }).join('');
+  table.innerHTML = html;
+
+  updateSummary(files.length, changed, unchanged, collisions);
+}
+
+function updateSummary(total, changed, unchanged, collisions) {
+  document.getElementById('sum-total').textContent = total;
+  document.getElementById('sum-changed').textContent = changed;
+  document.getElementById('sum-unchanged').textContent = unchanged;
+  const col = document.getElementById('sum-collisions');
+  col.textContent = collisions;
+  col.className = 'stat-val' + (collisions > 0 ? ' danger' : '');
+
+  document.getElementById('file-count').textContent = total ? `× ${total}` : '';
+  document.getElementById('btn-export').disabled = total === 0 || collisions > 0 || changed === 0;
+
+  const statusEl = document.getElementById('op-status-text');
+  if (total === 0) statusEl.textContent = 'Standby';
+  else if (collisions > 0) statusEl.textContent = 'Collisions';
+  else if (changed === 0) statusEl.textContent = 'No Changes';
+  else statusEl.textContent = 'Ready';
+}
+
+/* ─────────────────────────────────────────────
+   FILE INTAKE
+───────────────────────────────────────────── */
+
+function addFiles(fileList) {
+  const added = [];
+  for (const f of fileList) {
+    // Skip hidden/dotfiles that sometimes get picked up
+    if (f.name.startsWith('.')) continue;
+    const { base, ext } = splitExt(f.name);
+    added.push({
+      id: fileIdSeq++,
+      file: f,
+      path: f.webkitRelativePath || f.name,
+      origName: f.name,
+      basename: base,
+      ext,
+    });
+  }
+  if (!added.length) return;
+  files = files.concat(added);
+  document.getElementById('dropzone').classList.add('hidden');
+  document.getElementById('list-head').style.display = '';
+  rerunPreview();
+  toast(`Loaded ${added.length} file${added.length===1?'':'s'}`);
+}
+
+function clearAll() {
+  files = [];
+  document.getElementById('dropzone').classList.remove('hidden');
+  document.getElementById('list-head').style.display = 'none';
+  document.getElementById('file-table').innerHTML = '';
+  updateSummary(0,0,0,0);
+}
+
+/* ─────────────────────────────────────────────
+   EXPORT (as .zip)
+───────────────────────────────────────────── */
+
+async function exportRenamed() {
+  if (!files.length) return;
+
+  // Re-compute final names
+  const nameCounts = new Map();
+  const computed = files.map((f, i) => {
+    const n = computeNewName(f, i);
+    nameCounts.set(n, (nameCounts.get(n) || 0) + 1);
+    return n;
+  });
+  // Abort if collisions
+  for (const [n, c] of nameCounts) {
+    if (c > 1) { toastError(`Collision: ${n}`); return; }
+  }
+
+  try {
+    document.getElementById('op-status-text').textContent = 'Zipping';
+    const zip = new JSZip();
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const newName = computed[i];
+      // Preserve any folder structure from webkitRelativePath (strip the original filename)
+      const relDir = f.path.includes('/') ? f.path.substring(0, f.path.lastIndexOf('/') + 1) : '';
+      zip.file(relDir + newName, f.file);
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    const a = document.createElement('a');
+    a.href = url; a.download = `tiko-rename-${ts}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast(`Exported ${files.length} file${files.length===1?'':'s'}`);
+    document.getElementById('op-status-text').textContent = 'Exported';
+  } catch (e) {
+    console.error(e);
+    toastError('Export failed');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
+function toast(msg, ms = 2400) {
+  const t = document.getElementById('toast');
+  t.className = ''; t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+function toastError(msg, ms = 3000) {
+  const t = document.getElementById('toast');
+  t.className = 'error'; t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ─────────────────────────────────────────────
+   EVENT BINDINGS
+───────────────────────────────────────────── */
+
+// Engine preset buttons
+document.querySelectorAll('.preset-btn[data-engine]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentEngine = btn.dataset.engine;
+    currentAssetPreset = 'none';
+    document.querySelectorAll('.preset-btn[data-engine]').forEach(b => b.classList.toggle('active', b === btn));
+    buildPresetDropdown();
+  });
+});
+
+document.getElementById('asset-preset').addEventListener('change', e => {
+  currentAssetPreset = e.target.value;
+  applyAssetPreset();
+});
+
+document.getElementById('btn-reset-ops').addEventListener('click', () => {
+  if (!confirm('Reset all operations to defaults?')) return;
+  ops = defaultOpState();
+  buildOpsList();
+  rerunPreview();
+  toast('Operations reset');
+});
+
+// File intake
+const fileInput = document.getElementById('file-input');
+const folderInput = document.getElementById('folder-input');
+fileInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+folderInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+document.getElementById('btn-load-files').addEventListener('click', () => fileInput.click());
+document.getElementById('btn-load-folder').addEventListener('click', () => folderInput.click());
+document.getElementById('btn-add-more').addEventListener('click', () => fileInput.click());
+document.getElementById('btn-clear-all').addEventListener('click', () => {
+  if (files.length && !confirm(`Clear all ${files.length} files?`)) return;
+  clearAll();
+  toast('Queue cleared');
+});
+
+// Drag & drop
+const main = document.getElementById('main');
+['dragenter','dragover'].forEach(ev => main.addEventListener(ev, e => {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.add('dragover');
+}));
+['dragleave','drop'].forEach(ev => main.addEventListener(ev, e => {
+  e.preventDefault();
+  if (ev === 'drop' || !main.contains(e.relatedTarget)) {
+    document.getElementById('dropzone').classList.remove('dragover');
+  }
+}));
+main.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);
+});
+
+// Export
+document.getElementById('btn-export').addEventListener('click', exportRenamed);
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+buildOpsList();
+buildPresetDropdown();
+updateSummary(0,0,0,0);
+</script>
+</body>
+</html>
