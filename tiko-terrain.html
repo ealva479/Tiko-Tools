@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiko Developments — Generative Terrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --obsidian:#0A0A0D;--purple:#8B5CF6;--teal:#14B8A6;
+    --white:#F1F1F5;--muted:#A1A1AA;--lavender:#C4B5FD;
+    --deep:#5B21B6;--pink:#EC4899;--gold:#F59E0B;
+  }
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--obsidian);cursor:none;}
+
+  /* CURSOR */
+  #cur{position:fixed;width:8px;height:8px;background:var(--teal);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+  #cur-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(139,92,246,.45);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .08s,top .08s;}
+
+  /* THREE CANVAS */
+  #c{position:fixed;inset:0;display:block;z-index:0;}
+
+  /* TERRAIN LABEL */
+  .terrain-label{ display:none; }
+  .left-panel{ display:none; }
+
+  /* ── FLOATING CONTROL PANEL ── */
+  .panel{
+    position:fixed;top:2rem;right:2.2rem;
+    z-index:20;
+    width:220px;
+    background:rgba(10,10,13,.82);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(139,92,246,.22);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(139,92,246,.08);
+    animation:fadeIn 1s .7s both;
+    user-select:none;
+    transition:width .35s cubic-bezier(.4,0,.2,1), border-radius .35s;
+  }
+  .panel.collapsed{
+    width:36px;
+    border-radius:8px;
+  }
+
+  /* Panel header */
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.7rem 1rem;
+    background:rgba(139,92,246,.08);
+    border-bottom:1px solid rgba(139,92,246,.15);
+    cursor:none;
+    transition:padding .35s, border-color .35s;
+  }
+  .panel.collapsed .panel-header{
+    padding:.55rem;
+    border-bottom-color:transparent;
+    justify-content:center;
+  }
+  .panel-title{
+    font-family:'Space Mono',monospace;font-size:.58rem;
+    letter-spacing:.18em;text-transform:uppercase;
+    color:var(--lavender);display:flex;align-items:center;gap:.5rem;
+    overflow:hidden;white-space:nowrap;
+    transition:opacity .2s, max-width .35s;
+    max-width:200px;
+  }
+  .panel-title::before{
+    content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;
+    background:var(--teal);box-shadow:0 0 6px var(--teal);
+  }
+  .panel.collapsed .panel-title{
+    opacity:0;max-width:0;pointer-events:none;
+  }
+  .panel-toggle{
+    width:26px;height:26px;
+    background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.28);
+    border-radius:6px;cursor:none;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s, box-shadow .2s;
+  }
+  .panel-toggle:hover{
+    background:rgba(139,92,246,.28);
+    box-shadow:0 0 10px rgba(139,92,246,.3);
+  }
+  .panel-toggle svg{transition:transform .3s;}
+  .panel.collapsed .panel-toggle svg{transform:rotate(180deg);}
+
+  /* Panel body */
+  .panel-body{
+    padding:.85rem 1rem;
+    display:flex;flex-direction:column;gap:.7rem;
+    max-height:600px;
+    overflow:hidden;
+    transition:max-height .35s cubic-bezier(.4,0,.2,1), padding .35s, opacity .2s;
+    opacity:1;
+  }
+  .panel.collapsed .panel-body{
+    max-height:0;
+    padding-top:0;padding-bottom:0;
+    opacity:0;
+  }
+
+  /* Panel sections */
+  .ps-label{
+    font-family:'Space Mono',monospace;font-size:.48rem;
+    letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(139,92,246,.45);margin-bottom:.2rem;
+  }
+  .ps-row{display:flex;gap:.35rem;flex-wrap:wrap;}
+
+  .pb{
+    font-family:'Space Mono',monospace;font-size:.52rem;
+    letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);background:rgba(255,255,255,.04);
+    border:1px solid rgba(139,92,246,.18);border-radius:4px;
+    padding:.3rem .65rem;cursor:none;transition:all .2s;
+    white-space:nowrap;
+  }
+  .pb.on{
+    color:var(--lavender);
+    border-color:rgba(139,92,246,.55);
+    background:rgba(139,92,246,.16);
+  }
+  .pb:hover:not(.on){color:var(--white);border-color:rgba(139,92,246,.3);}
+
+  /* Speed slider */
+  .slider-wrap{display:flex;align-items:center;gap:.6rem;}
+  #spd{
+    -webkit-appearance:none;flex:1;height:2px;
+    background:rgba(139,92,246,.25);outline:none;
+    cursor:none;border-radius:1px;
+  }
+  #spd::-webkit-slider-thumb{
+    -webkit-appearance:none;width:10px;height:10px;
+    border-radius:50%;background:var(--purple);cursor:none;
+    box-shadow:0 0 6px rgba(139,92,246,.6);
+  }
+  .spd-val{
+    font-family:'Space Mono',monospace;font-size:.48rem;
+    color:var(--muted);white-space:nowrap;min-width:28px;text-align:right;
+  }
+
+  /* Divider */
+  .ps-div{height:1px;background:rgba(139,92,246,.1);margin:.1rem 0;}
+
+
+
+  /* Scanline */
+  .scanline{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:4;}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<canvas id="c"></canvas>
+<div class="scanline"></div>
+
+
+
+
+
+<!-- FLOATING CONTROL PANEL -->
+<div class="panel collapsed" id="panel">
+  <div class="panel-header" id="panel-header">
+    <div class="panel-title">Controls</div>
+    <div class="panel-toggle" id="panel-toggle">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <polyline points="2,7 5,3 8,7" stroke="#C4B5FD" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+  <div class="panel-body">
+
+    <div>
+      <div class="ps-label">Palette</div>
+      <div class="ps-row">
+        <button class="pb on" data-pal="0">Aether</button>
+        <button class="pb" data-pal="1">Magma</button>
+        <button class="pb" data-pal="2">Void</button>
+      </div>
+    </div>
+
+    <div class="ps-div"></div>
+
+    <div>
+      <div class="ps-label">Render</div>
+      <div class="ps-row">
+        <button class="pb on" data-rnd="0">Wire</button>
+        <button class="pb" data-rnd="1">Solid</button>
+        <button class="pb" data-rnd="2">Both</button>
+      </div>
+    </div>
+
+    <div class="ps-div"></div>
+
+    <div>
+      <div class="ps-label">Speed</div>
+      <div class="slider-wrap">
+        <input type="range" id="spd" min="1" max="100" value="30">
+        <span class="spd-val" id="spd-lbl">0.30×</span>
+      </div>
+    </div>
+
+    <div class="ps-div"></div>
+
+    <div>
+      <div class="ps-label">Camera</div>
+      <div class="ps-row">
+        <button class="pb on" data-cam="0">Orbit</button>
+        <button class="pb" data-cam="1">Top</button>
+        <button class="pb" data-cam="2">Side</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── CURSOR ────────────────────────────────────────────────────
+const curEl=document.getElementById('cur'),rngEl=document.getElementById('cur-ring');
+let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function ac(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;curEl.style.left=mx+'px';curEl.style.top=my+'px';rngEl.style.left=rx+'px';rngEl.style.top=ry+'px';requestAnimationFrame(ac);})();
+
+// ── PANEL TOGGLE + DRAG ────────────────────────────────────────
+const panel      = document.getElementById('panel');
+const panelToggle= document.getElementById('panel-toggle');
+const panelHeader= document.getElementById('panel-header');
+let collapsed = true;
+
+panelToggle.addEventListener('click', ()=>{
+  collapsed = !collapsed;
+  panel.classList.toggle('collapsed', collapsed);
+});
+
+// Drag
+let dragging=false, dragOffX=0, dragOffY=0;
+panelHeader.addEventListener('mousedown', e=>{
+  if(e.target===panelToggle || panelToggle.contains(e.target)) return;
+  dragging=true;
+  const r=panel.getBoundingClientRect();
+  dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top;
+  panel.style.transition='none';
+  panel.style.right='auto';
+});
+document.addEventListener('mousemove', e=>{
+  if(!dragging) return;
+  panel.style.left=(e.clientX-dragOffX)+'px';
+  panel.style.top =(e.clientY-dragOffY)+'px';
+});
+document.addEventListener('mouseup', ()=>{ dragging=false; });
+
+// ── THREE ─────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.setClearColor(0x0A0A0D,1);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x0A0A0D,0.024);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,300);
+camera.position.set(0,16,26); camera.lookAt(0,0,0);
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// ── PERLIN ────────────────────────────────────────────────────
+const _p=new Uint8Array(512);
+(()=>{const t=new Uint8Array(256);for(let i=0;i<256;i++)t[i]=i;for(let i=255;i>0;i--){const j=Math.floor(Math.random()*(i+1));[t[i],t[j]]=[t[j],t[i]];}for(let i=0;i<512;i++)_p[i]=t[i&255];})();
+function fade(t){return t*t*t*(t*(t*6-15)+10);}
+function lerp(a,b,t){return a+t*(b-a);}
+function grad2(h,x,y){h&=3;const u=h<2?x:y,v=h<2?y:x;return((h&1)?-u:u)+((h&2)?-v:v);}
+function noise2(x,y){const X=Math.floor(x)&255,Y=Math.floor(y)&255;x-=Math.floor(x);y-=Math.floor(y);const u=fade(x),v=fade(y),A=_p[X]+Y,B=_p[X+1]+Y;return lerp(lerp(grad2(_p[A],x,y),grad2(_p[B],x-1,y),u),lerp(grad2(_p[A+1],x,y-1),grad2(_p[B+1],x-1,y-1),u),v);}
+function fbm(x,y,oct){let val=0,amp=1,freq=1,max=0;for(let i=0;i<oct;i++){val+=noise2(x*freq,y*freq)*amp;max+=amp;amp*=.5;freq*=2.1;}return val/max;}
+
+// ── HEAT MAP ──────────────────────────────────────────────────
+const HW=512,hCv=document.createElement('canvas');
+hCv.width=hCv.height=HW;
+const hCx=hCv.getContext('2d');
+let hPx=null;
+function bakeHeat(){
+  hCx.fillStyle='#000';hCx.fillRect(0,0,HW,HW);
+  [24,16,8,0].forEach(blur=>{
+    hCx.save();
+    if(blur>0)hCx.filter=`blur(${blur}px)`;
+    hCx.fillStyle=blur===0?'#fff':`rgba(255,255,255,${.25-blur*.006})`;
+    hCx.font=`900 ${Math.floor(HW*.4)}px Syne,Arial Black,sans-serif`;
+    hCx.textAlign='center';hCx.textBaseline='middle';
+    hCx.fillText('TIKO',HW/2,HW/2);
+    hCx.restore();
+  });
+  hPx=hCx.getImageData(0,0,HW,HW).data;
+}
+document.fonts.ready.then(bakeHeat);
+setTimeout(()=>{if(!hPx)bakeHeat();},600);
+function getHeat(nx,ny){
+  if(!hPx)return 0;
+  const px=Math.max(0,Math.min(HW-1,Math.floor(nx*HW)));
+  const py=Math.max(0,Math.min(HW-1,Math.floor((1-ny)*HW)));
+  return hPx[(py*HW+px)*4]/255;
+}
+
+// ── GEOMETRY ──────────────────────────────────────────────────
+const SEGS=140,SZ=36,MAX_H=5;
+const geo=new THREE.PlaneGeometry(SZ,SZ,SEGS,SEGS);
+geo.rotateX(-Math.PI/2);
+const G1=(SEGS+1)*(SEGS+1);
+const colBuf=new Float32Array(G1*3);
+const colAttr=new THREE.BufferAttribute(colBuf,3);
+geo.setAttribute('color',colAttr);
+
+const wireMat  = new THREE.MeshBasicMaterial({vertexColors:true,wireframe:true});
+const solidMat = new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+const overMat  = new THREE.MeshBasicMaterial({color:0x1a0a30,wireframe:true,transparent:true,opacity:.14});
+
+const wireMesh  = new THREE.Mesh(geo,wireMat);
+const solidMesh = new THREE.Mesh(geo,solidMat);
+const overMesh  = new THREE.Mesh(geo,overMat);
+scene.add(wireMesh);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x1a0a2e,3));
+const dl1=new THREE.DirectionalLight(0x8B5CF6,2.5);dl1.position.set(10,20,10);scene.add(dl1);
+const dl2=new THREE.DirectionalLight(0x14B8A6,1.8);dl2.position.set(-10,15,-8);scene.add(dl2);
+
+// ── STATE ─────────────────────────────────────────────────────
+let palette=0,renderMode=0,heatOn=false,speed=.30,camMode=0,camAngle=0;
+
+// ── CONTROLS ──────────────────────────────────────────────────
+document.querySelectorAll('[data-pal]').forEach(b=>b.addEventListener('click',()=>{
+  palette=+b.dataset.pal;
+  document.querySelectorAll('[data-pal]').forEach(x=>x.classList.toggle('on',x===b));
+}));
+document.querySelectorAll('[data-rnd]').forEach(b=>b.addEventListener('click',()=>{
+  renderMode=+b.dataset.rnd;
+  document.querySelectorAll('[data-rnd]').forEach(x=>x.classList.toggle('on',x===b));
+  scene.remove(wireMesh,solidMesh,overMesh);
+  if(renderMode===0)scene.add(wireMesh);
+  else if(renderMode===1)scene.add(solidMesh);
+  else{scene.add(solidMesh);scene.add(overMesh);}
+}));
+document.querySelectorAll('[data-heat]').forEach(b=>b.addEventListener('click',()=>{
+  heatOn=b.dataset.heat==='1';
+  document.querySelectorAll('[data-heat]').forEach(x=>x.classList.toggle('on',x===b));
+}));
+document.querySelectorAll('[data-cam]').forEach(b=>b.addEventListener('click',()=>{
+  camMode=+b.dataset.cam;
+  document.querySelectorAll('[data-cam]').forEach(x=>x.classList.toggle('on',x===b));
+}));
+document.getElementById('spd').addEventListener('input',function(){
+  speed=+this.value/100;
+  document.getElementById('spd-lbl').textContent=speed.toFixed(2)+'×';
+});
+
+// ── COLOUR HELPERS ────────────────────────────────────────────
+function lerp(a,b,t){return a+t*(b-a);}
+function palAether(t,h,et){
+  let r,g,b;
+  if(t<.25){r=lerp(.04,.227,t*4);g=lerp(.02,.082,t*4);b=lerp(.08,.443,t*4);}
+  else if(t<.5){r=lerp(.227,.545,(t-.25)*4);g=lerp(.082,.361,(t-.25)*4);b=lerp(.443,.965,(t-.25)*4);}
+  else if(t<.75){r=lerp(.545,.769,(t-.5)*4);g=lerp(.361,.714,(t-.5)*4);b=lerp(.965,.992,(t-.5)*4);}
+  else{r=lerp(.769,.082,(t-.75)*4);g=lerp(.714,.722,(t-.75)*4);b=lerp(.992,.651,(t-.75)*4);}
+  if(heatOn&&h>.04){
+    const p=h*h,pulse=.8+Math.sin(et*3+h*10)*.2;
+    let hr,hg,hb;
+    if(p<.33){hr=lerp(.545,.929,p*3);hg=lerp(.361,.282,p*3);hb=lerp(.965,.6,p*3);}
+    else if(p<.66){hr=lerp(.929,.965,(p-.33)*3);hg=lerp(.282,.62,(p-.33)*3);hb=lerp(.6,.04,(p-.33)*3);}
+    else{hr=lerp(.965,1,(p-.66)*3);hg=lerp(.62,.95,(p-.66)*3);hb=lerp(.04,.8,(p-.66)*3);}
+    const blend=Math.min(h*1.4,1)*pulse;
+    r=lerp(r,hr,blend);g=lerp(g,hg,blend);b=lerp(b,hb,blend);
+  }
+  return[r,g,b];
+}
+function palMagma(t,h,et){
+  let r,g,b;
+  if(t<.25){r=lerp(.04,.3,t*4);g=lerp(.01,.03,t*4);b=lerp(.04,.1,t*4);}
+  else if(t<.5){r=lerp(.3,.7,(t-.25)*4);g=lerp(.03,.12,(t-.25)*4);b=lerp(.1,.05,(t-.25)*4);}
+  else if(t<.75){r=lerp(.7,.94,(t-.5)*4);g=lerp(.12,.5,(t-.5)*4);b=lerp(.05,.05,(t-.5)*4);}
+  else{r=lerp(.94,1,(t-.75)*4);g=lerp(.5,.9,(t-.75)*4);b=lerp(.05,.5,(t-.75)*4);}
+  if(heatOn&&h>.04){const pulse=.8+Math.sin(et*4+h*8)*.2;r=lerp(r,.769,h*.7*pulse);g=lerp(g,.714,h*.7*pulse);b=lerp(b,.992,h*.7*pulse);}
+  return[r,g,b];
+}
+function palVoid(t,h,et){
+  let r,g,b;
+  if(t<.35){r=lerp(.01,.06,t*2.86);g=lerp(.01,.03,t*2.86);b=lerp(.02,.14,t*2.86);}
+  else if(t<.65){r=lerp(.06,.227,(t-.35)*3.33);g=lerp(.03,.082,(t-.35)*3.33);b=lerp(.14,.443,(t-.35)*3.33);}
+  else{r=lerp(.227,.545,(t-.65)*2.86);g=lerp(.082,.361,(t-.65)*2.86);b=lerp(.443,.965,(t-.65)*2.86);}
+  if(heatOn&&h>.04){const pulse=.85+Math.sin(et*2.5+h*6)*.15;r=lerp(r,.082,h*.8*pulse);g=lerp(g,.722,h*.8*pulse);b=lerp(b,.651,h*.8*pulse);}
+  return[r,g,b];
+}
+
+// ── MOUSE ─────────────────────────────────────────────────────
+let mouseNX=.5,mouseNY=.5;
+document.addEventListener('mousemove',e=>{
+  // Only influence terrain if not over the panel
+  if(e.target.closest('.panel')) return;
+  mouseNX=e.clientX/innerWidth; mouseNY=e.clientY/innerHeight;
+});
+document.addEventListener('touchmove',e=>{mouseNX=e.touches[0].clientX/innerWidth;mouseNY=e.touches[0].clientY/innerHeight;},{passive:true});
+
+// ── TERRAIN UPDATE ────────────────────────────────────────────
+const posAttr=geo.attributes.position;
+let maxH=0,fpsArr=[],lastFT=0;
+
+function updateTerrain(et){
+  const G=SEGS+1,tc=et*speed;
+  maxH=0;
+  for(let row=0;row<=SEGS;row++){
+    for(let col=0;col<=SEGS;col++){
+      const idx=row*G+col;
+      const nx=col/SEGS,ny=row/SEGS;
+      let h=fbm(nx*3+tc*.35,ny*3+tc*.28,6);
+      h+=fbm(nx*6+tc*.6,ny*5.5-tc*.45,4)*.28;
+      const dwx=nx+fbm(nx*2+tc*.12,ny*2,3)*.22;
+      const dwy=ny+fbm(nx*2,ny*2+tc*.12,3)*.22;
+      h+=fbm(dwx*4+1.7,dwy*4+9.2,4)*.18;
+      const mdx=(nx-mouseNX)*2.0,mdy=ny-mouseNY;
+      h+=Math.exp(-(mdx*mdx+mdy*mdy)*16)*.85;
+      const heat=(heatOn&&hPx)?getHeat(nx,ny):0;
+      h+=heat*.5;
+      h*=MAX_H;
+      if(h>maxH)maxH=h;
+      posAttr.setY(idx,h);
+      const t01=Math.max(0,Math.min(1,(h+.5)/(MAX_H+.5)));
+      let rgb;
+      if(palette===0)rgb=palAether(t01,heat,et);
+      else if(palette===1)rgb=palMagma(t01,heat,et);
+      else rgb=palVoid(t01,heat,et);
+      colBuf[idx*3]=rgb[0];colBuf[idx*3+1]=rgb[1];colBuf[idx*3+2]=rgb[2];
+    }
+  }
+  posAttr.needsUpdate=true;
+  colAttr.needsUpdate=true;
+  geo.computeVertexNormals();
+}
+
+// ── ANIMATE ───────────────────────────────────────────────────
+const clock=new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta(),et=clock.getElapsedTime();
+  fpsArr.push(1/Math.max(dt,.001));
+  if(fpsArr.length>30)fpsArr.shift();
+  if(et-lastFT>.5){
+    lastFT=et;
+  }
+  updateTerrain(et);
+
+  // Camera modes
+  if(camMode===0){
+    // Slow orbit
+    camAngle+=dt*.05;
+    camera.position.set(Math.sin(camAngle)*26,16,Math.cos(camAngle)*26);
+    camera.lookAt(0,1.5,0);
+  } else if(camMode===1){
+    // Top down
+    camera.position.set(0,38,0.001);
+    camera.lookAt(0,0,0);
+  } else {
+    // Side
+    camera.position.set(26,8,0);
+    camera.lookAt(0,2,0);
+  }
+
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
