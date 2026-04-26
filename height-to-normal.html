@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Height → Normal Map — Tiko Developments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0A0A0D;
+    --bg2:       #121217;
+    --bg3:       #16161c;
+    --bg4:       #2A2A33;
+    --border:    rgba(255,255,255,0.06);
+    --border2:   rgba(255,255,255,0.12);
+    --border3:   rgba(255,255,255,0.20);
+    --text:      #F1F1F5;
+    --text2:     #A1A1AA;
+    --text3:     #6B7280;
+    --text4:     #4a4a52;
+
+    --teal:      #14B8A6;
+    --teal2:     #22D3EE;
+    --teal3:     #0F766E;
+    --teal-dim:  rgba(20,184,166,0.12);
+
+    --purple:    #8B5CF6;
+    --purple2:   #A855F7;
+    --purple-dim: rgba(139,92,246,0.12);
+
+    --red:       #EF4444;
+    --gold:      #F59E0B;
+
+    --mono: 'JetBrains Mono', 'DM Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html, body {
+    min-height: 100%; background: var(--bg);
+    font-family: var(--sans); color: var(--text);
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+  }
+  body { overflow-x: hidden; }
+
+  #root { display: flex; min-height: 100vh; flex-direction: column; }
+
+  /* ── REGISTRATION MARKS ──────────────────── */
+  .reg-mark {
+    position: fixed; width: 14px; height: 14px;
+    pointer-events: none; z-index: 1000;
+    color: var(--teal); opacity: 0.5;
+  }
+  .reg-mark::before, .reg-mark::after {
+    content: ''; position: absolute; background: currentColor;
+  }
+  .reg-mark::before { left: 6px; top: 0; width: 1px; height: 14px; }
+  .reg-mark::after  { left: 0; top: 6px; width: 14px; height: 1px; }
+  .reg-tl { top: 8px;    left: 8px; }
+  .reg-tr { top: 8px;    right: 8px; }
+  .reg-bl { bottom: 8px; left: 8px; }
+  .reg-br { bottom: 8px; right: 8px; }
+
+  /* ── TOPBAR ──────────────────────────────── */
+  #topbar {
+    height: 52px; min-height: 52px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    padding: 0 28px;
+    flex-shrink: 0; position: sticky; top: 0;
+    z-index: 50;
+  }
+  #topbar .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding-right: 24px;
+  }
+  .brand-mark { width: 12px; height: 12px; background: var(--teal); flex-shrink: 0; }
+  .brand-name {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--text);
+  }
+  .brand-divider { width: 1px; background: var(--border2); margin: 12px 0; }
+  #topbar .product {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #topbar .product .arrow { color: var(--text4); }
+  #topbar .sep { flex: 1; }
+  #topbar .meta {
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  #topbar .meta .label-pill {
+    background: var(--teal); color: var(--bg);
+    padding: 3px 7px; font-weight: 500;
+  }
+
+  /* ── MAIN ────────────────────────────────── */
+  #main {
+    flex: 1; max-width: 1280px; width: 100%;
+    margin: 0 auto; padding: 28px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  /* ── OP HEADER ───────────────────────────── */
+  #op-header {
+    height: 38px;
+    display: flex; align-items: center;
+    gap: 10px; padding: 0 16px;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    position: relative;
+  }
+  #op-header::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+    pointer-events: none;
+  }
+  #op-header > * { position: relative; z-index: 1; }
+  #op-header .op-marker { width: 6px; height: 6px; background: var(--teal); }
+  #op-header .op-status {
+    color: var(--teal); margin-left: auto;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px;
+  }
+  #op-header .op-status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── TABS ────────────────────────────────── */
+  .tabs {
+    display: flex; gap: 1px;
+    background: var(--border2);
+    border: 1px solid var(--border2);
+    width: fit-content;
+  }
+  .tab {
+    background: var(--bg2); border: none;
+    color: var(--text2); padding: 11px 22px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.12s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { background: var(--bg3); color: var(--text); }
+  .tab.active {
+    background: var(--teal); color: var(--bg);
+    font-weight: 600;
+  }
+  .tab .tab-marker {
+    width: 6px; height: 6px;
+    background: var(--text3);
+  }
+  .tab.active .tab-marker { background: var(--bg); }
+
+  /* ── PANELS ──────────────────────────────── */
+  .panel {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .panel-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px 10px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head .marker {
+    width: 8px; height: 8px; background: var(--teal); flex-shrink: 0;
+  }
+  .panel-head .count {
+    margin-left: auto; color: var(--text3);
+    font-size: 10px; letter-spacing: 0.04em;
+  }
+
+  /* ── DROP FRAME ─────────────────────────── */
+  .drop-frame {
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .drop-frame.drag-over { border-color: var(--teal); background: rgba(20,184,166,0.04); }
+
+  .corner {
+    position: absolute; width: 10px; height: 10px;
+    color: var(--teal); pointer-events: none;
+  }
+  .corner::before, .corner::after { content: ''; position: absolute; background: currentColor; }
+  .corner.tl { top: -1px; left: -1px; }
+  .corner.tl::before { top: 0; left: 0; width: 1px; height: 10px; }
+  .corner.tl::after  { top: 0; left: 0; height: 1px; width: 10px; }
+  .corner.tr { top: -1px; right: -1px; }
+  .corner.tr::before { top: 0; right: 0; width: 1px; height: 10px; }
+  .corner.tr::after  { top: 0; right: 0; height: 1px; width: 10px; }
+  .corner.bl { bottom: -1px; left: -1px; }
+  .corner.bl::before { bottom: 0; left: 0; width: 1px; height: 10px; }
+  .corner.bl::after  { bottom: 0; left: 0; height: 1px; width: 10px; }
+  .corner.br { bottom: -1px; right: -1px; }
+  .corner.br::before { bottom: 0; right: 0; width: 1px; height: 10px; }
+  .corner.br::after  { bottom: 0; right: 0; height: 1px; width: 10px; }
+
+  .drop-section-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono); font-size: 10px; color: var(--text2);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .drop-section-label .marker {
+    width: 8px; height: 8px; background: var(--teal); flex-shrink: 0;
+  }
+  .drop-headline {
+    padding: 32px 32px 14px;
+    font-size: 32px; font-weight: 600; line-height: 1.05;
+    color: var(--text); letter-spacing: -0.02em;
+  }
+  .drop-headline .hl { color: var(--teal2); }
+  .drop-sub {
+    padding: 0 32px 24px;
+    font-size: 14px; color: var(--text2); font-weight: 400;
+    max-width: 540px; line-height: 1.5;
+  }
+  .drop-actions {
+    padding: 0 32px 24px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .drop-readout {
+    border-top: 1px solid var(--border);
+    padding: 14px 32px 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    line-height: 1.7;
+  }
+  .drop-readout .line-prefix { color: var(--text4); }
+  .drop-readout .line-cmd { color: var(--text2); }
+  .drop-readout .formats-list { margin-top: 4px; color: var(--text2); }
+  .drop-readout .formats-list .fmt {
+    color: var(--teal2); display: inline-block; margin-right: 14px;
+  }
+  .drop-readout .formats-list .fmt::before { content: '└─ '; color: var(--text4); }
+
+  /* ── BUTTONS ─────────────────────────────── */
+  .btn-cta {
+    background: var(--teal); color: var(--bg);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+    position: relative;
+  }
+  .btn-cta::before, .btn-cta::after {
+    content: ''; position: absolute; width: 5px; height: 5px;
+    border: 1px solid var(--bg);
+  }
+  .btn-cta::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .btn-cta::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+  .btn-cta:hover:not(:disabled) { background: #1cc7b3; }
+  .btn-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-cta .arrow { font-family: var(--mono); }
+
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid var(--border3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .btn-secondary:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
+  .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── FORM ────────────────────────────────── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  /* At 3 columns, 8 cells leave one dead spot — let the last cell span 2 to fill */
+  @media (max-width: 1100px) {
+    .form-grid { grid-template-columns: repeat(3, 1fr); }
+    .form-grid > .form-cell:last-child { grid-column: span 2; }
+  }
+  @media (max-width: 820px) {
+    .form-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid > .form-cell:last-child { grid-column: span 1; }
+  }
+  .form-cell {
+    background: var(--bg2);
+    padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .form-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text3); letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .form-label::before { content: '>'; color: var(--text4); }
+  .form-label .val {
+    margin-left: auto; color: var(--teal2);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+
+  select, input[type="number"] {
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); padding: 9px 12px;
+    font-size: 12px; font-family: var(--mono); outline: none; width: 100%;
+    transition: border-color 0.15s; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-radius: 0;
+    -webkit-appearance: none; appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2314B8A6' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  select:focus, input[type="number"]:focus { border-color: var(--teal); }
+  select option { background: var(--bg3); }
+  input[type="file"] { display: none; }
+
+  /* Range slider */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; background: transparent;
+    cursor: pointer;
+    margin: 6px 0 2px;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px; background: var(--bg3);
+    border: 1px solid var(--border2);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px; background: var(--bg3);
+    border: 1px solid var(--border2);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 14px; background: var(--teal);
+    border: none; cursor: pointer;
+    margin-top: -6px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 14px; background: var(--teal);
+    border: none; cursor: pointer; border-radius: 0;
+  }
+  input[type="range"]:focus { outline: none; }
+
+  /* Toggle row */
+  .toggle-row {
+    display: flex; gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border2);
+  }
+  .toggle-btn {
+    flex: 1;
+    background: var(--bg3); border: none;
+    color: var(--text2);
+    padding: 9px 10px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.12s;
+    font-weight: 500;
+  }
+  .toggle-btn:hover:not(.active) { background: var(--bg4); color: var(--text); }
+  .toggle-btn.active {
+    background: var(--teal); color: var(--bg);
+    font-weight: 600;
+  }
+
+  /* Checkbox-style toggle (single switch) */
+  .switch-row {
+    display: flex; align-items: center;
+    gap: 10px;
+    padding: 8px 0 0;
+  }
+  .switch {
+    width: 32px; height: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: ''; position: absolute;
+    width: 10px; height: 10px;
+    background: var(--text3);
+    top: 2px; left: 2px;
+    transition: left 0.12s, background 0.12s;
+  }
+  .switch.on { background: var(--teal-dim); border-color: var(--teal); }
+  .switch.on::after { left: 18px; background: var(--teal); }
+  .switch-label {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.1em;
+    text-transform: uppercase;
+    user-select: none; cursor: pointer;
+  }
+
+  /* ── SINGLE-MODE PREVIEW ────────────────── */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+  .preview-cell {
+    background: var(--bg2);
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .preview-cell .ph {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-cell .ph .swatch { width: 6px; height: 6px; background: var(--teal); }
+  .preview-cell .ph .meta {
+    margin-left: auto; color: var(--text3); font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+  .preview-cell .pbody {
+    flex: 1; min-height: 280px;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      linear-gradient(45deg, var(--bg3) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--bg3) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--bg3) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--bg3) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-color: var(--bg);
+    overflow: hidden;
+    position: relative;
+  }
+  .preview-cell .pbody canvas,
+  .preview-cell .pbody img {
+    max-width: 100%; max-height: 100%;
+    width: auto; height: auto;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .preview-cell .placeholder {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text4); letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .preview-cell .placeholder::before { content: '> '; }
+
+  /* ── BATCH IMAGE GRID ───────────────────── */
+  #imagesGrid {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .image-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    position: relative;
+    transition: border-color 0.12s;
+    display: flex; flex-direction: column;
+  }
+  .image-card:hover { border-color: var(--border3); }
+  .image-card .img-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text3); letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .image-card .img-head .swatch {
+    width: 8px; height: 8px; background: var(--teal); flex-shrink: 0;
+  }
+  .image-card .img-head .idx { color: var(--text2); font-weight: 500; }
+  .image-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+  .image-pair > div {
+    background: var(--bg);
+    aspect-ratio: 1/1;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .image-pair canvas, .image-pair img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .image-pair .lbl {
+    position: absolute;
+    top: 4px; left: 4px;
+    font-family: var(--mono); font-size: 8px;
+    background: rgba(10,10,13,0.75);
+    color: var(--text2);
+    padding: 2px 5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .image-pair .pending {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text4); letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .image-pair .pending::before { content: '> '; }
+  .image-info {
+    padding: 8px 10px 10px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .image-name {
+    font-weight: 500; color: var(--text); font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .image-size {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text3); letter-spacing: 0.04em;
+    display: flex; gap: 6px;
+  }
+  .image-size .dim { color: var(--teal2); }
+  .image-size .sep { color: var(--text4); }
+  .remove-btn {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    background: rgba(10,10,13,0.75);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    cursor: pointer; font-size: 14px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+    font-family: var(--mono); border-radius: 0; padding: 0;
+    z-index: 2;
+  }
+  .remove-btn:hover {
+    background: var(--red); border-color: var(--red); color: var(--text);
+  }
+
+  /* ── EMPTY ───────────────────────────────── */
+  .empty-state {
+    padding: 40px 0; text-align: center;
+    font-family: var(--mono); font-size: 11px; color: var(--text4);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .empty-state::before { content: '> '; color: var(--text4); }
+
+  /* ── PROGRESS ────────────────────────────── */
+  .progress-section { display: none; border: 1px solid var(--border); background: var(--bg2); }
+  .progress-section.visible { display: block; }
+  .progress-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text2); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .progress-head .marker {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal); box-shadow: 0 0 6px var(--teal);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .progress-head .pct {
+    margin-left: auto; color: var(--teal2);
+    font-weight: 500; font-variant-numeric: tabular-nums;
+  }
+  .progress-bar { height: 6px; background: var(--bg3); overflow: hidden; }
+  .progress-fill {
+    height: 100%; background: var(--teal);
+    transition: width 0.3s ease; width: 0%;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 1.6s ease-in-out infinite;
+  }
+  @keyframes shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  .progress-status {
+    padding: 10px 16px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--text3); letter-spacing: 0.06em;
+  }
+  .progress-status::before { content: '$ '; color: var(--text4); }
+
+  /* ── CONTROLS BAR ────────────────────────── */
+  .controls {
+    display: flex; gap: 10px;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .controls .btn-cta { flex: 1; justify-content: space-between; }
+
+  /* ── HIDDEN ──────────────────────────────── */
+  [hidden] { display: none !important; }
+
+  /* ── TOAST ───────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--bg2); border: 1px solid var(--teal);
+    color: var(--text); padding: 12px 18px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 500;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.18s, transform 0.18s;
+    z-index: 200; pointer-events: none;
+    display: flex; align-items: center; gap: 10px;
+    max-width: calc(100% - 56px);
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--teal); flex-shrink: 0;
+  }
+
+  /* ── MOBILE ──────────────────────────────── */
+  @media (max-width: 720px) {
+    #topbar { padding: 0 16px; height: 48px; min-height: 48px; }
+    #topbar .product { display: none; }
+    #topbar .meta { gap: 8px; font-size: 9px; }
+    #topbar .meta .label-pill { padding: 2px 5px; }
+    #main { padding: 16px; gap: 14px; }
+    .drop-headline { font-size: 22px; padding: 24px 18px 12px; }
+    .drop-sub, .drop-actions, .drop-readout { padding-left: 18px; padding-right: 18px; }
+    .drop-section-label { padding: 12px 16px; }
+    .reg-mark { display: none; }
+    .preview-grid { grid-template-columns: 1fr; }
+    .preview-cell .pbody { min-height: 220px; }
+    #imagesGrid { grid-template-columns: 1fr; padding: 10px; gap: 10px; }
+    #toast { right: 16px; bottom: 16px; left: 16px; justify-content: center; }
+    .tab { padding: 10px 14px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="reg-mark reg-tl"></div>
+<div class="reg-mark reg-tr"></div>
+<div class="reg-mark reg-bl"></div>
+<div class="reg-mark reg-br"></div>
+
+<div id="root">
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">TIKO</div>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="product">
+      <span class="arrow">/</span>
+      <span>Tools</span>
+      <span class="arrow">/</span>
+      <span>Height → Normal</span>
+    </div>
+    <div class="sep"></div>
+    <div class="meta">
+      <span class="label-pill">v1.0</span>
+      <span>Texture Pipeline</span>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- Operation header -->
+    <div id="op-header">
+      <span class="op-marker"></span>
+      <span>Operation 003 · Heightmap → Normal</span>
+      <span class="op-status" id="opStatus">Standby</span>
+    </div>
+
+    <!-- Mode tabs -->
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-mode="single" type="button" role="tab">
+        <span class="tab-marker"></span>
+        <span>Single + Preview</span>
+      </button>
+      <button class="tab" data-mode="batch" type="button" role="tab">
+        <span class="tab-marker"></span>
+        <span>Batch</span>
+      </button>
+    </div>
+
+    <!-- ============ SHARED CONFIG PANEL ============ -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="marker"></div>
+        <span>Configuration</span>
+      </div>
+      <div class="form-grid">
+
+        <div class="form-cell">
+          <label class="form-label">Convention
+            <span class="val" id="convVal">OpenGL</span>
+          </label>
+          <div class="toggle-row" role="group" aria-label="Normal map convention">
+            <button class="toggle-btn active" data-conv="opengl" type="button">OpenGL · Y+</button>
+            <button class="toggle-btn" data-conv="directx" type="button">DirectX · Y−</button>
+          </div>
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label" for="strength">Strength
+            <span class="val" id="strengthVal">5.0</span>
+          </label>
+          <input type="range" id="strength" min="0.1" max="20" step="0.1" value="5">
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label" for="strengthX">X Scale
+            <span class="val" id="strengthXVal">1.00</span>
+          </label>
+          <input type="range" id="strengthX" min="0" max="2" step="0.05" value="1">
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label" for="strengthY">Y Scale
+            <span class="val" id="strengthYVal">1.00</span>
+          </label>
+          <input type="range" id="strengthY" min="0" max="2" step="0.05" value="1">
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label">Filter</label>
+          <select id="filterSelect">
+            <option value="sobel" selected>Sobel · 3×3</option>
+            <option value="scharr">Scharr · 3×3</option>
+            <option value="prewitt">Prewitt · 3×3</option>
+          </select>
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label">Output Format</label>
+          <select id="formatSelect">
+            <option value="png" selected>PNG · lossless</option>
+            <option value="jpg">JPG · 95%</option>
+            <option value="webp">WebP · 95%</option>
+          </select>
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label">Invert Axes</label>
+          <div class="switch-row">
+            <div class="switch" id="invertX" role="switch" aria-checked="false" tabindex="0"></div>
+            <label class="switch-label" for="invertX">Invert X (Red)</label>
+          </div>
+          <div class="switch-row">
+            <div class="switch" id="invertY" role="switch" aria-checked="false" tabindex="0"></div>
+            <label class="switch-label" for="invertY">Invert Y (Green)</label>
+          </div>
+        </div>
+
+        <div class="form-cell">
+          <label class="form-label">Height</label>
+          <div class="switch-row">
+            <div class="switch" id="invertH" role="switch" aria-checked="false" tabindex="0"></div>
+            <label class="switch-label" for="invertH">Invert Height (Black = High)</label>
+          </div>
+          <div class="switch-row">
+            <div class="switch on" id="tiling" role="switch" aria-checked="true" tabindex="0"></div>
+            <label class="switch-label" for="tiling">Tiling (Wrap Edges)</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ SINGLE MODE ============ -->
+    <section id="singleMode">
+
+      <!-- Drop frame -->
+      <div class="drop-frame" id="singleDrop">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <div class="drop-section-label">
+          <div class="marker"></div>
+          <span>Initialize Heightmap</span>
+        </div>
+
+        <div class="drop-headline">
+          Convert <span class="hl">grayscale height</span> into tangent-space normals.
+        </div>
+        <div class="drop-sub">
+          Drop a heightmap onto this window or browse to begin. Adjust strength and convention live, then export PNG, JPG, or WebP.
+        </div>
+        <div class="drop-actions">
+          <button class="btn-cta" type="button" id="singleBrowseBtn">
+            <span>Choose File</span>
+            <span class="arrow">→</span>
+          </button>
+          <button class="btn-secondary" type="button" id="formatsBtn">
+            <span>Supported Formats</span>
+          </button>
+        </div>
+
+        <div class="drop-readout">
+          <div><span class="line-prefix">$ </span><span class="line-cmd">tiko-normal --await-input --filter=sobel</span></div>
+          <div class="formats-list">
+            <span class="fmt">.png</span><span class="fmt">.jpg</span><span class="fmt">.webp</span><span class="fmt">.bmp</span><span class="fmt">.tiff</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="panel" id="singlePreviewPanel" hidden>
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Preview</span>
+          <span class="count" id="singleMeta"></span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-cell">
+            <div class="ph">
+              <span class="swatch"></span>
+              <span>Heightmap · Input</span>
+              <span class="meta" id="srcMeta"></span>
+            </div>
+            <div class="pbody">
+              <img id="srcImg" alt="height map source">
+            </div>
+          </div>
+          <div class="preview-cell">
+            <div class="ph">
+              <span class="swatch" style="background: var(--teal2)"></span>
+              <span>Normal Map · Output</span>
+              <span class="meta" id="dstMeta"></span>
+            </div>
+            <div class="pbody">
+              <canvas id="dstCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-secondary" type="button" id="singleClearBtn">
+            <span>Clear</span>
+          </button>
+          <button class="btn-cta" type="button" id="singleDownloadBtn">
+            <span>Download Normal Map</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ BATCH MODE ============ -->
+    <section id="batchMode" hidden>
+
+      <div class="drop-frame" id="batchDrop">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <div class="drop-section-label">
+          <div class="marker"></div>
+          <span>Initialize Batch</span>
+        </div>
+
+        <div class="drop-headline">
+          Process <span class="hl">multiple heightmaps</span> with the same settings.
+        </div>
+        <div class="drop-sub">
+          Drop a folder of heightmaps. All files use the configuration above. Results download individually as <span style="color: var(--teal2); font-family: var(--mono);">{name}_normal.{ext}</span>.
+        </div>
+        <div class="drop-actions">
+          <button class="btn-cta" type="button" id="batchBrowseBtn">
+            <span>Choose Files</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Heightmap Queue</span>
+          <span class="count" id="queueCount">0 loaded</span>
+        </div>
+
+        <div id="imagesContainer">
+          <div class="empty-state">no heightmaps loaded</div>
+        </div>
+
+        <div id="imagesGrid" hidden></div>
+
+        <div class="controls" id="batchControls" hidden>
+          <button class="btn-secondary" type="button" id="batchClearBtn">
+            <span>Clear All</span>
+          </button>
+          <button class="btn-cta" type="button" id="batchProcessBtn">
+            <span>Convert & Download</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="progress-section" id="progressSection">
+        <div class="progress-head">
+          <span class="marker"></span>
+          <span>Processing</span>
+          <span class="pct" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status" id="progressText">awaiting batch</div>
+      </div>
+
+    </section>
+
+  </div>
+</div>
+
+<input type="file" id="singleFileInput" accept="image/*">
+<input type="file" id="batchFileInput" multiple accept="image/*">
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────
+const state = {
+  mode: 'single',
+  settings: {
+    convention: 'opengl', // 'opengl' | 'directx'
+    strength: 5.0,
+    strengthX: 1.0,
+    strengthY: 1.0,
+    filter: 'sobel',
+    format: 'png',
+    invertX: false,
+    invertY: false,
+    invertH: false,
+    tiling: true
+  },
+  single: {
+    img: null, // HTMLImageElement
+    name: null,
+    width: 0,
+    height: 0,
+    originalSize: 0
+  },
+  batch: {
+    images: [] // { id, file, img, src, name, originalSize, width, height }
+  }
+};
+
+// ── DOM ───────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const opStatus = $('opStatus');
+const toastEl = $('toast');
+let toastTimer = null;
+
+function toast(msg, ms = 2400) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+function setOpStatus(s) { opStatus.textContent = s; }
+
+// ── Tab switching ─────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.mode = tab.dataset.mode;
+    $('singleMode').hidden = state.mode !== 'single';
+    $('batchMode').hidden = state.mode !== 'batch';
+  });
+});
+
+// ── Convention toggle ─────────────────────
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.settings.convention = btn.dataset.conv;
+    $('convVal').textContent = btn.dataset.conv === 'opengl' ? 'OpenGL' : 'DirectX';
+    rerenderSingle();
+  });
+});
+
+// ── Sliders ───────────────────────────────
+function bindSlider(id, valId, key, fmt) {
+  const el = $(id), vEl = $(valId);
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    state.settings[key] = v;
+    vEl.textContent = fmt(v);
+    rerenderSingle();
+  });
+}
+bindSlider('strength',  'strengthVal',  'strength',  v => v.toFixed(1));
+bindSlider('strengthX', 'strengthXVal', 'strengthX', v => v.toFixed(2));
+bindSlider('strengthY', 'strengthYVal', 'strengthY', v => v.toFixed(2));
+
+// ── Selects ───────────────────────────────
+$('filterSelect').addEventListener('change', e => {
+  state.settings.filter = e.target.value;
+  rerenderSingle();
+});
+$('formatSelect').addEventListener('change', e => {
+  state.settings.format = e.target.value;
+});
+
+// ── Switches ──────────────────────────────
+function bindSwitch(id, key) {
+  const el = $(id);
+  const toggle = () => {
+    const next = !el.classList.contains('on');
+    el.classList.toggle('on', next);
+    el.setAttribute('aria-checked', String(next));
+    state.settings[key] = next;
+    rerenderSingle();
+  };
+  el.addEventListener('click', toggle);
+  el.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+  });
+}
+bindSwitch('invertX', 'invertX');
+bindSwitch('invertY', 'invertY');
+bindSwitch('invertH', 'invertH');
+bindSwitch('tiling',  'tiling');
+
+// ── Drag & drop wiring ────────────────────
+function attachDrop(el, fileHandler) {
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    if (el === $('singleDrop')) $('singleFileInput').click();
+    else $('batchFileInput').click();
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', e => {
+    if (e.target === el) el.classList.remove('drag-over');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    fileHandler(e.dataTransfer.files);
+  });
+}
+attachDrop($('singleDrop'), files => loadSingle(files[0]));
+attachDrop($('batchDrop'),  files => loadBatch(files));
+
+$('singleBrowseBtn').addEventListener('click', e => { e.stopPropagation(); $('singleFileInput').click(); });
+$('batchBrowseBtn').addEventListener('click',  e => { e.stopPropagation(); $('batchFileInput').click(); });
+$('formatsBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  toast('Supported · PNG · JPG · WEBP · BMP · TIFF (browser-decoded)');
+});
+
+$('singleFileInput').addEventListener('change', e => loadSingle(e.target.files[0]));
+$('batchFileInput').addEventListener('change',  e => loadBatch(e.target.files));
+
+// Window-level drop fallback
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  if (!e.dataTransfer?.files?.length) return;
+  if (state.mode === 'single') loadSingle(e.dataTransfer.files[0]);
+  else loadBatch(e.dataTransfer.files);
+});
+
+// ── Single load ──────────────────────────
+function loadSingle(file) {
+  if (!file || !file.type.startsWith('image/')) { toast('No image file detected'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      state.single = {
+        img,
+        name: file.name,
+        width: img.width,
+        height: img.height,
+        originalSize: file.size
+      };
+      $('singlePreviewPanel').hidden = false;
+      $('srcImg').src = e.target.result;
+      $('srcMeta').textContent = `${img.width}×${img.height}`;
+      $('singleMeta').textContent = file.name;
+      setOpStatus('Ready');
+      rerenderSingle();
+      toast(`Loaded ${file.name}`);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+$('singleClearBtn').addEventListener('click', () => {
+  state.single = { img: null, name: null, width: 0, height: 0, originalSize: 0 };
+  $('singlePreviewPanel').hidden = true;
+  $('srcImg').removeAttribute('src');
+  const c = $('dstCanvas');
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  setOpStatus('Standby');
+  toast('Cleared');
+});
+
+// ── Single render (debounced) ────────────
+let renderHandle = null;
+function rerenderSingle() {
+  if (!state.single.img) return;
+  if (renderHandle) cancelAnimationFrame(renderHandle);
+  renderHandle = requestAnimationFrame(() => {
+    const t0 = performance.now();
+    convertToCanvas(state.single.img, $('dstCanvas'));
+    const dt = performance.now() - t0;
+    $('dstMeta').textContent = `${state.single.width}×${state.single.height} · ${dt.toFixed(0)}ms`;
+  });
+}
+
+// ── Download single ──────────────────────
+$('singleDownloadBtn').addEventListener('click', () => {
+  if (!state.single.img) return;
+  const c = $('dstCanvas');
+  const fmt = state.settings.format;
+  const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
+  const quality = fmt === 'png' ? undefined : 0.95;
+  c.toBlob(blob => {
+    if (!blob) { toast('Export failed'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ext = fmt === 'jpg' ? 'jpg' : fmt;
+    a.href = url;
+    a.download = state.single.name.replace(/\.[^/.]+$/, '') + '_normal.' + ext;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Normal map downloaded');
+  }, mime, quality);
+});
+
+// ── Batch load ───────────────────────────
+function loadBatch(files) {
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!arr.length) { toast('No image files detected'); return; }
+  let loaded = 0;
+  arr.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        state.batch.images.push({
+          id: Date.now() + Math.random(),
+          file, img,
+          src: e.target.result,
+          name: file.name,
+          originalSize: file.size,
+          width: img.width, height: img.height
+        });
+        loaded++;
+        renderBatchGrid();
+        if (loaded === arr.length) {
+          setOpStatus('Ready');
+          toast(`Loaded ${arr.length} heightmap${arr.length > 1 ? 's' : ''}`);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderBatchGrid() {
+  const grid = $('imagesGrid');
+  const container = $('imagesContainer');
+  const controls = $('batchControls');
+  const queueCount = $('queueCount');
+
+  queueCount.textContent = state.batch.images.length === 0
+    ? '0 loaded'
+    : `${state.batch.images.length} loaded`;
+
+  if (state.batch.images.length === 0) {
+    container.hidden = false;
+    grid.hidden = true;
+    controls.hidden = true;
+    setOpStatus('Standby');
+    return;
+  }
+  container.hidden = true;
+  grid.hidden = false;
+  controls.hidden = false;
+  grid.style.display = 'grid';
+
+  grid.innerHTML = state.batch.images.map((im, i) => `
+    <div class="image-card">
+      <div class="img-head">
+        <span class="swatch"></span>
+        <span class="idx">HMAP_${String(i + 1).padStart(3, '0')}</span>
+      </div>
+      <button class="remove-btn" data-id="${im.id}" type="button" title="Remove">×</button>
+      <div class="image-pair">
+        <div>
+          <span class="lbl">Height</span>
+          <img src="${im.src}" alt="">
+        </div>
+        <div>
+          <span class="lbl">Normal</span>
+          <span class="pending">pending</span>
+        </div>
+      </div>
+      <div class="image-info">
+        <div class="image-name">${im.name}</div>
+        <div class="image-size">
+          <span class="dim">${im.width}×${im.height}</span>
+          <span class="sep">·</span>
+          <span>${(im.originalSize / 1024).toFixed(0)} KB</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.remove-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.getAttribute('data-id');
+      state.batch.images = state.batch.images.filter(im => String(im.id) !== id);
+      renderBatchGrid();
+    });
+  });
+}
+
+$('batchClearBtn').addEventListener('click', () => {
+  state.batch.images = [];
+  renderBatchGrid();
+  toast('Queue cleared');
+});
+
+// ── Batch process ───────────────────────
+$('batchProcessBtn').addEventListener('click', async () => {
+  if (!state.batch.images.length) return;
+  const progressSection = $('progressSection');
+  const progressFill = $('progressFill');
+  const progressText = $('progressText');
+  const progressPercent = $('progressPercent');
+
+  progressSection.classList.add('visible');
+  $('batchProcessBtn').disabled = true;
+  $('batchClearBtn').disabled = true;
+  setOpStatus('Active');
+
+  const fmt = state.settings.format;
+  const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
+  const quality = fmt === 'png' ? undefined : 0.95;
+  const ext = fmt === 'jpg' ? 'jpg' : fmt;
+
+  const cards = document.querySelectorAll('.image-card');
+
+  for (let i = 0; i < state.batch.images.length; i++) {
+    const im = state.batch.images[i];
+    const pct = ((i + 1) / state.batch.images.length) * 100;
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `processing ${i + 1} of ${state.batch.images.length} · ${im.name}`;
+    progressPercent.textContent = Math.round(pct) + '%';
+
+    const canvas = document.createElement('canvas');
+    convertToCanvas(im.img, canvas);
+
+    // Update the card thumbnail (right cell) with the result
+    const card = cards[i];
+    if (card) {
+      const rightCell = card.querySelectorAll('.image-pair > div')[1];
+      if (rightCell) {
+        rightCell.innerHTML = '<span class="lbl">Normal</span>';
+        // Use a downscaled bitmap for display
+        const thumb = document.createElement('canvas');
+        const tw = Math.min(256, canvas.width);
+        const th = Math.round(canvas.height * (tw / canvas.width));
+        thumb.width = tw; thumb.height = th;
+        thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
+        rightCell.appendChild(thumb);
+      }
+    }
+
+    await new Promise(resolve => {
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = im.name.replace(/\.[^/.]+$/, '') + '_normal.' + ext;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        resolve();
+      }, mime, quality);
+    });
+
+    await new Promise(r => setTimeout(r, 80));
+  }
+
+  toast('Batch complete · downloads triggered');
+  setOpStatus('Complete');
+  progressText.textContent = 'batch complete';
+
+  setTimeout(() => {
+    progressSection.classList.remove('visible');
+    progressFill.style.width = '0%';
+    progressPercent.textContent = '0%';
+    progressText.textContent = 'awaiting batch';
+  }, 1800);
+
+  $('batchProcessBtn').disabled = false;
+  $('batchClearBtn').disabled = false;
+});
+
+// ══════════════════════════════════════════
+// CORE: Heightmap → Normal map conversion
+// ══════════════════════════════════════════
+function convertToCanvas(srcImg, dstCanvas) {
+  const w = srcImg.naturalWidth || srcImg.width;
+  const h = srcImg.naturalHeight || srcImg.height;
+  if (!w || !h) return;
+
+  // Read source pixels
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width = w; srcCanvas.height = h;
+  const sctx = srcCanvas.getContext('2d', { willReadFrequently: true });
+  sctx.drawImage(srcImg, 0, 0);
+  const srcData = sctx.getImageData(0, 0, w, h).data;
+
+  // Build a luminance buffer (Float32, 0..1)
+  const N = w * h;
+  const heights = new Float32Array(N);
+  const invertH = state.settings.invertH;
+  for (let i = 0, p = 0; i < N; i++, p += 4) {
+    // Rec. 709 luminance
+    const lum = (0.2126 * srcData[p] + 0.7152 * srcData[p + 1] + 0.0722 * srcData[p + 2]) / 255;
+    heights[i] = invertH ? (1 - lum) : lum;
+  }
+
+  // Filter kernel coefficients (only the X kernel; Y is the transpose)
+  // Order: [tl, tc, tr, ml, mc, mr, bl, bc, br]
+  let kx;
+  switch (state.settings.filter) {
+    case 'scharr':
+      kx = [-3, 0, 3, -10, 0, 10, -3, 0, 3];
+      break;
+    case 'prewitt':
+      kx = [-1, 0, 1, -1, 0, 1, -1, 0, 1];
+      break;
+    case 'sobel':
+    default:
+      kx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+  }
+
+  // Output
+  dstCanvas.width = w; dstCanvas.height = h;
+  const dctx = dstCanvas.getContext('2d');
+  const out = dctx.createImageData(w, h);
+  const od = out.data;
+
+  const { strength, strengthX, strengthY, convention, invertX, invertY, tiling } = state.settings;
+  const yFlip = (convention === 'directx') ? -1 : 1;
+  const sxSign = invertX ? -1 : 1;
+  const sySign = invertY ? -1 : 1;
+  const invStrength = 1 / Math.max(strength, 0.0001);
+
+  // Sample helper
+  const sample = (x, y) => {
+    if (tiling) {
+      x = ((x % w) + w) % w;
+      y = ((y % h) + h) % h;
+    } else {
+      if (x < 0) x = 0; else if (x >= w) x = w - 1;
+      if (y < 0) y = 0; else if (y >= h) y = h - 1;
+    }
+    return heights[y * w + x];
+  };
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const tl = sample(x - 1, y - 1), tc = sample(x, y - 1), tr = sample(x + 1, y - 1);
+      const ml = sample(x - 1, y    ),                       mr = sample(x + 1, y    );
+      const bl = sample(x - 1, y + 1), bc = sample(x, y + 1), br = sample(x + 1, y + 1);
+
+      // Gx using kx
+      const gx = kx[0]*tl + kx[1]*tc + kx[2]*tr +
+                 kx[3]*ml + 0          + kx[5]*mr +
+                 kx[6]*bl + kx[7]*bc + kx[8]*br;
+
+      // Gy: the same kernel transposed (top row = -, bottom = +)
+      // Equivalent to using the X kernel coefficients with rotated layout.
+      // Top row coefficients are kx[0],kx[3],kx[6] (negative side)
+      // Bottom row are kx[2],kx[5],kx[8]
+      const gy = kx[0]*tl + kx[3]*tc + kx[6]*tr +   // top row weights
+                 // middle row contributes 0 (kx[1]=kx[4]=kx[7]=0 in transpose, since kx[1] etc. are 0 already)
+                 kx[2]*bl + kx[5]*bc + kx[8]*br;    // bottom row weights
+
+      // Normal vector in tangent space: n = normalize(-gx*sX, -gy*sY*yFlip, 1/strength)
+      let nx = -gx * strengthX * sxSign;
+      let ny = -gy * strengthY * sySign * yFlip;
+      let nz = invStrength;
+
+      const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+      nx /= len; ny /= len; nz /= len;
+
+      // Pack [-1..1] -> [0..255]
+      const i = (y * w + x) * 4;
+      od[i]     = (nx * 0.5 + 0.5) * 255;
+      od[i + 1] = (ny * 0.5 + 0.5) * 255;
+      od[i + 2] = (nz * 0.5 + 0.5) * 255;
+      od[i + 3] = 255;
+    }
+  }
+
+  dctx.putImageData(out, 0, 0);
+}
+</script>
+</body>
+</html>
