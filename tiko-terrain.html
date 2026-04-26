@@ -191,8 +191,8 @@
     <div>
       <div class="ps-label">Render</div>
       <div class="ps-row">
-        <button class="pb on" data-rnd="0">Wire</button>
-        <button class="pb" data-rnd="1">Solid</button>
+        <button class="pb" data-rnd="0">Wire</button>
+        <button class="pb on" data-rnd="1">Solid</button>
         <button class="pb" data-rnd="2">Both</button>
       </div>
     </div>
@@ -309,7 +309,7 @@ function getHeat(nx,ny){
 }
 
 // ── GEOMETRY ──────────────────────────────────────────────────
-const SEGS=140,SZ=36,MAX_H=5;
+const SEGS=140,SZ=43,MAX_H=6;
 const geo=new THREE.PlaneGeometry(SZ,SZ,SEGS,SEGS);
 geo.rotateX(-Math.PI/2);
 const G1=(SEGS+1)*(SEGS+1);
@@ -324,7 +324,7 @@ const overMat  = new THREE.MeshBasicMaterial({color:0x1a0a30,wireframe:true,tran
 const wireMesh  = new THREE.Mesh(geo,wireMat);
 const solidMesh = new THREE.Mesh(geo,solidMat);
 const overMesh  = new THREE.Mesh(geo,overMat);
-scene.add(wireMesh);
+scene.add(solidMesh);
 
 // Lights
 scene.add(new THREE.AmbientLight(0x1a0a2e,3));
@@ -332,7 +332,7 @@ const dl1=new THREE.DirectionalLight(0x8B5CF6,2.5);dl1.position.set(10,20,10);sc
 const dl2=new THREE.DirectionalLight(0x14B8A6,1.8);dl2.position.set(-10,15,-8);scene.add(dl2);
 
 // ── STATE ─────────────────────────────────────────────────────
-let palette=0,renderMode=0,heatOn=false,speed=.30,camMode=0,camAngle=0;
+let palette=0,renderMode=1,heatOn=false,speed=.30,camMode=0,camAngle=0;
 
 // ── CONTROLS ──────────────────────────────────────────────────
 document.querySelectorAll('[data-pal]').forEach(b=>b.addEventListener('click',()=>{
@@ -422,8 +422,8 @@ function updateTerrain(et){
       const dwx=nx+fbm(nx*2+tc*.12,ny*2,3)*.22;
       const dwy=ny+fbm(nx*2,ny*2+tc*.12,3)*.22;
       h+=fbm(dwx*4+1.7,dwy*4+9.2,4)*.18;
-      const mdx=(nx-mouseNX)*2.0,mdy=ny-mouseNY;
-      h+=Math.exp(-(mdx*mdx+mdy*mdy)*16)*.85;
+      const mdx=(nx-mouseNX)*1.6,mdy=(ny-mouseNY)*1.6;
+      h+=Math.exp(-(mdx*mdx+mdy*mdy)*14)*1.1;
       const heat=(heatOn&&hPx)?getHeat(nx,ny):0;
       h+=heat*.5;
       h*=MAX_H;
