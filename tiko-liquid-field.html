@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiko — Liquid Field</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0A0A0D;cursor:none;}
+  #cur{position:fixed;width:6px;height:6px;background:#14B8A6;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+  #c{position:fixed;inset:0;display:block;}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<canvas id="c"></canvas>
+<script>
+'use strict';
+
+// ── CURSOR
+const curEl = document.getElementById('cur');
+let mx = innerWidth / 2, my = innerHeight / 2;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  curEl.style.left = mx + 'px';
+  curEl.style.top  = my + 'px';
+});
+
+// ── RENDERER
+const canvas   = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0x0A0A0D, 1);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 200);
+camera.position.z = 26;
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── SIMPLE FAST NOISE (no heavy fbm — keeps it smooth)
+function hash(n) { return (Math.sin(n) * 43758.5453) % 1; }
+function smoothNoise(x, y, z) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  const fx = x - ix, fy = y - iy, fz = z - iz;
+  const ux = fx*fx*(3-2*fx), uy = fy*fy*(3-2*fy), uz = fz*fz*(3-2*fz);
+  const n000 = hash(ix     + iy*57     + iz*131);
+  const n100 = hash(ix+1   + iy*57     + iz*131);
+  const n010 = hash(ix     + (iy+1)*57 + iz*131);
+  const n110 = hash(ix+1   + (iy+1)*57 + iz*131);
+  const n001 = hash(ix     + iy*57     + (iz+1)*131);
+  const n101 = hash(ix+1   + iy*57     + (iz+1)*131);
+  const n011 = hash(ix     + (iy+1)*57 + (iz+1)*131);
+  const n111 = hash(ix+1   + (iy+1)*57 + (iz+1)*131);
+  return (
+    n000*(1-ux)*(1-uy)*(1-uz) + n100*ux*(1-uy)*(1-uz) +
+    n010*(1-ux)*uy*(1-uz)     + n110*ux*uy*(1-uz) +
+    n001*(1-ux)*(1-uy)*uz     + n101*ux*(1-uy)*uz +
+    n011*(1-ux)*uy*uz         + n111*ux*uy*uz
+  ) * 2 - 1;
+}
+
+// ── PARTICLE SETUP
+const COUNT    = 16000;
+const W        = 22;   // world half-width
+const H_RANGE  = 14;   // world half-height
+
+const pos  = new Float32Array(COUNT * 3);
+const vel  = new Float32Array(COUNT * 3);
+const home = new Float32Array(COUNT * 3);
+const col  = new Float32Array(COUNT * 3);
+const sz   = new Float32Array(COUNT);
+
+// Teal / turquoise palette
+const TEAL_PALETTE = [
+  [0.082, 0.722, 0.651],  // #14B8A6 core teal
+  [0.133, 0.831, 0.933],  // #22D3EE bright aqua
+  [0.059, 0.600, 0.550],  // deep teal
+  [0.100, 0.780, 0.680],  // mid turquoise
+  [0.160, 0.900, 0.780],  // bright turquoise
+  [0.050, 0.480, 0.450],  // dark ocean
+  [0.180, 0.850, 0.820],  // light aqua
+  [0.070, 0.650, 0.600],  // teal-green
+];
+
+for (let i = 0; i < COUNT; i++) {
+  // Full-screen spread with slight noise clustering
+  const x = (Math.random() - 0.5) * W * 2;
+  const y = (Math.random() - 0.5) * H_RANGE * 2;
+  const z = (Math.random() - 0.5) * 8;
+
+  pos[i*3]   = home[i*3]   = x;
+  pos[i*3+1] = home[i*3+1] = y;
+  pos[i*3+2] = home[i*3+2] = z;
+
+  vel[i*3] = vel[i*3+1] = vel[i*3+2] = 0;
+
+  // Size distribution: big blobs + medium + fine spray
+  const r = Math.random();
+  sz[i] = r < 0.03  ? 0.6 + Math.random() * 0.8
+        : r < 0.12  ? 0.2 + Math.random() * 0.3
+        : r < 0.45  ? 0.06 + Math.random() * 0.12
+        :              0.015 + Math.random() * 0.055;
+
+  // Pick colour from palette with slight variation
+  const pc = TEAL_PALETTE[Math.floor(Math.random() * TEAL_PALETTE.length)];
+  col[i*3]   = Math.max(0, Math.min(1, pc[0] + (Math.random()-0.5)*0.05));
+  col[i*3+1] = Math.max(0, Math.min(1, pc[1] + (Math.random()-0.5)*0.08));
+  col[i*3+2] = Math.max(0, Math.min(1, pc[2] + (Math.random()-0.5)*0.07));
+}
+
+// ── GEOMETRY
+const geo = new THREE.BufferGeometry();
+const posAttr = new THREE.BufferAttribute(pos, 3);
+const colAttr = new THREE.BufferAttribute(col, 3);
+const szAttr  = new THREE.BufferAttribute(sz,  1);
+geo.setAttribute('position', posAttr);
+geo.setAttribute('color',    colAttr);
+geo.setAttribute('size',     szAttr);
+
+// ── SHADER MATERIAL — soft round blobs
+const mat = new THREE.ShaderMaterial({
+  vertexColors: true,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexShader: `
+    attribute float size;
+    varying vec3  vCol;
+    varying float vAlpha;
+    void main() {
+      vCol = color;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      float depth = clamp((-mv.z) / 25.0, 0.0, 1.0);
+      vAlpha = mix(0.95, 0.2, depth);
+      gl_PointSize = size * (500.0 / -mv.z);
+      gl_Position  = projectionMatrix * mv;
+    }
+  `,
+  fragmentShader: `
+    varying vec3  vCol;
+    varying float vAlpha;
+    void main() {
+      vec2  uv = gl_PointCoord * 2.0 - 1.0;
+      float d  = dot(uv, uv);
+      if (d > 1.0) discard;
+      float a  = smoothstep(1.0, 0.0, d) * vAlpha;
+      // bright centre highlight
+      float hi = smoothstep(0.5, 0.0, d) * 0.45;
+      gl_FragColor = vec4(vCol + hi, a);
+    }
+  `
+});
+
+const points = new THREE.Points(geo, mat);
+scene.add(points);
+
+// ── MOUSE → WORLD POSITION
+const mouseW = new THREE.Vector3(0, 0, 0);
+const smoothW = new THREE.Vector3(0, 0, 0);
+
+function updateMouseWorld() {
+  const ndcX =  (mx / innerWidth)  * 2 - 1;
+  const ndcY = -(my / innerHeight) * 2 + 1;
+  // Project onto z=0 plane
+  const fov    = camera.fov * Math.PI / 180;
+  const aspect = camera.aspect;
+  const dist   = camera.position.z;
+  mouseW.x = ndcX * dist * Math.tan(fov / 2) * aspect;
+  mouseW.y = ndcY * dist * Math.tan(fov / 2);
+  mouseW.z = 0;
+}
+
+// ── ANIMATE
+const clock = new THREE.Clock();
+let frame = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const et = clock.getElapsedTime();
+
+  updateMouseWorld();
+  smoothW.x += (mouseW.x - smoothW.x) * 0.08;
+  smoothW.y += (mouseW.y - smoothW.y) * 0.08;
+
+  // Process in batches — 1/2 per frame
+  const BATCH = Math.floor(COUNT / 2);
+  const start = (frame % 2) * BATCH;
+  const end   = Math.min(start + BATCH, COUNT);
+
+  const MOUSE_R  = 8.0;   // cursor influence radius (world units)
+  const MOUSE_F  = 0.28;  // cursor push strength — strong
+  const SPRING   = 0.003; // pull back to home
+  const DAMPING  = 0.92;  // velocity decay
+  const NOISE_S  = 0.08;  // noise spatial scale — low = gentle
+  const NOISE_T  = 0.05;  // noise time scale — low = slow drift
+  const NOISE_F  = 0.003; // noise force — very subtle
+
+  for (let i = start; i < end; i++) {
+    const ix = i*3, iy = i*3+1, iz = i*3+2;
+
+    const px = pos[ix], py = pos[iy], pz = pos[iz];
+
+    // Cursor repulsion
+    const dx = px - smoothW.x;
+    const dy = py - smoothW.y;
+    const dist2 = dx*dx + dy*dy;
+    const dist  = Math.sqrt(dist2) + 0.001;
+    let fx = 0, fy = 0;
+    if (dist < MOUSE_R) {
+      const strength = (1.0 - dist / MOUSE_R) * (1.0 - dist / MOUSE_R) * MOUSE_F;
+      fx = (dx / dist) * strength;
+      fy = (dy / dist) * strength;
+    }
+
+    // Very gentle noise drift — barely moves on its own
+    const ns = NOISE_S;
+    const nt = et * NOISE_T;
+    const nx2 = smoothNoise(px*ns,       py*ns+100, nt) * NOISE_F;
+    const ny2 = smoothNoise(px*ns+200,   py*ns,     nt) * NOISE_F;
+
+    // Spring back to home position
+    const spx = (home[ix] - px) * SPRING;
+    const spy = (home[iy] - py) * SPRING;
+
+    vel[ix] = (vel[ix] + fx + nx2 + spx) * DAMPING;
+    vel[iy] = (vel[iy] + fy + ny2 + spy) * DAMPING;
+    vel[iz] = (vel[iz]) * DAMPING;
+
+    pos[ix] += vel[ix];
+    pos[iy] += vel[iy];
+    pos[iz] += vel[iz];
+
+    // Colour brightens toward bright aqua when disturbed
+    const speed = Math.abs(vel[ix]) + Math.abs(vel[iy]);
+    const boost = Math.min(speed * 80, 1.0);
+    if (boost > 0.01) {
+      col[ix]   = Math.min(1, col[ix]   + (0.13 - col[ix])   * boost * 0.3);
+      col[iy]   = Math.min(1, col[iy]   + (0.93 - col[iy])   * boost * 0.3);
+      col[iz]   = Math.min(1, col[iz]   + (0.93 - col[iz])   * boost * 0.3);
+    }
+  }
+
+  posAttr.needsUpdate = true;
+  colAttr.needsUpdate = true;
+
+  // Very gentle camera drift
+  camera.position.x = Math.sin(et * 0.04) * 1.2;
+  camera.position.y = Math.cos(et * 0.03) * 0.5;
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+  frame++;
+}
+animate();
+
+// Touch support
+document.addEventListener('touchmove', e => {
+  e.preventDefault();
+  mx = e.touches[0].clientX;
+  my = e.touches[0].clientY;
+}, { passive: false });
+</script>
+</body>
+</html>
