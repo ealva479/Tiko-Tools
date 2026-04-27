@@ -13,7 +13,7 @@
     --white:#F1F1F5;--muted:#A1A1AA;--lavender:#C4B5FD;
     --deep:#5B21B6;--pink:#EC4899;--gold:#F59E0B;
   }
-  html,body{width:100%;height:100%;overflow:hidden;background:var(--obsidian);cursor:none;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000000;cursor:none;}
 
   /* CURSOR */
   #cur{position:fixed;width:8px;height:8px;background:var(--teal);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
@@ -261,9 +261,10 @@ const canvas=document.getElementById('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
-renderer.setClearColor(0x0A0A0D,1);
+renderer.setClearColor(0x000000,1);
 const scene=new THREE.Scene();
-scene.fog=new THREE.FogExp2(0x0A0A0D,0.024);
+scene.background=new THREE.Color(0x000000);
+scene.fog=new THREE.FogExp2(0x000000,0.024);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,300);
 camera.position.set(0,16,26); camera.lookAt(0,0,0);
 window.addEventListener('resize',()=>{
@@ -459,8 +460,8 @@ function animate(){
   if(camMode===0){
     // Slow orbit
     camAngle+=dt*.05;
-    camera.position.set(Math.sin(camAngle)*26,16,Math.cos(camAngle)*26);
-    camera.lookAt(0,1.5,0);
+    camera.position.set(Math.sin(camAngle)*26,10,Math.cos(camAngle)*26);
+    camera.lookAt(0,-1,0);
   } else if(camMode===1){
     // Top down
     camera.position.set(0,38,0.001);
