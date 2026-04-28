@@ -641,6 +641,14 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/ColladaLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/inflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.min.js"></script>
+<script>
+  // Expose fflate globally so FBXLoader (and any other Three.js loader) can find it
+  // regardless of which name it expects (Zlib, fflate, etc.)
+  if (typeof fflate !== 'undefined') {
+    window.fflate = fflate;
+  }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
@@ -853,7 +861,18 @@
         collectTexturesFromScene(fbx);
         URL.revokeObjectURL(url);
         resolve();
-      }, undefined, reject);
+      }, undefined, (err) => {
+        URL.revokeObjectURL(url);
+        // Translate cryptic library errors into something useful
+        const msg = String(err && (err.message || err));
+        if (/fflate|inflate|Zlib/i.test(msg)) {
+          reject(new Error('FBX decompression library failed to load. Try refreshing the page, or re-export your FBX as ASCII (uncompressed) from your 3D software.'));
+        } else if (/Cannot read|undefined/i.test(msg)) {
+          reject(new Error('This FBX file uses an unsupported version. Try re-exporting as FBX 2014/2015 binary or as GLB for best results.'));
+        } else {
+          reject(err);
+        }
+      });
     });
   }
 
