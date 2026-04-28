@@ -226,6 +226,281 @@
     font-weight: 500;
   }
 
+  /* Material card — expanded mode for texture editing */
+  .mat-card .mat-head { cursor: pointer; }
+  .mat-card .mat-chevron {
+    color: var(--text4); font-family: var(--mono); font-size: 10px;
+    transition: transform 0.15s; flex-shrink: 0; margin-left: 4px;
+  }
+  .mat-card.expanded .mat-chevron { transform: rotate(90deg); color: var(--teal); }
+
+  .mat-tex-editor {
+    display: none;
+    padding: 10px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+  }
+  .mat-card.expanded .mat-tex-editor { display: block; }
+
+  .tex-section-label {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 8px 0 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tex-section-label::before { content: ''; width: 4px; height: 4px; background: var(--teal); }
+  .tex-section-label:first-child { margin-top: 0; }
+
+  .tex-slot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .tex-slot {
+    background: var(--bg); border: 1px solid var(--border2);
+    padding: 6px 7px;
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer; transition: border-color 0.12s, background 0.12s;
+    min-height: 38px;
+    position: relative;
+  }
+  .tex-slot:hover { border-color: var(--teal); }
+  .tex-slot.dragover { border-color: var(--teal); background: var(--teal-dim); }
+  .tex-slot.has-tex { border-color: var(--teal3); }
+
+  .tex-slot-thumb {
+    width: 24px; height: 24px;
+    background: var(--bg4); border: 1px solid var(--border2);
+    flex-shrink: 0; background-size: cover; background-position: center;
+    background-image:
+      repeating-conic-gradient(rgba(255,255,255,0.04) 0% 25%, transparent 0% 50%);
+    background-size: 8px 8px;
+  }
+  .tex-slot-thumb.loaded {
+    background-image: var(--bg-img);
+    background-size: cover;
+  }
+  .tex-slot-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .tex-slot-name {
+    font-family: var(--mono); font-size: 9px; color: var(--text2);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tex-slot.has-tex .tex-slot-name { color: var(--teal2); }
+  .tex-slot-status {
+    font-family: var(--mono); font-size: 8px; color: var(--text4);
+    letter-spacing: 0.04em; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tex-slot-clear {
+    position: absolute; top: 2px; right: 3px;
+    background: none; border: none; color: var(--text4);
+    cursor: pointer; padding: 0; width: 14px; height: 14px;
+    font-family: var(--mono); font-size: 11px; line-height: 1;
+    display: none;
+  }
+  .tex-slot.has-tex .tex-slot-clear { display: block; }
+  .tex-slot-clear:hover { color: var(--red); }
+
+  .pack-row {
+    display: flex; gap: 5px; margin-top: 6px;
+  }
+  .pack-mode-btn {
+    flex: 1;
+    background: var(--bg); border: 1px solid var(--border2);
+    color: var(--text3); padding: 6px;
+    font-family: var(--mono); font-size: 9px; cursor: pointer;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    transition: all 0.12s;
+  }
+  .pack-mode-btn:hover { color: var(--text); border-color: var(--border3); }
+  .pack-mode-btn.active {
+    background: var(--teal); color: var(--bg); border-color: var(--teal);
+    font-weight: 600;
+  }
+  .pack-help {
+    font-family: var(--mono); font-size: 9px; color: var(--text4);
+    line-height: 1.5; margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+  .pack-help::before { content: '└─ '; color: var(--text4); }
+
+  .mat-slider-row {
+    display: grid; grid-template-columns: 50px 1fr 36px;
+    align-items: center; gap: 8px;
+    padding: 4px 0;
+  }
+  .mat-slider-row label {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .mat-slider-row input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    height: 2px; background: var(--border3);
+    outline: none; cursor: pointer;
+  }
+  .mat-slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; background: var(--teal);
+    border: 0; cursor: pointer;
+  }
+  .mat-slider-row input[type="range"]::-moz-range-thumb {
+    width: 10px; height: 10px; background: var(--teal);
+    border: 0; cursor: pointer; border-radius: 0;
+  }
+  .mat-slider-row .val {
+    font-family: var(--mono); font-size: 10px; color: var(--teal2);
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+
+  /* ── LIGHTS PANEL ──────────────────────── */
+  .light-types-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 4px;
+    padding: 0 18px 10px;
+  }
+  .light-type-btn {
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text2); padding: 8px 4px;
+    font-family: var(--mono); font-size: 9px; cursor: pointer;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: all 0.12s;
+  }
+  .light-type-btn:hover { color: var(--text); border-color: var(--teal); }
+  .light-type-btn svg { display: block; }
+
+  .place-mode-row {
+    padding: 0 18px 12px;
+  }
+  .place-mode-toggle {
+    width: 100%;
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text2); padding: 9px 12px;
+    font-family: var(--mono); font-size: 10px; cursor: pointer;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    transition: all 0.12s;
+  }
+  .place-mode-toggle:hover { color: var(--text); border-color: var(--border3); }
+  .place-mode-toggle.active {
+    background: var(--teal); color: var(--bg);
+    border-color: var(--teal); font-weight: 600;
+  }
+  .place-mode-toggle .hint {
+    font-size: 9px; opacity: 0.7;
+  }
+
+  #lights-list {
+    padding: 0 18px 14px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+
+  .light-card {
+    background: var(--bg3); border: 1px solid var(--border2);
+    padding: 0;
+    display: flex; flex-direction: column;
+    transition: border-color 0.12s;
+  }
+  .light-card:hover { border-color: var(--border3); }
+  .light-card.selected {
+    border-color: var(--teal);
+    box-shadow: inset 0 0 0 1px var(--teal-dim);
+  }
+
+  .light-head {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 9px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .light-onoff {
+    width: 12px; height: 12px;
+    background: var(--bg); border: 1px solid var(--border3);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .light-onoff::after {
+    content: ''; width: 5px; height: 5px;
+    background: transparent; transition: background 0.12s;
+  }
+  .light-card.enabled .light-onoff { background: var(--teal); border-color: var(--teal); }
+  .light-card.enabled .light-onoff::after { background: var(--bg); }
+
+  .light-icon {
+    color: var(--text3); flex-shrink: 0;
+    width: 12px; height: 12px;
+  }
+  .light-card.enabled .light-icon { color: var(--teal2); }
+
+  .light-name {
+    flex: 1;
+    font-family: var(--mono); font-size: 10px; color: var(--text);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .light-color-chip {
+    width: 12px; height: 12px;
+    border: 1px solid var(--border2);
+    cursor: pointer; flex-shrink: 0;
+    background: #fff;
+  }
+  .light-delete {
+    background: none; border: none;
+    color: var(--text4); cursor: pointer;
+    font-family: var(--mono); font-size: 11px; line-height: 1;
+    padding: 0 2px;
+  }
+  .light-delete:hover { color: var(--red); }
+  .light-chevron {
+    color: var(--text4); font-family: var(--mono); font-size: 10px;
+    transition: transform 0.15s; flex-shrink: 0;
+  }
+  .light-card.expanded .light-chevron { transform: rotate(90deg); color: var(--teal); }
+
+  .light-body {
+    padding: 8px 9px 10px;
+    display: none; flex-direction: column; gap: 6px;
+  }
+  .light-card.expanded .light-body { display: flex; }
+
+  .light-empty {
+    padding: 12px; text-align: center;
+    font-family: var(--mono); font-size: 10px; color: var(--text4);
+    letter-spacing: 0.06em;
+    border: 1px dashed var(--border2);
+  }
+  .light-empty::before { content: '> '; }
+
+  /* COLOR PICKER POPUP */
+  #color-picker-popup {
+    position: absolute; display: none; z-index: 300;
+    background: var(--bg2); border: 1px solid var(--border3);
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+  #color-picker-popup input[type="color"] {
+    width: 80px; height: 80px; border: 1px solid var(--border2);
+    background: var(--bg); cursor: pointer;
+    padding: 0;
+  }
+  #color-picker-popup .ck-presets {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 3px; margin-top: 6px;
+  }
+  #color-picker-popup .ck-preset {
+    width: 100%; aspect-ratio: 1;
+    cursor: pointer; border: 1px solid var(--border);
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  #color-picker-popup .ck-preset:hover {
+    transform: scale(1.1); border-color: var(--teal);
+  }
+
   .empty-state {
     padding: 16px 0; text-align: center;
     font-family: var(--mono); font-size: 10px; color: var(--text4);
@@ -249,6 +524,43 @@
   }
   .form-group select:focus { border-color: var(--teal); }
   .form-group select option { background: var(--bg3); }
+
+  /* Exposure slider */
+  .slider-row {
+    display: flex; align-items: center; gap: 10px;
+    padding-top: 4px;
+  }
+  .slider-row .slider-label {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    min-width: 64px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 2px; background: var(--border3);
+    outline: none; cursor: pointer;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px; background: var(--teal);
+    border: 0; cursor: pointer;
+  }
+  .slider-row input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--teal);
+    border: 0; cursor: pointer; border-radius: 0;
+  }
+  .slider-row .slider-val {
+    font-family: var(--mono); font-size: 11px; color: var(--teal2);
+    min-width: 32px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .slider-row .slider-reset {
+    background: none; border: 1px solid var(--border2);
+    color: var(--text3); font-family: var(--mono); font-size: 9px;
+    padding: 3px 6px; cursor: pointer; letter-spacing: 0.06em;
+    transition: all 0.12s;
+  }
+  .slider-row .slider-reset:hover { color: var(--teal); border-color: var(--teal); }
 
   /* Primary CTA — bracket-cornered teal */
   .btn-primary {
@@ -611,6 +923,65 @@
             <option value="warehouse">Warehouse</option>
             <option value="neutral">Neutral</option>
           </select>
+          <div class="slider-row">
+            <span class="slider-label">Exposure</span>
+            <input type="range" id="exposure-slider" min="0.2" max="3" step="0.05" value="1" />
+            <span class="slider-val" id="exposure-val">1.00</span>
+            <button class="slider-reset" id="exposure-reset" title="Reset to 1.0">↺</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="marker"></div>
+          <span>Lights</span>
+          <span class="count" id="light-count"></span>
+        </div>
+        <div class="light-types-row">
+          <button class="light-type-btn" data-add-light="point" title="Add Point Light">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <circle cx="8" cy="8" r="2.5"/>
+              <line x1="8" y1="2" x2="8" y2="4"/><line x1="8" y1="12" x2="8" y2="14"/>
+              <line x1="2" y1="8" x2="4" y2="8"/><line x1="12" y1="8" x2="14" y2="8"/>
+              <line x1="3.5" y1="3.5" x2="5" y2="5"/><line x1="11" y1="11" x2="12.5" y2="12.5"/>
+              <line x1="12.5" y1="3.5" x2="11" y2="5"/><line x1="5" y1="11" x2="3.5" y2="12.5"/>
+            </svg>
+            <span>Point</span>
+          </button>
+          <button class="light-type-btn" data-add-light="spot" title="Add Spot Light">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <circle cx="8" cy="3.5" r="1.5"/>
+              <path d="M8 5 L4 14 L12 14 Z"/>
+            </svg>
+            <span>Spot</span>
+          </button>
+          <button class="light-type-btn" data-add-light="directional" title="Add Directional Light">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <circle cx="4" cy="4" r="2"/>
+              <line x1="6" y1="6" x2="13" y2="13"/>
+              <path d="M13 10 L13 13 L10 13"/>
+            </svg>
+            <span>Dir</span>
+          </button>
+          <button class="light-type-btn" data-add-light="area" title="Add Area Light">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <rect x="3" y="3" width="10" height="6" />
+              <line x1="5" y1="11" x2="5" y2="14"/>
+              <line x1="8" y1="11" x2="8" y2="14"/>
+              <line x1="11" y1="11" x2="11" y2="14"/>
+            </svg>
+            <span>Area</span>
+          </button>
+        </div>
+        <div class="place-mode-row">
+          <button class="place-mode-toggle" id="btn-place-mode">
+            <span>Click-to-Place</span>
+            <span class="hint" id="place-mode-hint">Off</span>
+          </button>
+        </div>
+        <div id="lights-list">
+          <div class="light-empty">no lights · use buttons above</div>
         </div>
       </div>
 
@@ -710,6 +1081,25 @@
 </div>
 
 <input type="file" id="file-input" accept=".glb,.gltf,.obj,.fbx,.stl" style="display:none" />
+<input type="file" id="tex-input" accept="image/*" style="display:none" />
+
+<div id="color-picker-popup">
+  <input type="color" id="color-picker-input" value="#ffffff" />
+  <div class="ck-presets">
+    <div class="ck-preset" style="background:#ffffff" data-c="#ffffff"></div>
+    <div class="ck-preset" style="background:#fff4d4" data-c="#fff4d4"></div>
+    <div class="ck-preset" style="background:#ffd089" data-c="#ffd089"></div>
+    <div class="ck-preset" style="background:#ff7a5c" data-c="#ff7a5c"></div>
+    <div class="ck-preset" style="background:#a8d4ff" data-c="#a8d4ff"></div>
+    <div class="ck-preset" style="background:#22D3EE" data-c="#22D3EE"></div>
+    <div class="ck-preset" style="background:#14B8A6" data-c="#14B8A6"></div>
+    <div class="ck-preset" style="background:#8B5CF6" data-c="#8B5CF6"></div>
+    <div class="ck-preset" style="background:#EC4899" data-c="#EC4899"></div>
+    <div class="ck-preset" style="background:#EF4444" data-c="#EF4444"></div>
+    <div class="ck-preset" style="background:#F59E0B" data-c="#F59E0B"></div>
+    <div class="ck-preset" style="background:#5B21B6" data-c="#5B21B6"></div>
+  </div>
+</div>
 
 <script type="importmap">
 {
@@ -723,11 +1113,16 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+
+RectAreaLightUniformsLib.init();
 
 const canvasWrap = document.getElementById('canvas-wrap');
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
@@ -746,6 +1141,23 @@ controls.enableDamping = true; controls.dampingFactor = 0.08;
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
 
+// Transform gizmo for moving lights
+const transformControls = new TransformControls(camera, renderer.domElement);
+transformControls.setSize(0.7);
+transformControls.addEventListener('dragging-changed', e => {
+  controls.enabled = !e.value;
+});
+transformControls.addEventListener('change', () => {
+  // Sync gizmo position back to selected light
+  if (selectedLightId !== null) {
+    const L = lights.find(l => l.id === selectedLightId);
+    if (L && L.helper) {
+      L.helper.update?.();
+    }
+  }
+});
+scene.add(transformControls);
+
 let grid = null;
 function makeGrid(size) {
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
@@ -755,16 +1167,33 @@ function makeGrid(size) {
 }
 makeGrid(10);
 
-const hemi = new THREE.HemisphereLight(0xffffff, 0x222233, 0.35); scene.add(hemi);
-const dir = new THREE.DirectionalLight(0xffffff, 0.6); dir.position.set(5, 8, 5); scene.add(dir);
+// 3-point lighting — Three.js r150+ uses physically-correct intensities,
+// so values need to be much higher than older tutorials suggest.
+const hemi = new THREE.HemisphereLight(0xffffff, 0x404050, 1.2); scene.add(hemi);
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.5); keyLight.position.set(5, 8, 5); scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xffffff, 1.0); fillLight.position.set(-5, 4, -3); scene.add(fillLight);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.6); rimLight.position.set(0, -3, 0); scene.add(rimLight);
 
 let currentModel = null;
 let stats = { tris: 0, verts: 0, meshes: 0, materials: 0, textures: 0, bounds: '—' };
-let materialsList = [];
+let materialsList = [];          // [{ uuid, name, type, mat (live ref) }]
+let materialsByUuid = new Map(); // uuid → material
+let materialUserTextures = new Map(); // uuid → { baseColor, normal, roughness, metallic, ao, emissive, packed, packMode, originals }
+let expandedMatUuids = new Set();
 let wireframeOn = false;
 let measureMode = false;
 let measurePoints = []; let measureLine = null; let measureMarkers = [];
 let modelUnitScale = 1;
+
+// Lights system
+let lights = [];                 // [{ id, type, name, light, helper, enabled, color, intensity, ... }]
+let selectedLightId = null;
+let expandedLightIds = new Set();
+let lightIdSeq = 1;
+let placeMode = false;            // click-to-place mode
+let pendingLightType = null;      // when adding via panel button
+let activeColorTarget = null;     // { type, id } — what the color picker affects
+let activeTexSlot = null;         // { matUuid, slot } — what the tex file input fills
 
 function makeGradientEnv(topHex, bottomHex, sunHex) {
   const size = 256;
@@ -797,6 +1226,92 @@ function setEnvironment(name) {
   scene.environment = envPresets[name]();
 }
 setEnvironment('studio');
+
+/* ─── Material Preparation ───
+ * Fixes the most common reasons a loaded model renders black:
+ *  - Legacy Phong/Lambert materials that don't read the IBL
+ *  - PBR materials with envMapIntensity at default that comes out flat
+ *  - OBJ/FBX coming in with color set to pure black
+ *  - Single-sided materials where the geometry is wound inside-out
+ */
+function prepareModelMaterials(root, ext) {
+  root.traverse(obj => {
+    if (!obj.isMesh) return;
+
+    // Make sure normals exist (STL we already do, but some FBX/OBJ skip them)
+    if (obj.geometry && !obj.geometry.attributes.normal) {
+      obj.geometry.computeVertexNormals();
+    }
+
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    const newMats = mats.map(m => upgradeMaterial(m, ext));
+    if (Array.isArray(obj.material)) obj.material = newMats;
+    else obj.material = newMats[0];
+
+    // Frustum culling can cause flicker/disappear on huge or unbounded models
+    obj.frustumCulled = true;
+  });
+}
+
+function upgradeMaterial(m, ext) {
+  if (!m) {
+    return new THREE.MeshStandardMaterial({
+      color: 0xc0c0c8, roughness: 0.6, metalness: 0.0,
+      side: THREE.DoubleSide,
+    });
+  }
+
+  // Pure black diffuse usually means the loader couldn't read the material —
+  // bump it to a sensible neutral so the user can actually SEE the geometry.
+  if (m.color && m.color.r === 0 && m.color.g === 0 && m.color.b === 0 && !m.map) {
+    m.color.setHex(0xc0c0c8);
+  }
+
+  // Phong / Lambert / Basic don't read scene.environment at all — so they look
+  // black under the dark studio environment. Convert to MeshStandardMaterial,
+  // preserving the diffuse color and color map.
+  const isLegacy =
+    m.isMeshPhongMaterial || m.isMeshLambertMaterial ||
+    m.type === 'MeshPhongMaterial' || m.type === 'MeshLambertMaterial';
+
+  if (isLegacy) {
+    const upgraded = new THREE.MeshStandardMaterial({
+      name: m.name || '',
+      color: m.color ? m.color.clone() : new THREE.Color(0xc0c0c8),
+      map: m.map || null,
+      normalMap: m.normalMap || null,
+      emissive: m.emissive ? m.emissive.clone() : new THREE.Color(0x000000),
+      emissiveMap: m.emissiveMap || null,
+      transparent: m.transparent || false,
+      opacity: m.opacity ?? 1,
+      alphaMap: m.alphaMap || null,
+      side: THREE.DoubleSide,
+      roughness: 0.65,
+      metalness: 0.0,
+    });
+    upgraded.envMapIntensity = 1.0;
+    m.dispose?.();
+    return upgraded;
+  }
+
+  // For real PBR materials, just make sure they actually use the env map and
+  // are double-sided (most asset issues come from inverted/missing back faces).
+  if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) {
+    if (m.envMapIntensity === undefined || m.envMapIntensity < 0.01) {
+      m.envMapIntensity = 1.0;
+    }
+    // For OBJ/FBX (often have winding issues), force double-sided.
+    // GLB/GLTF authors usually set this intentionally — leave those alone.
+    if (ext === 'obj' || ext === 'fbx' || ext === 'stl') {
+      m.side = THREE.DoubleSide;
+    }
+    m.needsUpdate = true;
+    return m;
+  }
+
+  // Anything else (Basic, custom shaders) — leave untouched.
+  return m;
+}
 
 function resize() {
   const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
@@ -868,6 +1383,7 @@ function frameObject(obj) {
 function inspectModel(obj) {
   stats.tris = 0; stats.verts = 0; stats.meshes = 0; stats.materials = 0; stats.textures = 0;
   materialsList = [];
+  materialsByUuid = new Map();
   const seenMats = new Set(), seenTex = new Set();
   obj.traverse(child => {
     if (child.isMesh) {
@@ -883,23 +1399,34 @@ function inspectModel(obj) {
       mats.forEach(m => {
         if (m && !seenMats.has(m.uuid)) {
           seenMats.add(m.uuid); stats.materials++;
-          const info = {
+          materialsByUuid.set(m.uuid, m);
+          materialsList.push({
+            uuid: m.uuid,
             name: m.name || '(unnamed)',
             type: (m.type || '').replace('Mesh','').replace('Material',''),
-            color: m.color ? '#' + m.color.getHexString() : null,
-            metalness: typeof m.metalness === 'number' ? m.metalness.toFixed(2) : null,
-            roughness: typeof m.roughness === 'number' ? m.roughness.toFixed(2) : null,
-            opacity: typeof m.opacity === 'number' && m.opacity < 1 ? m.opacity.toFixed(2) : null,
-            textures: []
-          };
+            mat: m,
+          });
+          // Cache snapshot of original maps so user can revert
+          if (!materialUserTextures.has(m.uuid)) {
+            materialUserTextures.set(m.uuid, {
+              packMode: 'separate',  // separate | orm | ms (Unity metallic-smoothness)
+              originals: {
+                map: m.map || null,
+                normalMap: m.normalMap || null,
+                roughnessMap: m.roughnessMap || null,
+                metalnessMap: m.metalnessMap || null,
+                aoMap: m.aoMap || null,
+                emissiveMap: m.emissiveMap || null,
+              },
+              userTex: {},  // slotName → { url, name, texture }
+            });
+          }
           ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap','alphaMap','bumpMap','displacementMap']
             .forEach(slot => {
-              if (m[slot]) {
-                info.textures.push(slot.replace('Map','').replace('map','col'));
-                if (!seenTex.has(m[slot].uuid)) { seenTex.add(m[slot].uuid); stats.textures++; }
+              if (m[slot] && !seenTex.has(m[slot].uuid)) {
+                seenTex.add(m[slot].uuid); stats.textures++;
               }
             });
-          materialsList.push(info);
         }
       });
     }
@@ -923,24 +1450,643 @@ function renderMaterials() {
     block.innerHTML = `<div class="empty-state">no materials</div>`;
     return;
   }
-  block.innerHTML = materialsList.map(m => `
-    <div class="mat-card">
-      <div class="mat-head">
-        <span class="mat-swatch" style="background:${m.color || '#333'}"></span>
-        <span class="mat-name">${escapeHTML(m.name)}</span>
-        <span class="mat-type">${escapeHTML(m.type || '—')}</span>
+  block.innerHTML = materialsList.map(info => {
+    const m = info.mat;
+    const isPBR = m.isMeshStandardMaterial || m.isMeshPhysicalMaterial;
+    const colorHex = m.color ? '#' + m.color.getHexString() : '#333';
+    const expanded = expandedMatUuids.has(info.uuid);
+    const userTex = materialUserTextures.get(info.uuid) || { userTex: {}, packMode: 'separate' };
+
+    const slotData = (slot, label) => {
+      const t = m[slot];
+      const userInfo = userTex.userTex[slot];
+      const hasTex = !!t;
+      const status = hasTex
+        ? (userInfo ? userInfo.name.slice(0, 20) : (slot in userTex.originals && userTex.originals[slot] ? 'original' : 'set'))
+        : 'empty';
+      const thumb = userInfo?.thumbUrl || '';
+      return { hasTex, status, thumb, label };
+    };
+
+    const slots = [
+      { slot: 'map',          label: 'BaseColor' },
+      { slot: 'normalMap',    label: 'Normal' },
+      { slot: 'roughnessMap', label: 'Roughness' },
+      { slot: 'metalnessMap', label: 'Metallic' },
+      { slot: 'aoMap',        label: 'AO' },
+      { slot: 'emissiveMap',  label: 'Emissive' },
+    ].map(s => ({ ...s, ...slotData(s.slot, s.label) }));
+
+    const renderSlot = (s) => `
+      <div class="tex-slot ${s.hasTex ? 'has-tex' : ''}" data-mat="${info.uuid}" data-slot="${s.slot}" title="Click or drop texture">
+        <div class="tex-slot-thumb ${s.thumb ? 'loaded' : ''}" ${s.thumb ? `style="--bg-img:url(${s.thumb});background-image:url(${s.thumb})"` : ''}></div>
+        <div class="tex-slot-info">
+          <div class="tex-slot-name">${s.label}</div>
+          <div class="tex-slot-status">${s.status}</div>
+        </div>
+        <button class="tex-slot-clear" data-mat="${info.uuid}" data-slot-clear="${s.slot}" title="Clear">×</button>
       </div>
-      <div class="mat-props">
-        ${m.color ? `<div class="row"><span class="k">col</span><span>${m.color}</span></div>` : ''}
-        ${m.metalness !== null ? `<div class="row"><span class="k">met</span><span>${m.metalness}</span></div>` : ''}
-        ${m.roughness !== null ? `<div class="row"><span class="k">rgh</span><span>${m.roughness}</span></div>` : ''}
-        ${m.opacity !== null ? `<div class="row"><span class="k">α</span><span>${m.opacity}</span></div>` : ''}
+    `;
+
+    const packed = userTex.userTex.packed;
+    const packedSlot = `
+      <div class="tex-slot ${packed ? 'has-tex' : ''}" data-mat="${info.uuid}" data-slot="packed" title="Click or drop ${userTex.packMode === 'orm' ? 'ORM' : userTex.packMode === 'ms' ? 'metallic-smoothness' : 'packed'} texture">
+        <div class="tex-slot-thumb ${packed?.thumbUrl ? 'loaded' : ''}" ${packed?.thumbUrl ? `style="background-image:url(${packed.thumbUrl})"` : ''}></div>
+        <div class="tex-slot-info">
+          <div class="tex-slot-name">${userTex.packMode === 'orm' ? 'ORM Packed' : userTex.packMode === 'ms' ? 'Metallic-Smoothness' : 'Packed'}</div>
+          <div class="tex-slot-status">${packed ? packed.name.slice(0,20) : 'empty'}</div>
+        </div>
+        <button class="tex-slot-clear" data-mat="${info.uuid}" data-slot-clear="packed" title="Clear">×</button>
       </div>
-      ${m.textures.length ? `<div class="mat-tex-row">${m.textures.map(t => `<span class="mat-tex">${t}</span>`).join('')}</div>` : ''}
+    `;
+
+    const sliders = isPBR ? `
+      <div class="tex-section-label">Material Values</div>
+      <div class="mat-slider-row">
+        <label>Color</label>
+        <input type="text" readonly value="${colorHex}" data-color-target="material-${info.uuid}" style="background:${colorHex};border:1px solid var(--border2);padding:0;height:14px;cursor:pointer;border-radius:0;width:100%;color:transparent;" title="Click to change color"/>
+        <span class="val">${colorHex.slice(1).toUpperCase()}</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Rough</label>
+        <input type="range" min="0" max="1" step="0.01" value="${m.roughness ?? 0.5}" data-mat-prop="roughness" data-mat="${info.uuid}"/>
+        <span class="val" data-mat-val="roughness-${info.uuid}">${(m.roughness ?? 0.5).toFixed(2)}</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Metal</label>
+        <input type="range" min="0" max="1" step="0.01" value="${m.metalness ?? 0}" data-mat-prop="metalness" data-mat="${info.uuid}"/>
+        <span class="val" data-mat-val="metalness-${info.uuid}">${(m.metalness ?? 0).toFixed(2)}</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Env</label>
+        <input type="range" min="0" max="3" step="0.01" value="${m.envMapIntensity ?? 1}" data-mat-prop="envMapIntensity" data-mat="${info.uuid}"/>
+        <span class="val" data-mat-val="envMapIntensity-${info.uuid}">${(m.envMapIntensity ?? 1).toFixed(2)}</span>
+      </div>
+    ` : `
+      <div class="tex-section-label">Material Values</div>
+      <div class="empty-state" style="padding: 8px 0;">non-PBR material<br/>convert via env preset</div>
+    `;
+
+    const helpText = userTex.packMode === 'orm'
+      ? 'Unreal ORM: R=AO · G=Roughness · B=Metallic'
+      : userTex.packMode === 'ms'
+      ? 'Unity MS: RGB=Metallic · A=Smoothness (1−Rough)'
+      : 'Each channel uploaded as separate texture';
+
+    return `
+    <div class="mat-card ${expanded ? 'expanded' : ''}" data-mat-card="${info.uuid}">
+      <div class="mat-head" data-mat-head="${info.uuid}">
+        <span class="mat-swatch" style="background:${colorHex}"></span>
+        <span class="mat-name">${escapeHTML(info.name)}</span>
+        <span class="mat-type">${escapeHTML(info.type || '—')}</span>
+        <span class="mat-chevron">›</span>
+      </div>
+      <div class="mat-tex-editor">
+        <div class="tex-section-label">Channels</div>
+        <div class="tex-slot-grid">
+          ${slots.map(renderSlot).join('')}
+        </div>
+
+        <div class="tex-section-label">Packed Texture</div>
+        <div class="pack-row">
+          <button class="pack-mode-btn ${userTex.packMode==='separate'?'active':''}" data-pack-mode="separate" data-mat="${info.uuid}">Separate</button>
+          <button class="pack-mode-btn ${userTex.packMode==='orm'?'active':''}" data-pack-mode="orm" data-mat="${info.uuid}">ORM</button>
+          <button class="pack-mode-btn ${userTex.packMode==='ms'?'active':''}" data-pack-mode="ms" data-mat="${info.uuid}">Unity MS</button>
+        </div>
+        <div class="pack-help">${helpText}</div>
+        ${userTex.packMode !== 'separate' ? `<div style="margin-top:6px">${packedSlot}</div>` : ''}
+
+        ${sliders}
+      </div>
     </div>
-  `).join('');
+  `;}).join('');
+
+  // Bind events
+  block.querySelectorAll('[data-mat-head]').forEach(head => {
+    head.addEventListener('click', () => {
+      const uuid = head.dataset.matHead;
+      if (expandedMatUuids.has(uuid)) expandedMatUuids.delete(uuid);
+      else expandedMatUuids.add(uuid);
+      renderMaterials();
+    });
+  });
+  block.querySelectorAll('.tex-slot[data-slot]').forEach(slot => {
+    slot.addEventListener('click', e => {
+      if (e.target.closest('[data-slot-clear]')) return;
+      activeTexSlot = { matUuid: slot.dataset.mat, slot: slot.dataset.slot };
+      document.getElementById('tex-input').click();
+    });
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('dragover'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      slot.classList.remove('dragover');
+      const f = e.dataTransfer?.files?.[0];
+      if (f && f.type.startsWith('image/')) {
+        applyTextureToMaterial(slot.dataset.mat, slot.dataset.slot, f);
+      }
+    });
+  });
+  block.querySelectorAll('[data-slot-clear]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      clearTextureFromMaterial(btn.dataset.mat, btn.dataset.slotClear);
+    });
+  });
+  block.querySelectorAll('[data-pack-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const u = materialUserTextures.get(btn.dataset.mat);
+      if (u) { u.packMode = btn.dataset.packMode; renderMaterials(); }
+    });
+  });
+  block.querySelectorAll('[data-mat-prop]').forEach(input => {
+    input.addEventListener('input', e => {
+      const m = materialsByUuid.get(input.dataset.mat);
+      if (!m) return;
+      const v = parseFloat(input.value);
+      m[input.dataset.matProp] = v;
+      m.needsUpdate = true;
+      const valEl = block.querySelector(`[data-mat-val="${input.dataset.matProp}-${input.dataset.mat}"]`);
+      if (valEl) valEl.textContent = v.toFixed(2);
+    });
+  });
+  block.querySelectorAll('[data-color-target]').forEach(swatch => {
+    swatch.addEventListener('click', e => {
+      e.stopPropagation();
+      openColorPicker(e.currentTarget, swatch.dataset.colorTarget, swatch.value);
+    });
+  });
 }
 function escapeHTML(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ─────────────────────────────────────────
+   TEXTURE LOADING + CHANNEL UNPACKING
+─────────────────────────────────────────── */
+
+function loadImageToTexture(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const tex = new THREE.Texture(img);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.NoColorSpace; // caller sets if BaseColor or Emissive
+      tex.flipY = true;
+      tex.needsUpdate = true;
+      resolve({ texture: tex, url, name: file.name });
+    };
+    img.onerror = e => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+// Split a single packed image into per-channel textures.
+// Returns { r, g, b, a } as canvas-backed Three.js Textures.
+async function unpackChannels(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth, h = img.naturalHeight;
+        const src = document.createElement('canvas');
+        src.width = w; src.height = h;
+        const ctx = src.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, w, h).data;
+
+        function makeChannel(idx, invert = false) {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const cctx = c.getContext('2d');
+          const out = cctx.createImageData(w, h);
+          for (let i = 0; i < data.length; i += 4) {
+            let v = data[i + idx];
+            if (invert) v = 255 - v;
+            out.data[i] = v; out.data[i+1] = v; out.data[i+2] = v; out.data[i+3] = 255;
+          }
+          cctx.putImageData(out, 0, 0);
+          const t = new THREE.CanvasTexture(c);
+          t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
+          t.colorSpace = THREE.NoColorSpace; t.flipY = true;
+          t.needsUpdate = true;
+          return { texture: t, dataUrl: c.toDataURL('image/png') };
+        }
+
+        URL.revokeObjectURL(url);
+        resolve({
+          r: makeChannel(0),
+          g: makeChannel(1),
+          b: makeChannel(2),
+          a: makeChannel(3),
+          aInverted: makeChannel(3, true),
+          previewUrl: src.toDataURL('image/png'),
+          name: file.name,
+        });
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = e => { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+async function applyTextureToMaterial(matUuid, slot, file) {
+  const m = materialsByUuid.get(matUuid);
+  if (!m) return;
+  const u = materialUserTextures.get(matUuid);
+  if (!u) return;
+
+  if (!(m.isMeshStandardMaterial || m.isMeshPhysicalMaterial)) {
+    toast('Convert legacy material first (re-load model)');
+    return;
+  }
+
+  try {
+    if (slot === 'packed') {
+      const channels = await unpackChannels(file);
+      // Apply based on packMode
+      if (u.packMode === 'orm') {
+        // Unreal ORM: R=AO, G=Roughness, B=Metallic
+        m.aoMap        = channels.r.texture;
+        m.roughnessMap = channels.g.texture;
+        m.metalnessMap = channels.b.texture;
+      } else if (u.packMode === 'ms') {
+        // Unity Metallic-Smoothness: RGB=Metallic, A=Smoothness (=1-Roughness)
+        m.metalnessMap = channels.r.texture;
+        m.roughnessMap = channels.aInverted.texture;
+      }
+      m.needsUpdate = true;
+      u.userTex.packed = { name: file.name, thumbUrl: channels.previewUrl };
+      toast(`Unpacked ${u.packMode.toUpperCase()}: ${file.name}`);
+    } else {
+      const { texture, name } = await loadImageToTexture(file);
+      // Set color space appropriately
+      if (slot === 'map' || slot === 'emissiveMap') texture.colorSpace = THREE.SRGBColorSpace;
+      m[slot] = texture;
+      // Make sure emissive color isn't black if user adds an emissive map
+      if (slot === 'emissiveMap' && m.emissive && m.emissive.r === 0 && m.emissive.g === 0 && m.emissive.b === 0) {
+        m.emissive.setHex(0xffffff);
+      }
+      m.needsUpdate = true;
+      const previewUrl = await fileToDataURL(file);
+      u.userTex[slot] = { name, thumbUrl: previewUrl };
+      toast(`Set ${slot.replace('Map','')}: ${name}`);
+    }
+    renderMaterials();
+  } catch (e) {
+    console.error(e);
+    toast('Failed to load texture');
+  }
+}
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+
+function clearTextureFromMaterial(matUuid, slot) {
+  const m = materialsByUuid.get(matUuid);
+  if (!m) return;
+  const u = materialUserTextures.get(matUuid);
+  if (slot === 'packed') {
+    // Restore originals for the channels this packMode would have touched
+    if (u.packMode === 'orm') {
+      m.aoMap        = u.originals.aoMap;
+      m.roughnessMap = u.originals.roughnessMap;
+      m.metalnessMap = u.originals.metalnessMap;
+    } else if (u.packMode === 'ms') {
+      m.metalnessMap = u.originals.metalnessMap;
+      m.roughnessMap = u.originals.roughnessMap;
+    }
+    delete u.userTex.packed;
+  } else {
+    m[slot] = u.originals[slot] || null;
+    delete u.userTex[slot];
+  }
+  m.needsUpdate = true;
+  renderMaterials();
+}
+
+/* ─────────────────────────────────────────
+   COLOR PICKER (shared between materials + lights)
+─────────────────────────────────────────── */
+
+const colorPicker = document.getElementById('color-picker-popup');
+const colorInput = document.getElementById('color-picker-input');
+
+function openColorPicker(anchorEl, target, currentHex) {
+  activeColorTarget = target;
+  const rect = anchorEl.getBoundingClientRect();
+  colorPicker.style.left = (rect.left) + 'px';
+  colorPicker.style.top = (rect.bottom + 6) + 'px';
+  colorPicker.style.display = 'block';
+  colorInput.value = currentHex;
+  // Adjust if it overflows right edge
+  setTimeout(() => {
+    const cpr = colorPicker.getBoundingClientRect();
+    if (cpr.right > window.innerWidth - 8) {
+      colorPicker.style.left = (window.innerWidth - cpr.width - 8) + 'px';
+    }
+  }, 0);
+}
+function closeColorPicker() { colorPicker.style.display = 'none'; activeColorTarget = null; }
+colorInput.addEventListener('input', e => applyColor(e.target.value));
+colorPicker.querySelectorAll('.ck-preset').forEach(p => {
+  p.addEventListener('click', () => {
+    colorInput.value = p.dataset.c;
+    applyColor(p.dataset.c);
+  });
+});
+function applyColor(hex) {
+  if (!activeColorTarget) return;
+  if (activeColorTarget.startsWith('material-')) {
+    const m = materialsByUuid.get(activeColorTarget.slice('material-'.length));
+    if (m && m.color) { m.color.set(hex); m.needsUpdate = true; renderMaterials(); }
+  } else if (activeColorTarget.startsWith('light-')) {
+    const lid = parseInt(activeColorTarget.slice('light-'.length));
+    const L = lights.find(l => l.id === lid);
+    if (L) { L.color = hex; L.light.color.set(hex); renderLights(); }
+  } else if (activeColorTarget.startsWith('emissive-')) {
+    const m = materialsByUuid.get(activeColorTarget.slice('emissive-'.length));
+    if (m && m.emissive) { m.emissive.set(hex); m.needsUpdate = true; renderMaterials(); }
+  }
+}
+document.addEventListener('mousedown', e => {
+  if (!colorPicker.contains(e.target) && !e.target.matches('[data-color-target], [data-color-target] *, .light-color-chip')) {
+    closeColorPicker();
+  }
+});
+
+// Texture file input
+document.getElementById('tex-input').addEventListener('change', e => {
+  const f = e.target.files?.[0];
+  if (f && activeTexSlot) {
+    applyTextureToMaterial(activeTexSlot.matUuid, activeTexSlot.slot, f);
+  }
+  e.target.value = '';
+  activeTexSlot = null;
+});
+
+/* ─────────────────────────────────────────
+   LIGHTS SYSTEM
+─────────────────────────────────────────── */
+
+const LIGHT_DEFAULTS = {
+  point:       { intensity: 30,  distance: 0,    decay: 2,  color: '#ffffff' },
+  spot:        { intensity: 80,  distance: 0,    decay: 2,  angle: 0.5, penumbra: 0.3, color: '#ffffff' },
+  directional: { intensity: 1.5, color: '#ffffff' },
+  area:        { intensity: 5,   width: 1, height: 1, color: '#ffffff' },
+};
+
+function nextLightName(type) {
+  const count = lights.filter(l => l.type === type).length + 1;
+  const labels = { point: 'Point', spot: 'Spot', directional: 'Dir', area: 'Area' };
+  return `${labels[type]} ${count}`;
+}
+
+function createLight(type, position) {
+  const d = LIGHT_DEFAULTS[type];
+  let light, helper;
+  const pos = position || new THREE.Vector3(modelUnitScale * 0.6, modelUnitScale * 0.6, modelUnitScale * 0.6);
+  const helperSize = Math.max(0.1, modelUnitScale * 0.06);
+
+  switch (type) {
+    case 'point':
+      light = new THREE.PointLight(d.color, d.intensity, d.distance, d.decay);
+      light.position.copy(pos);
+      helper = new THREE.PointLightHelper(light, helperSize, 0x14B8A6);
+      break;
+    case 'spot':
+      light = new THREE.SpotLight(d.color, d.intensity, d.distance, d.angle, d.penumbra, d.decay);
+      light.position.copy(pos);
+      light.target.position.set(0, 0, 0);
+      scene.add(light.target);
+      helper = new THREE.SpotLightHelper(light, 0x14B8A6);
+      break;
+    case 'directional':
+      light = new THREE.DirectionalLight(d.color, d.intensity);
+      light.position.copy(pos);
+      light.target.position.set(0, 0, 0);
+      scene.add(light.target);
+      helper = new THREE.DirectionalLightHelper(light, helperSize * 4, 0x14B8A6);
+      break;
+    case 'area':
+      light = new THREE.RectAreaLight(d.color, d.intensity, d.width, d.height);
+      light.position.copy(pos);
+      light.lookAt(0, 0, 0);
+      helper = new RectAreaLightHelper(light);
+      light.add(helper);
+      break;
+  }
+  scene.add(light);
+  if (helper && type !== 'area') scene.add(helper);
+
+  const id = lightIdSeq++;
+  const L = {
+    id, type, name: nextLightName(type),
+    light, helper, enabled: true,
+    color: d.color, intensity: d.intensity,
+    ...(type === 'point' ? { distance: d.distance, decay: d.decay } : {}),
+    ...(type === 'spot' ? { distance: d.distance, decay: d.decay, angle: d.angle, penumbra: d.penumbra } : {}),
+    ...(type === 'area' ? { width: d.width, height: d.height } : {}),
+  };
+  lights.push(L);
+  expandedLightIds.add(id);
+  return L;
+}
+
+function removeLight(id) {
+  const idx = lights.findIndex(l => l.id === id);
+  if (idx < 0) return;
+  const L = lights[idx];
+  if (L.light.target && (L.type === 'spot' || L.type === 'directional')) scene.remove(L.light.target);
+  scene.remove(L.light);
+  if (L.helper && L.type !== 'area') scene.remove(L.helper);
+  L.helper?.dispose?.();
+  if (L.light.dispose) L.light.dispose();
+  lights.splice(idx, 1);
+  if (selectedLightId === id) {
+    selectedLightId = null;
+    transformControls.detach();
+  }
+  expandedLightIds.delete(id);
+  renderLights();
+}
+
+function selectLight(id) {
+  selectedLightId = id;
+  if (id === null) { transformControls.detach(); renderLights(); return; }
+  const L = lights.find(l => l.id === id);
+  if (!L) return;
+  transformControls.attach(L.light);
+  renderLights();
+}
+
+function setLightProp(id, prop, value) {
+  const L = lights.find(l => l.id === id);
+  if (!L) return;
+  L[prop] = value;
+  if (prop === 'color') L.light.color.set(value);
+  else if (prop === 'enabled') L.light.visible = value;
+  else if (prop === 'angle') L.light.angle = value;
+  else if (prop === 'width' || prop === 'height') {
+    L.light[prop] = value;
+  }
+  else L.light[prop] = value;
+  // helpers need updating after geometry-affecting changes
+  if (L.helper && L.helper.update) L.helper.update();
+}
+
+function renderLights() {
+  const list = document.getElementById('lights-list');
+  const cnt = document.getElementById('light-count');
+  cnt.textContent = lights.length ? `× ${lights.length}` : '';
+  if (!lights.length) {
+    list.innerHTML = `<div class="light-empty">no lights · use buttons above</div>`;
+    return;
+  }
+  const iconFor = type => ({
+    point: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="2" x2="8" y2="4"/><line x1="8" y1="12" x2="8" y2="14"/><line x1="2" y1="8" x2="4" y2="8"/><line x1="12" y1="8" x2="14" y2="8"/></svg>',
+    spot:  '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3.5" r="1.5"/><path d="M8 5 L4 14 L12 14 Z"/></svg>',
+    directional: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><line x1="6" y1="6" x2="13" y2="13"/></svg>',
+    area:  '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="6"/></svg>',
+  })[type];
+
+  list.innerHTML = lights.map(L => {
+    const expanded = expandedLightIds.has(L.id);
+    const selected = selectedLightId === L.id;
+    let body = `
+      <div class="mat-slider-row">
+        <label>Intens</label>
+        <input type="range" min="0" max="${L.type === 'directional' ? 10 : L.type === 'area' ? 30 : 200}" step="0.1" value="${L.intensity}" data-light="${L.id}" data-prop="intensity"/>
+        <span class="val" data-lval="intensity-${L.id}">${L.intensity.toFixed(1)}</span>
+      </div>`;
+    if (L.type === 'point' || L.type === 'spot') {
+      body += `
+      <div class="mat-slider-row">
+        <label>Range</label>
+        <input type="range" min="0" max="${Math.max(20, modelUnitScale * 5)}" step="0.1" value="${L.distance}" data-light="${L.id}" data-prop="distance"/>
+        <span class="val" data-lval="distance-${L.id}">${L.distance === 0 ? '∞' : L.distance.toFixed(1)}</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Decay</label>
+        <input type="range" min="0" max="4" step="0.1" value="${L.decay}" data-light="${L.id}" data-prop="decay"/>
+        <span class="val" data-lval="decay-${L.id}">${L.decay.toFixed(1)}</span>
+      </div>`;
+    }
+    if (L.type === 'spot') {
+      body += `
+      <div class="mat-slider-row">
+        <label>Angle</label>
+        <input type="range" min="0.05" max="1.5" step="0.01" value="${L.angle}" data-light="${L.id}" data-prop="angle"/>
+        <span class="val" data-lval="angle-${L.id}">${(L.angle * 180 / Math.PI).toFixed(0)}°</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Soft</label>
+        <input type="range" min="0" max="1" step="0.01" value="${L.penumbra}" data-light="${L.id}" data-prop="penumbra"/>
+        <span class="val" data-lval="penumbra-${L.id}">${L.penumbra.toFixed(2)}</span>
+      </div>`;
+    }
+    if (L.type === 'area') {
+      body += `
+      <div class="mat-slider-row">
+        <label>Width</label>
+        <input type="range" min="0.1" max="${Math.max(5, modelUnitScale * 3)}" step="0.05" value="${L.width}" data-light="${L.id}" data-prop="width"/>
+        <span class="val" data-lval="width-${L.id}">${L.width.toFixed(2)}</span>
+      </div>
+      <div class="mat-slider-row">
+        <label>Height</label>
+        <input type="range" min="0.1" max="${Math.max(5, modelUnitScale * 3)}" step="0.05" value="${L.height}" data-light="${L.id}" data-prop="height"/>
+        <span class="val" data-lval="height-${L.id}">${L.height.toFixed(2)}</span>
+      </div>`;
+    }
+    body += `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;">
+        <button class="pack-mode-btn ${transformControls.mode==='translate'&&selected?'active':''}" data-light-mode="translate" data-light="${L.id}">Move</button>
+        <button class="pack-mode-btn ${transformControls.mode==='rotate'&&selected?'active':''}" data-light-mode="rotate" data-light="${L.id}">Rotate</button>
+      </div>
+    `;
+
+    return `
+    <div class="light-card ${L.enabled?'enabled':''} ${expanded?'expanded':''} ${selected?'selected':''}" data-light-card="${L.id}">
+      <div class="light-head" data-light-head="${L.id}">
+        <div class="light-onoff" data-light-onoff="${L.id}" title="Toggle on/off"></div>
+        <span class="light-icon">${iconFor(L.type)}</span>
+        <span class="light-name">${escapeHTML(L.name)}</span>
+        <span class="light-color-chip" style="background:${L.color}" data-light-color="${L.id}" title="Change color"></span>
+        <button class="light-delete" data-light-del="${L.id}" title="Delete">×</button>
+        <span class="light-chevron">›</span>
+      </div>
+      <div class="light-body">${body}</div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-light-head]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-light-onoff], [data-light-color], [data-light-del]')) return;
+      const id = parseInt(el.dataset.lightHead);
+      if (expandedLightIds.has(id)) expandedLightIds.delete(id);
+      else expandedLightIds.add(id);
+      selectLight(id);
+    });
+  });
+  list.querySelectorAll('[data-light-onoff]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = parseInt(el.dataset.lightOnoff);
+      const L = lights.find(l => l.id === id);
+      if (L) { setLightProp(id, 'enabled', !L.enabled); renderLights(); }
+    });
+  });
+  list.querySelectorAll('[data-light-color]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = el.dataset.lightColor;
+      openColorPicker(el, 'light-' + id, lights.find(l => l.id === parseInt(id)).color);
+    });
+  });
+  list.querySelectorAll('[data-light-del]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      removeLight(parseInt(el.dataset.lightDel));
+    });
+  });
+  list.querySelectorAll('[data-light][data-prop]').forEach(input => {
+    input.addEventListener('input', e => {
+      const id = parseInt(input.dataset.light);
+      const prop = input.dataset.prop;
+      const v = parseFloat(input.value);
+      setLightProp(id, prop, v);
+      const valEl = list.querySelector(`[data-lval="${prop}-${id}"]`);
+      if (valEl) {
+        if (prop === 'angle') valEl.textContent = (v * 180 / Math.PI).toFixed(0) + '°';
+        else if (prop === 'distance' && v === 0) valEl.textContent = '∞';
+        else valEl.textContent = v.toFixed(prop === 'distance' || prop === 'intensity' ? 1 : 2);
+      }
+    });
+  });
+  list.querySelectorAll('[data-light-mode]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      transformControls.setMode(btn.dataset.lightMode);
+      const id = parseInt(btn.dataset.light);
+      selectLight(id);
+    });
+  });
+}
+
+function setPlaceMode(on) {
+  placeMode = on;
+  const btn = document.getElementById('btn-place-mode');
+  btn.classList.toggle('active', on);
+  document.getElementById('place-mode-hint').textContent = on ? 'On' : 'Off';
+  renderer.domElement.style.cursor = on ? 'crosshair' : '';
+}
 
 function resetStats() {
   ['s-tris','s-verts','s-meshes','s-mats','s-tex','s-calls','s-bounds'].forEach(id => document.getElementById(id).textContent = '—');
@@ -970,8 +2116,15 @@ async function loadFiles(fileList) {
       case 'stl':  object = await loadSTL(primary); break;
       default: throw new Error('Unsupported');
     }
-    if (currentModel) { scene.remove(currentModel); disposeObject(currentModel); }
+    if (currentModel) {
+      scene.remove(currentModel);
+      disposeObject(currentModel);
+      // Reset per-material state when loading a new model
+      materialUserTextures.clear();
+      expandedMatUuids.clear();
+    }
     currentModel = object;
+    prepareModelMaterials(currentModel, ext);
     scene.add(currentModel);
     applyWireframe();
     frameObject(currentModel);
@@ -1022,7 +2175,10 @@ function loadOBJ(file) {
     new OBJLoader().load(url, (obj) => {
       obj.traverse(c => {
         if (c.isMesh && (!c.material || (Array.isArray(c.material) && !c.material.length))) {
-          c.material = new THREE.MeshStandardMaterial({ color: 0xc0c0c8, roughness: 0.7, metalness: 0.0 });
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0xc0c0c8, roughness: 0.7, metalness: 0.0,
+            side: THREE.DoubleSide,
+          });
         }
       });
       URL.revokeObjectURL(url); resolve(obj);
@@ -1042,7 +2198,8 @@ function loadSTL(file) {
     new STLLoader().load(url, geo => {
       geo.computeVertexNormals();
       const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-        color: 0xc0c0c8, roughness: 0.6, metalness: 0.1
+        color: 0xc0c0c8, roughness: 0.6, metalness: 0.1,
+        side: THREE.DoubleSide,
       }));
       const group = new THREE.Group(); group.add(mesh);
       URL.revokeObjectURL(url); resolve(group);
@@ -1105,15 +2262,44 @@ const ndc = new THREE.Vector2();
 let pointerDownPos = null;
 renderer.domElement.addEventListener('pointerdown', e => { pointerDownPos = { x: e.clientX, y: e.clientY }; });
 renderer.domElement.addEventListener('pointerup', e => {
-  if (!measureMode || !currentModel || !pointerDownPos) return;
+  if (!pointerDownPos) return;
   const dx = e.clientX - pointerDownPos.x, dy = e.clientY - pointerDownPos.y;
-  if (Math.hypot(dx, dy) > 6) return;
+  if (Math.hypot(dx, dy) > 6) { pointerDownPos = null; return; }
   const rect = renderer.domElement.getBoundingClientRect();
   ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
   ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
-  const hits = raycaster.intersectObject(currentModel, true);
-  if (hits.length) addMeasurePoint(hits[0].point);
+
+  // Click-to-place light mode takes priority
+  if (placeMode && currentModel && pendingLightType) {
+    const hits = raycaster.intersectObject(currentModel, true);
+    if (hits.length) {
+      // Place slightly above the surface along the normal so it actually illuminates
+      const hit = hits[0];
+      const offset = modelUnitScale * 0.15;
+      const placePos = hit.point.clone();
+      if (hit.face?.normal) {
+        const worldNormal = hit.face.normal.clone()
+          .transformDirection(hit.object.matrixWorld).normalize();
+        placePos.addScaledVector(worldNormal, offset);
+      } else {
+        placePos.y += offset;
+      }
+      const L = createLight(pendingLightType, placePos);
+      selectLight(L.id);
+      renderLights();
+      // Stay in place mode for chaining; user can toggle off when done
+    }
+    pointerDownPos = null;
+    return;
+  }
+
+  // Otherwise, fall through to measure mode
+  if (measureMode && currentModel) {
+    const hits = raycaster.intersectObject(currentModel, true);
+    if (hits.length) addMeasurePoint(hits[0].point);
+  }
+  pointerDownPos = null;
 });
 
 const fileInput = document.getElementById('file-input');
@@ -1135,6 +2321,19 @@ window.addEventListener('drop', e => {
 });
 
 document.getElementById('env-select').addEventListener('change', e => setEnvironment(e.target.value));
+
+const exposureSlider = document.getElementById('exposure-slider');
+const exposureVal = document.getElementById('exposure-val');
+exposureSlider.addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  renderer.toneMappingExposure = v;
+  exposureVal.textContent = v.toFixed(2);
+});
+document.getElementById('exposure-reset').addEventListener('click', () => {
+  renderer.toneMappingExposure = 1.0;
+  exposureSlider.value = 1.0;
+  exposureVal.textContent = '1.00';
+});
 document.getElementById('btn-wireframe').addEventListener('click', e => {
   wireframeOn = !wireframeOn;
   e.currentTarget.classList.toggle('active', wireframeOn);
@@ -1162,7 +2361,49 @@ document.getElementById('btn-screenshot').addEventListener('click', () => {
   }, 'image/png');
 });
 
+// LIGHTS — type buttons (add light immediately at default position OR enter place mode)
+document.querySelectorAll('[data-add-light]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.addLight;
+    if (placeMode) {
+      pendingLightType = type;
+      document.getElementById('place-mode-hint').textContent = type;
+      toast(`Click on model to place ${type} light`);
+    } else {
+      const L = createLight(type);
+      selectLight(L.id);
+      renderLights();
+      toast(`Added ${L.name}`);
+    }
+  });
+});
+
+// LIGHTS — place mode toggle
+document.getElementById('btn-place-mode').addEventListener('click', () => {
+  setPlaceMode(!placeMode);
+  if (placeMode) {
+    pendingLightType = pendingLightType || 'point';
+    document.getElementById('place-mode-hint').textContent = pendingLightType;
+    toast(`Place mode on · click model to drop ${pendingLightType} light`);
+  } else {
+    pendingLightType = null;
+  }
+});
+
+// Keyboard shortcuts for transform mode
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (selectedLightId === null) return;
+  switch (e.key.toLowerCase()) {
+    case 'g': case 'w': transformControls.setMode('translate'); renderLights(); break;
+    case 'r': case 'e': transformControls.setMode('rotate'); renderLights(); break;
+    case 'escape': selectLight(null); break;
+    case 'delete': case 'backspace': removeLight(selectedLightId); break;
+  }
+});
+
 resetStats();
+renderLights();
 </script>
 </body>
 </html>
