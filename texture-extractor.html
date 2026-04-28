@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiko · Texture Extractor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --obsidian: #0A0A0D;
+    --void: #121217;
+    --graphite: #2A2A33;
+    --aether: #8B5CF6;
+    --neon-violet: #A855F7;
+    --royal: #5B21B6;
+    --teal: #14B8A6;
+    --aqua: #22D3EE;
+    --soft-white: #F1F1F5;
+    --muted: #A1A1AA;
+    --chrome: #C0C0C8;
+    --fog: #6B7280;
+    --lavender: #C4B5FD;
+    --pink: #EC4899;
+    --gold: #F59E0B;
+    --red: #EF4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--obsidian);
+    color: var(--soft-white);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(139, 92, 246, 0.15), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(20, 184, 166, 0.10), transparent 50%),
+      var(--obsidian);
+    background-attachment: fixed;
+  }
+
+  .grain {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 56px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--aether), var(--teal));
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    color: var(--obsidian);
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  }
+
+  .brand-text {
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .brand-text strong {
+    color: var(--soft-white);
+    font-weight: 600;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--graphite);
+    padding: 6px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--teal);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  h1 .gradient {
+    background: linear-gradient(135deg, var(--aether) 0%, var(--lavender) 50%, var(--teal) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 620px;
+    line-height: 1.5;
+  }
+
+  /* Drop Zone */
+  .dropzone {
+    position: relative;
+    border: 1.5px dashed var(--graphite);
+    background:
+      linear-gradient(180deg, rgba(42, 42, 51, 0.3), rgba(18, 18, 23, 0.6));
+    border-radius: 20px;
+    padding: 64px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .dropzone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(139, 92, 246, 0.12), transparent 40%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .dropzone:hover {
+    border-color: var(--aether);
+    transform: translateY(-2px);
+  }
+
+  .dropzone:hover::before { opacity: 1; }
+
+  .dropzone.dragging {
+    border-color: var(--teal);
+    background:
+      linear-gradient(180deg, rgba(20, 184, 166, 0.08), rgba(139, 92, 246, 0.08));
+    transform: scale(1.005);
+  }
+
+  .dropzone-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--graphite), var(--void));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    display: grid;
+    place-items: center;
+    color: var(--aether);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .dropzone-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--soft-white);
+  }
+
+  .dropzone-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .formats {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .format-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    background: rgba(20, 184, 166, 0.08);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    color: var(--teal);
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Status bar */
+  .status {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--void);
+    border: 1px solid var(--graphite);
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+  }
+
+  .status.active { display: flex; }
+
+  .status.error {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+    color: #fca5a5;
+  }
+
+  .status.success {
+    border-color: rgba(20, 184, 166, 0.4);
+    background: rgba(20, 184, 166, 0.06);
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--graphite);
+    border-top-color: var(--aether);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Results */
+  .results {
+    margin-top: 48px;
+    display: none;
+  }
+
+  .results.active { display: block; }
+
+  .results-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .results-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .results-title {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .count-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(20, 184, 166, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 999px;
+    color: var(--lavender);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--soft-white);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--aether), var(--royal));
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--neon-violet), var(--aether));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(168, 85, 247, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  .btn-secondary {
+    background: var(--graphite);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .btn-secondary:hover {
+    background: #353541;
+    border-color: var(--teal);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Texture grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+  }
+
+  .tex-card {
+    background: linear-gradient(180deg, var(--graphite), var(--void));
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    position: relative;
+  }
+
+  .tex-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(139, 92, 246, 0.2);
+  }
+
+  .tex-preview {
+    width: 100%;
+    aspect-ratio: 1;
+    background:
+      conic-gradient(from 45deg at 50% 50%, #1a1a22, #232330, #1a1a22, #232330) 0 0 / 16px 16px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .tex-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
+  .tex-info {
+    padding: 14px 16px;
+  }
+
+  .tex-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--soft-white);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 6px;
+  }
+
+  .tex-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .tex-type {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tex-type.diffuse { background: rgba(139, 92, 246, 0.15); color: var(--lavender); border: 1px solid rgba(139, 92, 246, 0.3); }
+  .tex-type.normal { background: rgba(34, 211, 238, 0.12); color: var(--aqua); border: 1px solid rgba(34, 211, 238, 0.3); }
+  .tex-type.metallic { background: rgba(192, 192, 200, 0.12); color: var(--chrome); border: 1px solid rgba(192, 192, 200, 0.3); }
+  .tex-type.roughness { background: rgba(245, 158, 11, 0.12); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
+  .tex-type.emissive { background: rgba(236, 72, 153, 0.12); color: var(--pink); border: 1px solid rgba(236, 72, 153, 0.3); }
+  .tex-type.ao { background: rgba(107, 114, 128, 0.18); color: var(--chrome); border: 1px solid rgba(107, 114, 128, 0.3); }
+  .tex-type.opacity { background: rgba(196, 181, 253, 0.12); color: var(--lavender); border: 1px solid rgba(196, 181, 253, 0.3); }
+  .tex-type.unknown { background: rgba(20, 184, 166, 0.12); color: var(--teal); border: 1px solid rgba(20, 184, 166, 0.3); }
+
+  .tex-actions {
+    display: flex;
+    gap: 6px;
+    padding: 0 14px 14px;
+  }
+
+  .tex-btn {
+    flex: 1;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.3);
+    color: var(--soft-white);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .tex-btn:hover {
+    background: var(--aether);
+    border-color: var(--aether);
+  }
+
+  .tex-btn.preview-btn:hover {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    background: var(--void);
+    border: 1px dashed var(--graphite);
+    border-radius: 14px;
+  }
+
+  .empty-icon {
+    margin: 0 auto 16px;
+    color: var(--fog);
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 13, 0.94);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    cursor: zoom-out;
+  }
+
+  .lightbox.active { display: flex; }
+
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 8px;
+    box-shadow: 0 20px 80px rgba(139, 92, 246, 0.3);
+  }
+
+  .lightbox-info {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--void);
+    border: 1px solid var(--graphite);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--graphite);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--soft-white);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--graphite);
+    text-align: center;
+    color: var(--fog);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .footer span { color: var(--aether); }
+
+  @media (max-width: 600px) {
+    .container { padding: 32px 20px 60px; }
+    .dropzone { padding: 48px 20px; }
+    .results-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<div class="container">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">T</div>
+      <div class="brand-text"><strong>tiko</strong> · developments</div>
+    </div>
+    <div class="badge">v1.0 · TEXTURE EXTRACTOR</div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">// 3D Asset Pipeline</div>
+    <h1>Pull every <span class="gradient">texture</span><br>out of any 3D model.</h1>
+    <p class="hero-sub">Drop a model file. We'll parse the scene graph, isolate every embedded texture map, and let you preview or download them individually — or grab the lot as a zip.</p>
+  </section>
+
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".glb,.gltf,.obj,.fbx,.dae,.3ds,.ply,.stl,.zip" hidden>
+    <div class="dropzone-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <div class="dropzone-title">Drop a 3D model here</div>
+    <div class="dropzone-sub">or click to browse · max 200MB</div>
+    <div class="formats">
+      <span class="format-chip">.GLB</span>
+      <span class="format-chip">.GLTF</span>
+      <span class="format-chip">.OBJ + .MTL</span>
+      <span class="format-chip">.FBX</span>
+      <span class="format-chip">.DAE</span>
+      <span class="format-chip">.PLY</span>
+      <span class="format-chip">.ZIP</span>
+    </div>
+  </div>
+
+  <div class="status" id="status">
+    <div class="spinner" id="statusSpinner"></div>
+    <span id="statusText">Parsing model…</span>
+  </div>
+
+  <section class="results" id="results">
+    <div class="results-header">
+      <div class="results-meta">
+        <div class="results-title">Extracted Textures</div>
+        <div class="count-pill" id="countPill">0 maps</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="resetBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Clear
+        </button>
+        <button class="btn btn-primary" id="downloadAllBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download All (.zip)
+        </button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <footer class="footer">
+    <span>tiko developments</span> · built for 3D artists & game devs · UE5 / Unity ready
+  </footer>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-info" id="lightboxInfo"></div>
+</div>
+
+<!-- Three.js + loaders + JSZip via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/ColladaLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/inflate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const status = document.getElementById('status');
+  const statusText = document.getElementById('statusText');
+  const statusSpinner = document.getElementById('statusSpinner');
+  const results = document.getElementById('results');
+  const grid = document.getElementById('grid');
+  const countPill = document.getElementById('countPill');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxInfo = document.getElementById('lightboxInfo');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  let extractedTextures = []; // { name, type, dataUrl, blob, width, height, sizeKB }
+  let modelBaseName = 'model';
+
+  // ==== Dropzone interactions ====
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  dropzone.addEventListener('mousemove', (e) => {
+    const rect = dropzone.getBoundingClientRect();
+    dropzone.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+    dropzone.style.setProperty('--my', `${e.clientY - rect.top}px`);
+  });
+
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragging');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (ev === 'dragleave' && e.target !== dropzone) return;
+      dropzone.classList.remove('dragging');
+    });
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length) handleFiles(files);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFiles(e.target.files);
+  });
+
+  // ==== File handling ====
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList);
+    extractedTextures = [];
+
+    // Detect main model file (first non-image, non-mtl)
+    let mainFile = files.find(f => /\.(glb|gltf|obj|fbx|dae|3ds|ply|stl|zip)$/i.test(f.name));
+    if (!mainFile) mainFile = files[0];
+
+    modelBaseName = mainFile.name.replace(/\.[^.]+$/, '');
+
+    showStatus('Parsing ' + mainFile.name + '…', 'loading');
+
+    try {
+      const ext = mainFile.name.split('.').pop().toLowerCase();
+
+      if (ext === 'zip') {
+        await handleZip(mainFile);
+      } else if (ext === 'glb' || ext === 'gltf') {
+        await handleGLTF(mainFile, files);
+      } else if (ext === 'obj') {
+        await handleOBJ(mainFile, files);
+      } else if (ext === 'fbx') {
+        await handleFBX(mainFile);
+      } else if (ext === 'dae') {
+        await handleCollada(mainFile, files);
+      } else {
+        // PLY/STL/3DS rarely have textures; try opening it as raw and looking inside
+        showStatus(`No textures expected in .${ext} files (geometry only).`, 'error');
+        return;
+      }
+
+      finishExtraction();
+    } catch (err) {
+      console.error(err);
+      showStatus('Could not parse this file: ' + (err.message || err), 'error');
+    }
+  }
+
+  function showStatus(text, type) {
+    status.classList.add('active');
+    status.classList.remove('error', 'success');
+    statusSpinner.style.display = type === 'loading' ? 'block' : 'none';
+    if (type === 'error') status.classList.add('error');
+    if (type === 'success') status.classList.add('success');
+    statusText.textContent = text;
+  }
+
+  function finishExtraction() {
+    if (extractedTextures.length === 0) {
+      showStatus('No textures found in this model. Some models reference external image files that need to be uploaded together.', 'error');
+      results.classList.remove('active');
+      return;
+    }
+    showStatus(`Found ${extractedTextures.length} texture${extractedTextures.length === 1 ? '' : 's'}.`, 'success');
+    setTimeout(() => status.classList.remove('active'), 2500);
+    renderResults();
+  }
+
+  // ==== GLTF / GLB ====
+  async function handleGLTF(file, allFiles) {
+    const url = URL.createObjectURL(file);
+    const loader = new THREE.GLTFLoader();
+
+    // For .gltf, we may need a manager that resolves external image references
+    const manager = new THREE.LoadingManager();
+    const blobURLs = new Map();
+
+    if (file.name.toLowerCase().endsWith('.gltf')) {
+      // Build blob-url table for sibling files
+      allFiles.forEach(f => {
+        if (f === file) return;
+        blobURLs.set(f.name, URL.createObjectURL(f));
+      });
+      manager.setURLModifier((u) => {
+        const cleaned = decodeURIComponent(u.split('/').pop());
+        if (blobURLs.has(cleaned)) return blobURLs.get(cleaned);
+        return u;
+      });
+    }
+
+    const gltfLoader = new THREE.GLTFLoader(manager);
+
+    return new Promise((resolve, reject) => {
+      gltfLoader.load(url, (gltf) => {
+        collectTexturesFromScene(gltf.scene);
+        URL.revokeObjectURL(url);
+        blobURLs.forEach(u => URL.revokeObjectURL(u));
+        resolve();
+      }, undefined, reject);
+    });
+  }
+
+  // ==== OBJ + MTL ====
+  async function handleOBJ(file, allFiles) {
+    const objURL = URL.createObjectURL(file);
+
+    // Find sibling MTL
+    const mtlFile = allFiles.find(f => f.name.toLowerCase().endsWith('.mtl'));
+
+    const manager = new THREE.LoadingManager();
+    const blobURLs = new Map();
+    allFiles.forEach(f => {
+      if (f === file) return;
+      blobURLs.set(f.name, URL.createObjectURL(f));
+      // also map without path
+      const base = f.name.split(/[\\/]/).pop();
+      blobURLs.set(base, URL.createObjectURL(f));
+    });
+    manager.setURLModifier((u) => {
+      const cleaned = decodeURIComponent(u.split(/[\\/]/).pop());
+      if (blobURLs.has(cleaned)) return blobURLs.get(cleaned);
+      return u;
+    });
+
+    if (mtlFile) {
+      const mtlLoader = new THREE.MTLLoader(manager);
+      const mtlURL = URL.createObjectURL(mtlFile);
+      await new Promise((resolve, reject) => {
+        mtlLoader.load(mtlURL, (materials) => {
+          materials.preload();
+          const objLoader = new THREE.OBJLoader(manager);
+          objLoader.setMaterials(materials);
+          objLoader.load(objURL, (obj) => {
+            collectTexturesFromScene(obj);
+            resolve();
+          }, undefined, reject);
+        }, undefined, reject);
+      });
+    } else {
+      // No MTL — OBJ alone won't have textures
+      const objLoader = new THREE.OBJLoader(manager);
+      await new Promise((resolve, reject) => {
+        objLoader.load(objURL, (obj) => {
+          collectTexturesFromScene(obj);
+          resolve();
+        }, undefined, reject);
+      });
+    }
+
+    URL.revokeObjectURL(objURL);
+    blobURLs.forEach(u => URL.revokeObjectURL(u));
+  }
+
+  // ==== FBX ====
+  async function handleFBX(file) {
+    const url = URL.createObjectURL(file);
+    const loader = new THREE.FBXLoader();
+    return new Promise((resolve, reject) => {
+      loader.load(url, (fbx) => {
+        collectTexturesFromScene(fbx);
+        URL.revokeObjectURL(url);
+        resolve();
+      }, undefined, reject);
+    });
+  }
+
+  // ==== Collada (.dae) ====
+  async function handleCollada(file, allFiles) {
+    const url = URL.createObjectURL(file);
+    const manager = new THREE.LoadingManager();
+    const blobURLs = new Map();
+    allFiles.forEach(f => {
+      if (f === file) return;
+      blobURLs.set(f.name, URL.createObjectURL(f));
+    });
+    manager.setURLModifier((u) => {
+      const cleaned = decodeURIComponent(u.split(/[\\/]/).pop());
+      if (blobURLs.has(cleaned)) return blobURLs.get(cleaned);
+      return u;
+    });
+
+    const loader = new THREE.ColladaLoader(manager);
+    return new Promise((resolve, reject) => {
+      loader.load(url, (dae) => {
+        collectTexturesFromScene(dae.scene);
+        URL.revokeObjectURL(url);
+        blobURLs.forEach(u => URL.revokeObjectURL(u));
+        resolve();
+      }, undefined, reject);
+    });
+  }
+
+  // ==== ZIP archives ====
+  async function handleZip(file) {
+    const zip = await JSZip.loadAsync(file);
+    const allFiles = [];
+
+    // Convert zip entries to File objects
+    const entries = Object.values(zip.files).filter(f => !f.dir);
+    for (const entry of entries) {
+      const blob = await entry.async('blob');
+      const name = entry.name.split('/').pop();
+      allFiles.push(new File([blob], name, { type: blob.type }));
+    }
+
+    // Find main 3D file
+    const main = allFiles.find(f => /\.(glb|gltf|obj|fbx|dae)$/i.test(f.name));
+    if (!main) {
+      // Maybe the zip is just a texture pack — pull all images directly
+      const images = allFiles.filter(f => /\.(png|jpe?g|tga|bmp|webp|tif?f|hdr|exr)$/i.test(f.name));
+      if (images.length === 0) {
+        throw new Error('No 3D model or images found in this zip.');
+      }
+      for (const img of images) {
+        await addImageFileAsTexture(img);
+      }
+      return;
+    }
+
+    modelBaseName = main.name.replace(/\.[^.]+$/, '');
+    const ext = main.name.split('.').pop().toLowerCase();
+
+    if (ext === 'glb' || ext === 'gltf') await handleGLTF(main, allFiles);
+    else if (ext === 'obj') await handleOBJ(main, allFiles);
+    else if (ext === 'fbx') await handleFBX(main);
+    else if (ext === 'dae') await handleCollada(main, allFiles);
+  }
+
+  async function addImageFileAsTexture(file) {
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    const dims = await imageDimensions(dataUrl);
+    extractedTextures.push({
+      name: file.name,
+      type: classifyTexture(file.name, ''),
+      dataUrl: dataUrl,
+      blob: file,
+      width: dims.w,
+      height: dims.h,
+      sizeKB: Math.round(file.size / 1024)
+    });
+  }
+
+  function imageDimensions(dataUrl) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = () => res({ w: 0, h: 0 });
+      img.src = dataUrl;
+    });
+  }
+
+  // ==== Texture collection from a Three.js scene ====
+  function collectTexturesFromScene(root) {
+    const seen = new Map(); // texture.uuid -> entry
+    const slotMap = new Map(); // texture.uuid -> slot name (map, normalMap, etc.)
+
+    root.traverse((obj) => {
+      if (!obj.material) return;
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach(mat => {
+        Object.keys(mat).forEach(key => {
+          const val = mat[key];
+          if (val && val.isTexture) {
+            if (!slotMap.has(val.uuid)) slotMap.set(val.uuid, key);
+            if (!seen.has(val.uuid)) seen.set(val.uuid, val);
+          }
+        });
+      });
+    });
+
+    let idx = 0;
+    seen.forEach((tex, uuid) => {
+      const slot = slotMap.get(uuid) || 'map';
+      const entry = textureToEntry(tex, slot, idx++);
+      if (entry) extractedTextures.push(entry);
+    });
+  }
+
+  function textureToEntry(tex, slot, idx) {
+    const img = tex.image;
+    if (!img) return null;
+
+    let dataUrl = null;
+    let width = 0, height = 0;
+
+    try {
+      // ImageBitmap (common in GLTF)
+      if (img instanceof ImageBitmap || (img.width && img.height && !(img instanceof HTMLImageElement) && !(img.src))) {
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        c.getContext('2d').drawImage(img, 0, 0);
+        dataUrl = c.toDataURL('image/png');
+        width = img.width;
+        height = img.height;
+      } else if (img instanceof HTMLImageElement || img instanceof HTMLCanvasElement) {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        c.getContext('2d').drawImage(img, 0, 0);
+        dataUrl = c.toDataURL('image/png');
+        width = c.width;
+        height = c.height;
+      } else if (img.data && img.width && img.height) {
+        // Raw data textures (DataTexture)
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        const ctx = c.getContext('2d');
+        const imageData = ctx.createImageData(img.width, img.height);
+        // Try to copy raw RGBA bytes
+        if (img.data instanceof Uint8Array || img.data instanceof Uint8ClampedArray) {
+          imageData.data.set(img.data);
+          ctx.putImageData(imageData, 0, 0);
+          dataUrl = c.toDataURL('image/png');
+          width = img.width;
+          height = img.height;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to read texture', tex.name, e);
+      return null;
+    }
+
+    if (!dataUrl) return null;
+
+    // Generate sensible filename
+    let baseName = tex.name && tex.name.trim() ? tex.name.trim() : `texture_${idx + 1}`;
+    baseName = baseName.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+    if (!/\.(png|jpe?g|webp)$/i.test(baseName)) baseName += '.png';
+
+    const type = classifyTexture(baseName, slot);
+    const blob = dataUrlToBlob(dataUrl);
+
+    return {
+      name: baseName,
+      type,
+      dataUrl,
+      blob,
+      width,
+      height,
+      sizeKB: Math.round(blob.size / 1024)
+    };
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const [meta, b64] = dataUrl.split(',');
+    const mime = meta.match(/:(.*?);/)[1];
+    const bin = atob(b64);
+    const len = bin.length;
+    const arr = new Uint8Array(len);
+    for (let i = 0; i < len; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  // ==== Texture classification ====
+  function classifyTexture(name, slot) {
+    const n = (name || '').toLowerCase();
+    const s = (slot || '').toLowerCase();
+
+    if (s === 'normalmap' || /\b(normal|nrm|nor|_n\.|_n_)/i.test(n)) return 'normal';
+    if (s === 'metalnessmap' || /\b(metal|metallic|metalness|_m\.|_m_)/i.test(n)) return 'metallic';
+    if (s === 'roughnessmap' || /\b(rough|roughness|_r\.|_r_)/i.test(n)) return 'roughness';
+    if (s === 'aomap' || /\b(ao|ambient|occlusion)/i.test(n)) return 'ao';
+    if (s === 'emissivemap' || /\b(emiss|emission|glow)/i.test(n)) return 'emissive';
+    if (s === 'alphamap' || s === 'transmissionmap' || /\b(alpha|opacity|transparen|mask)/i.test(n)) return 'opacity';
+    if (s === 'displacementmap' || s === 'bumpmap' || /\b(disp|displace|height|bump)/i.test(n)) return 'unknown';
+    if (s === 'map' || /\b(diff|diffuse|albedo|color|basecolor|base_color)/i.test(n)) return 'diffuse';
+    return 'unknown';
+  }
+
+  function typeLabel(type) {
+    const labels = {
+      diffuse: 'Diffuse',
+      normal: 'Normal',
+      metallic: 'Metallic',
+      roughness: 'Roughness',
+      ao: 'AO',
+      emissive: 'Emissive',
+      opacity: 'Opacity',
+      unknown: 'Other'
+    };
+    return labels[type] || type;
+  }
+
+  // ==== Render results ====
+  function renderResults() {
+    grid.innerHTML = '';
+    countPill.textContent = `${extractedTextures.length} map${extractedTextures.length === 1 ? '' : 's'}`;
+    results.classList.add('active');
+
+    extractedTextures.forEach((tex, i) => {
+      const card = document.createElement('div');
+      card.className = 'tex-card';
+      card.innerHTML = `
+        <div class="tex-preview">
+          <img src="${tex.dataUrl}" alt="${escapeHtml(tex.name)}" loading="lazy">
+        </div>
+        <div class="tex-info">
+          <div class="tex-name" title="${escapeHtml(tex.name)}">${escapeHtml(tex.name)}</div>
+          <div class="tex-meta">
+            <span>${tex.width}×${tex.height} · ${tex.sizeKB}KB</span>
+            <span class="tex-type ${tex.type}">${typeLabel(tex.type)}</span>
+          </div>
+        </div>
+        <div class="tex-actions">
+          <button class="tex-btn preview-btn" data-action="preview" data-idx="${i}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview
+          </button>
+          <button class="tex-btn" data-action="download" data-idx="${i}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Delegated click handler
+    grid.querySelectorAll('.tex-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const action = btn.dataset.action;
+        if (action === 'download') downloadTexture(idx);
+        else if (action === 'preview') openLightbox(idx);
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ==== Downloads ====
+  function downloadTexture(idx) {
+    const tex = extractedTextures[idx];
+    const url = URL.createObjectURL(tex.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = tex.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  downloadAllBtn.addEventListener('click', async () => {
+    if (!extractedTextures.length) return;
+    downloadAllBtn.disabled = true;
+    downloadAllBtn.innerHTML = '<div class="spinner" style="width:14px;height:14px"></div> Zipping…';
+
+    const zip = new JSZip();
+    const folder = zip.folder(`${modelBaseName}_textures`);
+
+    // Group by type into subfolders for tidiness
+    const byType = {};
+    extractedTextures.forEach(t => {
+      if (!byType[t.type]) byType[t.type] = [];
+      byType[t.type].push(t);
+    });
+
+    // Track filename collisions
+    const used = new Set();
+    extractedTextures.forEach(t => {
+      let name = t.name;
+      let n = 1;
+      while (used.has(name)) {
+        const dot = t.name.lastIndexOf('.');
+        const base = dot > 0 ? t.name.slice(0, dot) : t.name;
+        const ext = dot > 0 ? t.name.slice(dot) : '';
+        name = `${base}_${n}${ext}`;
+        n++;
+      }
+      used.add(name);
+      folder.file(name, t.blob);
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${modelBaseName}_textures.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    downloadAllBtn.disabled = false;
+    downloadAllBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download All (.zip)`;
+  });
+
+  resetBtn.addEventListener('click', () => {
+    extractedTextures = [];
+    grid.innerHTML = '';
+    results.classList.remove('active');
+    status.classList.remove('active');
+    fileInput.value = '';
+  });
+
+  // ==== Lightbox ====
+  function openLightbox(idx) {
+    const tex = extractedTextures[idx];
+    lightboxImg.src = tex.dataUrl;
+    lightboxInfo.textContent = `${tex.name} — ${tex.width}×${tex.height} · ${tex.sizeKB}KB · ${typeLabel(tex.type)}`;
+    lightbox.classList.add('active');
+  }
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target === lightboxImg) lightbox.classList.remove('active');
+  });
+  lightboxClose.addEventListener('click', () => lightbox.classList.remove('active'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') lightbox.classList.remove('active');
+  });
+
+})();
+</script>
+</body>
+</html>
