@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('tiko', {
   openStore: call('store:open'), stores: call('store:list'),
   addLocal: call('local:add'), addPaths: call('local:addPaths'),
   addProject: call('project:add'), removeProject: call('project:remove'),
-  send: call('asset:send'), reveal: call('asset:reveal'), pickFile: call('pick:file'),
+  send: call('asset:send'), reveal: call('asset:reveal'), setThumb: call('asset:setThumb'), pickFile: call('pick:file'),
   pathOf: f => webUtils.getPathForFile(f),
   onAdded: cb => ipcRenderer.on('library:added', (_e, a) => cb(a))
 });

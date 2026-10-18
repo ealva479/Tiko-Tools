@@ -1,9 +1,15 @@
-const { app, BrowserWindow, ipcMain, dialog, session, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, session, shell, protocol, net } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { pathToFileURL } = require('url');
 const { openStores } = require('./core/store');
 const { Library } = require('./core/library');
 const providers = require('./providers');
 const { engines, detectEngine } = require('./engines');
+
+// asset://local/<abs path> serves files from the library folder only, so the
+// renderer (and three.js loaders) never get general filesystem access.
+protocol.registerSchemesAsPrivileged([{ scheme: 'asset', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 
 let stores, library, win;
 
@@ -72,6 +78,14 @@ function handlers() {
     return engines[project.engine].importAsset({ asset, project, config: cfg() });
   });
   ipcMain.handle('asset:reveal', (_e, id) => shell.showItemInFolder(library.get(id).dir));
+  ipcMain.handle('asset:setThumb', (_e, id, dataUrl) => {
+    const a = library.get(id);
+    if (!a || !a.dir || !/^data:image\/png;base64,/.test(dataUrl)) return;
+    const file = path.join(a.dir, '_thumb.png');
+    fs.writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
+    library.upsert({ provider: a.provider, providerId: a.providerId, thumbnail: 'asset://local/' + encodeURI(file.replace(/\\/g, '/')), generatedThumb: true });
+    return library.get(id);
+  });
   ipcMain.handle('pick:file', async () => {
     const r = await dialog.showOpenDialog(win, { properties: ['openFile'] });
     return r.canceled ? '' : r.filePaths[0];
@@ -81,6 +95,13 @@ function handlers() {
 app.whenReady().then(() => {
   stores = openStores(process.env.TIKO_LAUNCHER_HOME || path.join(app.getPath('userData'), 'launcher'));
   library = new Library(stores);
+  protocol.handle('asset', req => {
+    let p = decodeURIComponent(new URL(req.url).pathname);
+    if (/^\/[A-Za-z]:/.test(p)) p = p.slice(1);
+    const rel = path.relative(stores.assetsDir, path.resolve(p));
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return new Response('Forbidden', { status: 403 });
+    return net.fetch(pathToFileURL(path.resolve(p)).href);
+  });
   handlers();
   createWindow();
 });

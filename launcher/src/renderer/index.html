@@ -1,6 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Tiko Launcher</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-p2wJOWN8rB9YvERkPNjvIDxkJTxs+fOHzf3zG8iFAQc='; img-src 'self' https: data: blob: asset:; connect-src 'self' asset: blob: data:; style-src 'self' 'unsafe-inline'">
+<script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js","three/addons/":"../../node_modules/three/examples/jsm/"}}</script>
 <link rel="stylesheet" href="style.css"></head>
 <body>
 <aside>
@@ -25,5 +26,5 @@
   <label>UnrealEditor-Cmd <span class="row"><input id="unrealEditor"><button type="button" data-pick="unrealEditor">Browse</button></span></label>
   <menu><button id="saveSettings" value="ok">Save</button><button value="cancel">Cancel</button></menu>
 </form></dialog>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body></html>

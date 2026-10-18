@@ -10,6 +10,7 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
 - **Sketchfab**: API token (Settings), then "Sync" lists purchases and your uploads; "Download" fetches the glTF archive.
 - **Fab, CGTrader, TurboSquid, RenderHub, other**: these have no public library API. "Open <store>" gives you a window with its own persistent login. Anything you download there from your own purchases is captured, unzipped and indexed automatically.
 - **Anything else**: drag files, folders or zips onto the window.
+- **3D preview**: the "3D" button on a card opens an orbit viewer (glb, gltf, fbx, obj). Assets with no thumbnail get one saved automatically from the first preview. Models load through a restricted `asset://` protocol that only serves the library folder.
 
 ## How assets go out
 Add a project (Unity folder, Godot folder, Unreal folder with a .uproject, or a .blend file), pick it in the sidebar, click "Send to project".

@@ -1,3 +1,4 @@
+import * as viewer from './viewer.js';
 const $ = s => document.querySelector(s);
 let assets = [], config = {}, selProject = null;
 const status = t => { $('#status').textContent = t; };
@@ -34,12 +35,15 @@ function renderProjects() {
 }
 
 function renderGrid() {
+  viewer.stop();
   const q = $('#search').value.toLowerCase();
   const grid = $('#grid'); grid.replaceChildren();
   for (const a of assets.filter(a => `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
     const thumb = el('div', { className: 'thumb', textContent: a.thumbnail ? '' : a.provider });
     if (a.thumbnail) thumb.style.backgroundImage = `url("${a.thumbnail}")`;
     const actions = el('div', { className: 'actions' });
+    if (a.downloaded && viewer.previewFile(a))
+      actions.append(el('button', { textContent: '3D', title: 'Interactive 3D preview', onclick: () => preview(a, thumb) }));
     if (!a.downloaded) actions.append(el('button', { textContent: 'Download', onclick: () => guard('Downloading', () => tiko.download(a.id)).then(refresh) }));
     else {
       actions.append(el('button', { className: 'primary', textContent: selProject ? 'Send to project' : 'Pick a project', disabled: !selProject, onclick: () => guard('Importing', () => tiko.send(a.id, selProject)) }));
@@ -51,6 +55,15 @@ function renderGrid() {
         el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
       actions));
   }
+}
+
+async function preview(a, thumb) {
+  status('Loading preview...');
+  try {
+    const snap = await viewer.show(a, thumb);
+    status('Drag to orbit, scroll to zoom');
+    if (!a.thumbnail) tiko.setThumb(a.id, snap).then(u => { if (u) Object.assign(a, { thumbnail: u.thumbnail }); });
+  } catch (e) { viewer.stop(); status('Preview failed: ' + e.message); }
 }
 
 $('#search').oninput = renderGrid;
