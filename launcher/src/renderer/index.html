@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Tiko Launcher</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<aside>
+  <h1>Tiko Launcher</h1>
+  <h2>Sources</h2>
+  <div id="sources"></div>
+  <button id="addLocal">+ Add files / folders</button>
+  <h2>Projects</h2>
+  <div id="projects"></div>
+  <button id="addProject">+ Add project</button>
+  <button id="settingsBtn">Settings</button>
+</aside>
+<main>
+  <header><input id="search" placeholder="Search your library..."><span id="status"></span></header>
+  <div id="grid"></div>
+  <div id="drop">Drop files, folders or zips to add</div>
+</main>
+<dialog id="settings"><form method="dialog">
+  <h3>Settings</h3>
+  <label>Sketchfab API token <input id="tokSketchfab" type="password" placeholder="saved (hidden)"></label>
+  <label>Blender executable <span class="row"><input id="blenderPath"><button type="button" data-pick="blenderPath">Browse</button></span></label>
+  <label>UnrealEditor-Cmd <span class="row"><input id="unrealEditor"><button type="button" data-pick="unrealEditor">Browse</button></span></label>
+  <menu><button id="saveSettings" value="ok">Save</button><button value="cancel">Cancel</button></menu>
+</form></dialog>
+<script src="app.js"></script>
+</body></html>

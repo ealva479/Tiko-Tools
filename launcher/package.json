@@ -1,0 +1,16 @@
+{
+  "name": "tiko-launcher",
+  "version": "0.1.0",
+  "description": "Universal 3D asset launcher: pull owned assets from any store, send them to any engine.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/core.test.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

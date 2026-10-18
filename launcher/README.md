@@ -1,0 +1,23 @@
+# Tiko Launcher
+
+One library for every 3D asset you own, with one-click "send to project" for Unity, Godot, Unreal and Blender.
+
+    npm install
+    npm start        # Electron app
+    npm test         # core + engine tests (no Electron needed)
+
+## How assets get in
+- **Sketchfab**: API token (Settings), then "Sync" lists purchases and your uploads; "Download" fetches the glTF archive.
+- **Fab, CGTrader, TurboSquid, RenderHub, other**: these have no public library API. "Open <store>" gives you a window with its own persistent login. Anything you download there from your own purchases is captured, unzipped and indexed automatically.
+- **Anything else**: drag files, folders or zips onto the window.
+
+## How assets go out
+Add a project (Unity folder, Godot folder, Unreal folder with a .uproject, or a .blend file), pick it in the sidebar, click "Send to project".
+- Unity: copies to `Assets/TikoAssets/<name>` (glb/gltf needs glTFast)
+- Godot: copies to `assets/<name>`
+- Unreal: stages the files and runs an import script through `UnrealEditor-Cmd` (set its path in Settings; the editor must be closed)
+- Blender: imports headless into the chosen .blend and saves it (set the Blender path in Settings)
+
+## Extending
+- New API store: add `src/providers/<id>.js` exporting `{id, name, sync, download}` and register it in `providers/index.js`.
+- New engine: add `src/engines/<id>.js` exporting `{id, name, detect, importAsset}` and register it in `engines/index.js`.

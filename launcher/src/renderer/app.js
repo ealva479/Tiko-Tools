@@ -1,0 +1,80 @@
+const $ = s => document.querySelector(s);
+let assets = [], config = {}, selProject = null;
+const status = t => { $('#status').textContent = t; };
+const guard = async (label, fn) => { status(label + '...'); try { const r = await fn(); status(typeof r === 'string' ? r : 'Done'); return r; } catch (e) { status('Error: ' + e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')); } };
+
+function el(tag, props = {}, ...kids) {
+  const n = Object.assign(document.createElement(tag), props);
+  kids.forEach(k => n.append(k));
+  return n;
+}
+
+async function refresh() {
+  assets = await tiko.list();
+  config = await tiko.getConfig();
+  if (!config.projects.find(p => p.path === selProject)) selProject = config.projects[0]?.path ?? null;
+  renderSources(); renderProjects(); renderGrid();
+}
+
+async function renderSources() {
+  const box = $('#sources'); box.replaceChildren();
+  box.append(el('button', { textContent: 'Sync Sketchfab (API)', onclick: () => guard('Syncing Sketchfab', async () => `Synced ${await tiko.sync('sketchfab')} models`).then(refresh) }));
+  for (const s of await tiko.stores())
+    box.append(el('button', { textContent: `Open ${s.name} (sign in)`, title: 'Downloads you make here are added to your library', onclick: () => tiko.openStore(s.id) }));
+}
+
+function renderProjects() {
+  const box = $('#projects'); box.replaceChildren();
+  for (const p of config.projects) {
+    box.append(el('div', { className: 'proj' + (p.path === selProject ? ' sel' : ''), onclick: () => { selProject = p.path; renderProjects(); renderGrid(); } },
+      el('span', {}, p.name, el('small', { textContent: '  ' + p.engine })),
+      el('button', { textContent: 'x', onclick: async e => { e.stopPropagation(); await tiko.removeProject(p.path); refresh(); } })));
+  }
+  if (!config.projects.length) box.append(el('small', { textContent: 'Add a Unity, Godot, Unreal or .blend project.' }));
+}
+
+function renderGrid() {
+  const q = $('#search').value.toLowerCase();
+  const grid = $('#grid'); grid.replaceChildren();
+  for (const a of assets.filter(a => `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
+    const thumb = el('div', { className: 'thumb', textContent: a.thumbnail ? '' : a.provider });
+    if (a.thumbnail) thumb.style.backgroundImage = `url("${a.thumbnail}")`;
+    const actions = el('div', { className: 'actions' });
+    if (!a.downloaded) actions.append(el('button', { textContent: 'Download', onclick: () => guard('Downloading', () => tiko.download(a.id)).then(refresh) }));
+    else {
+      actions.append(el('button', { className: 'primary', textContent: selProject ? 'Send to project' : 'Pick a project', disabled: !selProject, onclick: () => guard('Importing', () => tiko.send(a.id, selProject)) }));
+      actions.append(el('button', { textContent: 'Folder', onclick: () => tiko.reveal(a.id) }));
+    }
+    actions.append(el('button', { textContent: '✕', title: 'Remove from library', onclick: () => tiko.remove(a.id).then(refresh) }));
+    grid.append(el('div', { className: 'card' }, thumb,
+      el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title }),
+        el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
+      actions));
+  }
+}
+
+$('#search').oninput = renderGrid;
+$('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
+$('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
+$('#settingsBtn').onclick = () => { $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
+document.querySelectorAll('[data-pick]').forEach(b => b.onclick = async () => { const f = await tiko.pickFile(); if (f) $('#' + b.dataset.pick).value = f; });
+$('#settings').addEventListener('close', async () => {
+  if ($('#settings').returnValue !== 'ok') return;
+  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value };
+  if ($('#tokSketchfab').value) patch.tokens = { sketchfab: $('#tokSketchfab').value };
+  await tiko.setConfig(patch); refresh();
+});
+
+// Drag & drop of folders, zips and model files.
+let depth = 0;
+addEventListener('dragenter', e => { e.preventDefault(); depth++; $('#drop').classList.add('on'); });
+addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; $('#drop').classList.remove('on'); } });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', async e => {
+  e.preventDefault(); depth = 0; $('#drop').classList.remove('on');
+  const paths = [...e.dataTransfer.files].map(f => tiko.pathOf(f)).filter(Boolean);
+  if (paths.length) { await guard('Adding', () => tiko.addPaths(paths)); refresh(); }
+});
+
+tiko.onAdded(a => { status(`Added "${a.title}" from ${a.provider}`); refresh(); });
+refresh();
