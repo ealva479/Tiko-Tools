@@ -65,3 +65,9 @@ test('unreal stages import script without editor configured', async () => {
   assert.match(msg, /Staged/);
   assert.ok(fs.existsSync(path.join(r, 'Saved/TikoImport/Cool_Chair/_import.py')));
 });
+
+test('setTags normalizes and dedupes', () => {
+  const lib = makeLib();
+  const a = lib.addFromPath(makeZip());
+  assert.deepStrictEqual(lib.setTags(a.id, [' Furniture', 'furniture', 'PBR', '']).tags, ['furniture', 'pbr']);
+});

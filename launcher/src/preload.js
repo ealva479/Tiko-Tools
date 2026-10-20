@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const call = ch => (...a) => ipcRenderer.invoke(ch, ...a);
 contextBridge.exposeInMainWorld('tiko', {
-  list: call('library:list'), remove: call('library:remove'),
+  list: call('library:list'), remove: call('library:remove'), setTags: call('library:setTags'),
   getConfig: call('config:get'), setConfig: call('config:set'),
   sync: call('provider:sync'), download: call('asset:download'),
   openStore: call('store:open'), stores: call('store:list'),

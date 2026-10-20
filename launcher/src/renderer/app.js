@@ -14,6 +14,9 @@ async function refresh() {
   assets = await tiko.list();
   config = await tiko.getConfig();
   if (!config.projects.find(p => p.path === selProject)) selProject = config.projects[0]?.path ?? null;
+  const sel = $('#source'), cur = sel.value;
+  sel.replaceChildren(el('option', { value: '', textContent: 'All sources' }), ...[...new Set(assets.map(a => a.provider))].sort().map(v => el('option', { value: v, textContent: v })));
+  sel.value = cur;
   renderSources(); renderProjects(); renderGrid();
 }
 
@@ -39,7 +42,7 @@ function renderGrid() {
   viewer.stop();
   const q = $('#search').value.toLowerCase();
   const grid = $('#grid'); grid.replaceChildren();
-  for (const a of assets.filter(a => `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
+  for (const a of assets.filter(a => (!$('#source').value || a.provider === $('#source').value) && `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
     const thumb = el('div', { className: 'thumb', textContent: a.thumbnail ? '' : a.provider });
     if (a.thumbnail) thumb.style.backgroundImage = `url("${a.thumbnail}")`;
     const actions = el('div', { className: 'actions' });
@@ -51,10 +54,17 @@ function renderGrid() {
       actions.append(el('button', { textContent: 'Folder', onclick: () => tiko.reveal(a.id) }));
     }
     actions.append(el('button', { textContent: '✕', title: 'Remove from library', onclick: () => tiko.remove(a.id).then(refresh) }));
+    const tagBox = el('div', { className: 'tags' });
+    const saveTags = tags => tiko.setTags(a.id, tags).then(r => { a.tags = r.tags; renderTags(); });
+    const renderTags = () => {
+      tagBox.replaceChildren(...(a.tags || []).map(t => el('span', { className: 'tag' }, t, el('b', { textContent: '×', onclick: () => saveTags(a.tags.filter(x => x !== t)) }))),
+        el('input', { placeholder: '+ tag', onkeydown: e => { if (e.key === 'Enter' && e.target.value.trim()) saveTags([...(a.tags || []), ...e.target.value.split(',')]); } }));
+    };
+    renderTags();
     const card = el('div', { className: 'card', draggable: !!a.downloaded, title: a.downloaded ? 'Drag onto a project to import' : '' }, thumb,
       el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title }),
         el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
-      actions);
+      tagBox, actions);
     card.ondragstart = e => e.dataTransfer.setData('text/tiko-asset', a.id);
     grid.append(card);
   }
@@ -70,6 +80,7 @@ async function preview(a, thumb) {
 }
 
 $('#search').oninput = renderGrid;
+$('#source').onchange = renderGrid;
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
 $('#settingsBtn').onclick = () => { $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };

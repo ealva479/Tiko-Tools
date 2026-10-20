@@ -21,3 +21,5 @@ dialog{background:#1b1e24;color:inherit;border:1px solid #3a4150;border-radius:1
 dialog label{display:flex;flex-direction:column;gap:4px;margin:10px 0}dialog input{padding:6px;background:#14161a;border:1px solid #3a4150;color:inherit;border-radius:6px}
 .row{display:flex;gap:6px}.row input{flex:1}menu{display:flex;gap:8px;justify-content:flex-end;padding:0}
 .proj.over{outline:2px dashed #2f6fed;background:#2f6fed33}.card[draggable=true]{cursor:grab}
+#source{background:#1b1e24;color:inherit;border:1px solid #3a4150;border-radius:6px;padding:7px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;padding:0 10px 8px}.tag{background:#2a2f3a;border-radius:10px;padding:1px 8px;font-size:12px}.tag b{cursor:pointer;margin-left:4px;color:#8a90a0}.tags input{width:64px;background:none;border:none;color:inherit;font-size:12px;outline:none}

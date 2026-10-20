@@ -69,6 +69,13 @@ class Library {
     const a = this.upsert({ provider, providerId, title: base, dir, downloaded: true });
     return this.refreshFiles(a.id);
   }
+  setTags(id, tags) {
+    const a = this.get(id);
+    if (!a) return null;
+    a.tags = [...new Set(tags.map(t => String(t).trim().toLowerCase()).filter(Boolean))];
+    this.stores.library.save();
+    return a;
+  }
   remove(id) {
     const a = this.get(id);
     if (!a) return;

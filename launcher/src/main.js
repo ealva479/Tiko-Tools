@@ -26,6 +26,7 @@ function createWindow() {
 function handlers() {
   const cfg = () => stores.config.data;
   ipcMain.handle('library:list', () => library.list());
+  ipcMain.handle('library:setTags', (_e, id, tags) => library.setTags(id, tags));
   ipcMain.handle('library:remove', (_e, id) => { library.remove(id); });
 
   ipcMain.handle('config:get', () => ({ ...cfg(), tokens: Object.fromEntries(Object.keys(cfg().tokens).map(k => [k, !!cfg().tokens[k]])) }));
