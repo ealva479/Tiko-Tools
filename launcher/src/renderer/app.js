@@ -27,9 +27,10 @@ async function renderSources() {
 function renderProjects() {
   const box = $('#projects'); box.replaceChildren();
   for (const p of config.projects) {
-    box.append(el('div', { className: 'proj' + (p.path === selProject ? ' sel' : ''), onclick: () => { selProject = p.path; renderProjects(); renderGrid(); } },
+    const row = el('div', { className: 'proj' + (p.path === selProject ? ' sel' : ''), ondragover: e => { if (e.dataTransfer.types.includes('text/tiko-asset')) { e.preventDefault(); row.classList.add('over'); } }, ondragleave: () => row.classList.remove('over'), ondrop: e => { const id = e.dataTransfer.getData('text/tiko-asset'); if (!id) return; e.preventDefault(); e.stopPropagation(); row.classList.remove('over'); guard('Importing', () => tiko.send(id, p.path)); }, onclick: () => { selProject = p.path; renderProjects(); renderGrid(); } },
       el('span', {}, p.name, el('small', { textContent: '  ' + p.engine })),
-      el('button', { textContent: 'x', onclick: async e => { e.stopPropagation(); await tiko.removeProject(p.path); refresh(); } })));
+      el('button', { textContent: 'x', onclick: async e => { e.stopPropagation(); await tiko.removeProject(p.path); refresh(); } }));
+    box.append(row);
   }
   if (!config.projects.length) box.append(el('small', { textContent: 'Add a Unity, Godot, Unreal or .blend project.' }));
 }
@@ -50,10 +51,12 @@ function renderGrid() {
       actions.append(el('button', { textContent: 'Folder', onclick: () => tiko.reveal(a.id) }));
     }
     actions.append(el('button', { textContent: '✕', title: 'Remove from library', onclick: () => tiko.remove(a.id).then(refresh) }));
-    grid.append(el('div', { className: 'card' }, thumb,
+    const card = el('div', { className: 'card', draggable: !!a.downloaded, title: a.downloaded ? 'Drag onto a project to import' : '' }, thumb,
       el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title }),
         el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
-      actions));
+      actions);
+    card.ondragstart = e => e.dataTransfer.setData('text/tiko-asset', a.id);
+    grid.append(card);
   }
 }
 
@@ -80,8 +83,8 @@ $('#settings').addEventListener('close', async () => {
 
 // Drag & drop of folders, zips and model files.
 let depth = 0;
-addEventListener('dragenter', e => { e.preventDefault(); depth++; $('#drop').classList.add('on'); });
-addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; $('#drop').classList.remove('on'); } });
+addEventListener('dragenter', e => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); depth++; $('#drop').classList.add('on'); });
+addEventListener('dragleave', e => { if (!e.dataTransfer.types.includes('Files')) return; if (--depth <= 0) { depth = 0; $('#drop').classList.remove('on'); } });
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', async e => {
   e.preventDefault(); depth = 0; $('#drop').classList.remove('on');

@@ -13,7 +13,7 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
 - **3D preview**: the "3D" button on a card opens an orbit viewer (glb, gltf, fbx, obj). Assets with no thumbnail get one saved automatically from the first preview. Models load through a restricted `asset://` protocol that only serves the library folder.
 
 ## How assets go out
-Add a project (Unity folder, Godot folder, Unreal folder with a .uproject, or a .blend file), pick it in the sidebar, click "Send to project".
+Add a project (Unity folder, Godot folder, Unreal folder with a .uproject, or a .blend file), then either drag a card onto it in the sidebar or select it and click "Send to project".
 - Unity: copies to `Assets/TikoAssets/<name>` (glb/gltf needs glTFast)
 - Godot: copies to `assets/<name>`
 - Unreal: stages the files and runs an import script through `UnrealEditor-Cmd` (set its path in Settings; the editor must be closed)

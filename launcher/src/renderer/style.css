@@ -20,3 +20,4 @@ header{display:flex;gap:12px;align-items:center;padding:12px}header input{flex:1
 dialog{background:#1b1e24;color:inherit;border:1px solid #3a4150;border-radius:10px;width:480px}dialog::backdrop{background:#0008}
 dialog label{display:flex;flex-direction:column;gap:4px;margin:10px 0}dialog input{padding:6px;background:#14161a;border:1px solid #3a4150;color:inherit;border-radius:6px}
 .row{display:flex;gap:6px}.row input{flex:1}menu{display:flex;gap:8px;justify-content:flex-end;padding:0}
+.proj.over{outline:2px dashed #2f6fed;background:#2f6fed33}.card[draggable=true]{cursor:grab}
