@@ -20,11 +20,21 @@ async function refresh() {
   renderSources(); renderProjects(); renderGrid();
 }
 
+const openStore = async (id, url, assetId) => {
+  const ext = await tiko.extStatus();
+  if (ext.lastSeen && !ext.embed) { // signed-in browser + extension: use it (autofill, passkeys)
+    await tiko.openExternal(id, url);
+    return status('Opened in your browser. Browse or download there; the launcher picks it up.');
+  }
+  await tiko.showStore(id, url, assetId); $('#back').hidden = false;
+};
+$('#back').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true; refresh(); };
+
 async function renderSources() {
   const box = $('#sources'); box.replaceChildren();
   box.append(el('button', { textContent: 'Sync Sketchfab (API)', onclick: () => guard('Syncing Sketchfab', async () => `Synced ${await tiko.sync('sketchfab')} models`).then(refresh) }));
   for (const s of await tiko.stores())
-    box.append(el('button', { textContent: `Open ${s.name} (sign in)`, title: 'Downloads you make here are added to your library. Ctrl+Shift+S saves a cleaned page snapshot.', onclick: () => tiko.openStore(s.id) }));
+    box.append(el('button', { textContent: `${s.name} library`, title: 'Sign in and browse your purchases. Your library is read automatically and downloads are captured. Ctrl+Shift+S saves a page snapshot.', onclick: () => openStore(s.id) }));
 }
 
 function renderProjects() {
@@ -48,7 +58,8 @@ function renderGrid() {
     const actions = el('div', { className: 'actions' });
     if (a.downloaded && viewer.previewFile(a))
       actions.append(el('button', { textContent: '3D', title: 'Interactive 3D preview', onclick: () => preview(a, thumb) }));
-    if (!a.downloaded) actions.append(el('button', { textContent: 'Download', onclick: () => guard('Downloading', () => tiko.download(a.id)).then(refresh) }));
+    if (!a.downloaded && a.provider === 'sketchfab') actions.append(el('button', { textContent: 'Download', onclick: () => guard('Downloading', () => tiko.download(a.id)).then(refresh) }));
+    else if (!a.downloaded) actions.append(el('button', { className: 'primary', textContent: 'Get from ' + a.provider, title: 'Opens the store page; click its download button and the file is added to this card', onclick: () => openStore(a.provider, a.pageUrl, a.id) }));
     else {
       actions.append(el('button', { className: 'primary', textContent: selProject ? 'Send to project' : 'Pick a project', disabled: !selProject, onclick: () => guard('Importing', () => tiko.send(a.id, selProject)) }));
       actions.append(el('button', { textContent: 'Folder', onclick: () => tiko.reveal(a.id) }));
@@ -83,11 +94,15 @@ $('#search').oninput = renderGrid;
 $('#source').onchange = renderGrid;
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
-$('#settingsBtn').onclick = () => { $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
+$('#settingsBtn').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true;
+  const x = await tiko.extStatus();
+  $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#embed').checked = x.embed;
+  $('#extState').textContent = x.lastSeen ? `Extension connected (last seen ${new Date(x.lastSeen).toLocaleString()}). Port ${x.port}.` : `Extension not connected yet. Port ${x.port}.`; $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
 document.querySelectorAll('[data-pick]').forEach(b => b.onclick = async () => { const f = await tiko.pickFile(); if (f) $('#' + b.dataset.pick).value = f; });
+$('#copyTok').onclick = () => navigator.clipboard.writeText($('#extToken').value);
 $('#settings').addEventListener('close', async () => {
   if ($('#settings').returnValue !== 'ok') return;
-  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value };
+  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value, embedStores: $('#embed').checked, extraDownloadDir: $('#extraDir').value.trim() };
   if ($('#tokSketchfab').value) patch.tokens = { sketchfab: $('#tokSketchfab').value };
   await tiko.setConfig(patch); refresh();
 });
@@ -104,5 +119,5 @@ addEventListener('drop', async e => {
 });
 
 tiko.onSnapshot(f => status('Saved page snapshot: ' + f));
-tiko.onAdded(a => { status(`Added "${a.title}" from ${a.provider}`); refresh(); });
+let t; tiko.onChanged(msg => { status(msg); clearTimeout(t); t = setTimeout(refresh, 400); });
 refresh();

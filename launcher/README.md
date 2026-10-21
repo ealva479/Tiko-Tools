@@ -8,7 +8,12 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
 
 ## How assets get in
 - **Sketchfab**: API token (Settings), then "Sync" lists purchases and your uploads; "Download" fetches the glTF archive.
-- **Fab, CGTrader, TurboSquid, RenderHub, other**: these have no public library API. "Open <store>" gives you a window with its own persistent login. Anything you download there from your own purchases is captured, unzipped and indexed automatically.
+- **Fab, CGTrader, TurboSquid, RenderHub** (no public library API): sign in with your normal browser (autofill, passkeys and Google sign-in all work) and use the **Browser extension**:
+  1. Chrome/Edge: `chrome://extensions`, turn on Developer mode, **Load unpacked**, choose the `launcher/extension` folder.
+  2. In the launcher: Settings, copy the pairing token. Click the extension icon, paste it, Save.
+  3. Click a store in the launcher sidebar. It opens in your browser. Open your library page there and your purchases appear in the launcher as cards. Downloads you make from those stores are imported automatically and the launcher comes to the front.
+  The extension only talks to `127.0.0.1` on your machine, needs the pairing token, and sends listings only (id, title, thumbnail, author), never page contents, cookies or passwords. If your browser downloads somewhere other than your default Downloads folder, set it in Settings.
+  Without the extension, or with "Open stores inside the launcher" ticked, the store opens in a panel inside the launcher instead (separate login, downloads captured the same way).
 - **Anything else**: drag files, folders or zips onto the window.
 - **Page snapshots**: in any store window, Ctrl+Shift+S saves a cleaned copy of the current page (scripts, forms, inline data and long tokens removed) to the launcher data folder under `snapshots/`. It is meant for building a store-specific purchase lister. Skim it before sharing, since it still contains visible page text.
 - **Tags and filters**: type a tag on any card (comma-separate several) and press Enter. The search box matches titles, authors, sources and tags, and the dropdown filters by source.

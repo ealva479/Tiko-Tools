@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Tiko Launcher Connector",
+  "version": "0.1.0",
+  "description": "Sends your 3D asset library from Fab, CGTrader, TurboSquid and RenderHub to the Tiko Launcher on this computer.",
+  "permissions": ["downloads", "storage"],
+  "host_permissions": [
+    "https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Tiko Launcher" },
+  "content_scripts": [
+    {
+      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*"],
+      "js": ["shared.js", "inject.js"], "run_at": "document_start", "world": "MAIN"
+    },
+    {
+      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*"],
+      "js": ["relay.js"], "run_at": "document_start"
+    }
+  ]
+}

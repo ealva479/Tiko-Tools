@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  body{width:300px;margin:12px;font:13px system-ui,sans-serif;color:#222}
+  label{display:block;margin:8px 0 2px;font-weight:600}input{width:100%;box-sizing:border-box;padding:6px}
+  button{margin-top:10px;padding:6px 12px}#msg{margin-top:8px}.ok{color:#1a7f37}.bad{color:#c0392b}
+</style>
+<h3 style="margin:0 0 4px">Tiko Launcher</h3>
+<small>In the launcher: Settings, Browser extension. Copy the pairing token here.</small>
+<label>Pairing token</label><input id="token" type="password" autocomplete="off">
+<label>Port</label><input id="port" type="number" value="47821">
+<button id="save">Save and test</button> <button id="open">Open launcher</button>
+<div id="msg"></div>
+<script src="popup.js"></script>

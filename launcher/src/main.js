@@ -1,7 +1,10 @@
-const { app, BrowserWindow, ipcMain, dialog, session, shell, protocol, net } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, dialog, session, shell, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { pathToFileURL } = require('url');
+const { createBridge } = require('./core/bridge');
+const { STORES, safeStoreUrl } = require('../extension/shared');
 const { openStores } = require('./core/store');
 const { Library } = require('./core/library');
 const providers = require('./providers');
@@ -11,7 +14,21 @@ const { engines, detectEngine } = require('./engines');
 // renderer (and three.js loaders) never get general filesystem access.
 protocol.registerSchemesAsPrivileged([{ scheme: 'asset', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 
+const TEST_MODE = !!process.env.TIKO_LAUNCHER_HOME;
+if (!TEST_MODE && !app.requestSingleInstanceLock()) app.quit();
+// tiko-launcher:// lets the browser extension bring the launcher to the front.
+if (process.defaultApp && process.argv[1]) app.setAsDefaultProtocolClient('tiko-launcher', process.execPath, [path.resolve(process.argv[1])]);
+else app.setAsDefaultProtocolClient('tiko-launcher');
+
 let stores, library, win;
+
+function focusWindow() {
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show(); win.focus(); app.focus({ steal: true });
+}
+app.on('second-instance', focusWindow);
+app.on('open-url', e => { e.preventDefault(); focusWindow(); });
 
 const send = (ch, payload) => win && !win.isDestroyed() && win.webContents.send(ch, payload);
 
@@ -48,8 +65,42 @@ function handlers() {
     const out = await p.download({ asset: a, token: cfg().tokens[a.provider], library });
     return library.refreshFiles(out.id);
   });
-  ipcMain.handle('store:open', (_e, id, url) => {
-    providers.browser.openStoreWindow({ BrowserWindow, session }, id, library, a => send('library:added', a), url, path.join(stores.home, 'snapshots'), f => { send('snapshot:saved', f); shell.showItemInFolder(f); });
+  // Stores are embedded views over the main content area (right of the sidebar).
+  const SIDEBAR = 240;
+  const storeViews = {};
+  let activeStore = null;
+  const layout = () => {
+    if (!activeStore) return;
+    const { width, height } = win.getContentBounds();
+    storeViews[activeStore].view.setBounds({ x: SIDEBAR, y: 0, width: Math.max(0, width - SIDEBAR), height });
+  };
+  const hideStore = () => {
+    if (activeStore) win.contentView.removeChildView(storeViews[activeStore].view);
+    activeStore = null;
+  };
+  win.on('resize', layout);
+  ipcMain.handle('store:show', (_e, id, url, assetId) => {
+    hideStore();
+    if (!storeViews[id]) {
+      storeViews[id] = providers.browser.createStoreView({ WebContentsView, session }, id, library, {
+        snapshotsDir: path.join(stores.home, 'snapshots'),
+        onChanged: (n, msg) => send('library:changed', msg),
+        onSnapshot: f => { send('snapshot:saved', f); shell.showItemInFolder(f); }
+      });
+      storeViews[id].load();
+    }
+    const sv = storeViews[id];
+    if (url && url !== sv.url()) sv.load(url);
+    sv.state.pendingAsset = assetId || null;
+    win.contentView.addChildView(sv.view);
+    activeStore = id;
+    layout();
+  });
+  ipcMain.handle('store:hide', hideStore);
+  ipcMain.handle('ext:status', () => ({ token: cfg().extToken, port: cfg().extPort, lastSeen: cfg().extLastSeen, embed: cfg().embedStores }));
+  ipcMain.handle('store:external', (_e, id, url) => {
+    const target = (url && safeStoreUrl(id, url)) || STORES[id].url;
+    return shell.openExternal(target);
   });
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
 
@@ -103,7 +154,18 @@ app.whenReady().then(() => {
     if (rel.startsWith('..') || path.isAbsolute(rel)) return new Response('Forbidden', { status: 403 });
     return net.fetch(pathToFileURL(path.resolve(p)).href);
   });
-  handlers();
   createWindow();
+  handlers();
+  const cfg = stores.config.data;
+  if (!cfg.extToken) { cfg.extToken = crypto.randomBytes(24).toString('hex'); stores.config.save(); }
+  const bridge = createBridge({
+    library, getToken: () => cfg.extToken,
+    downloadDirs: () => [app.getPath('downloads'), cfg.extraDownloadDir].filter(Boolean).map(d => { try { return fs.realpathSync(d); } catch { return d; } }),
+    onSeen: () => { cfg.extLastSeen = Date.now(); },
+    onItems: (store, n) => send('library:changed', `${STORES[store].name}: synced ${n} items from your browser`),
+    onDownload: a => { send('library:changed', `Added "${a.title}" from your browser`); focusWindow(); }
+  });
+  bridge.on('error', err => console.error('extension bridge unavailable:', err.message));
+  bridge.listen(cfg.extPort, '127.0.0.1');
 });
 app.on('window-all-closed', () => app.quit());
