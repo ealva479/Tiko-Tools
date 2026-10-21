@@ -24,7 +24,7 @@ async function renderSources() {
   const box = $('#sources'); box.replaceChildren();
   box.append(el('button', { textContent: 'Sync Sketchfab (API)', onclick: () => guard('Syncing Sketchfab', async () => `Synced ${await tiko.sync('sketchfab')} models`).then(refresh) }));
   for (const s of await tiko.stores())
-    box.append(el('button', { textContent: `Open ${s.name} (sign in)`, title: 'Downloads you make here are added to your library', onclick: () => tiko.openStore(s.id) }));
+    box.append(el('button', { textContent: `Open ${s.name} (sign in)`, title: 'Downloads you make here are added to your library. Ctrl+Shift+S saves a cleaned page snapshot.', onclick: () => tiko.openStore(s.id) }));
 }
 
 function renderProjects() {
@@ -103,5 +103,6 @@ addEventListener('drop', async e => {
   if (paths.length) { await guard('Adding', () => tiko.addPaths(paths)); refresh(); }
 });
 
+tiko.onSnapshot(f => status('Saved page snapshot: ' + f));
 tiko.onAdded(a => { status(`Added "${a.title}" from ${a.provider}`); refresh(); });
 refresh();

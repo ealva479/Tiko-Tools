@@ -49,7 +49,7 @@ function handlers() {
     return library.refreshFiles(out.id);
   });
   ipcMain.handle('store:open', (_e, id, url) => {
-    providers.browser.openStoreWindow({ BrowserWindow, session }, id, library, a => send('library:added', a), url);
+    providers.browser.openStoreWindow({ BrowserWindow, session }, id, library, a => send('library:added', a), url, path.join(stores.home, 'snapshots'), f => { send('snapshot:saved', f); shell.showItemInFolder(f); });
   });
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
 

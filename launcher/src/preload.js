@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('tiko', {
   addProject: call('project:add'), removeProject: call('project:remove'),
   send: call('asset:send'), reveal: call('asset:reveal'), setThumb: call('asset:setThumb'), pickFile: call('pick:file'),
   pathOf: f => webUtils.getPathForFile(f),
+  onSnapshot: cb => ipcRenderer.on('snapshot:saved', (_e, f) => cb(f)),
   onAdded: cb => ipcRenderer.on('library:added', (_e, a) => cb(a))
 });
