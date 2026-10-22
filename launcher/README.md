@@ -6,6 +6,9 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
     npm start        # Electron app
     npm test         # core + engine tests (no Electron needed)
 
+## Opening it (Windows)
+Double-click `Tiko Launcher.bat` (installs what's needed, then starts the app). After the first run, `Tiko Launcher (no console).vbs` starts it with no terminal window; right-click it, Send to, Desktop (create shortcut) for a desktop icon. After `git pull`, run the .bat once so new dependencies install.
+
 ## How assets get in
 - **Sketchfab**: API token (Settings), then "Sync" lists purchases and your uploads; "Download" fetches the glTF archive.
 - **Fab, CGTrader, TurboSquid, RenderHub** (no public library API): click the store in the sidebar. The launcher starts your installed Chrome (or Edge) with its own profile and watches it.
@@ -19,6 +22,7 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
 - **DAZ 3D**: listed like the other stores, but DAZ content is in Daz's own formats. Export from Daz Studio (FBX or glTF, e.g. via the Daz to Blender/Unreal/Unity bridges) and drag the export into the launcher.
 - **Anything else**: drag files, folders or zips onto the window.
 - **Page snapshots**: in any store window, Ctrl+Shift+S saves a cleaned copy of the current page (scripts, forms, inline data and long tokens removed) to the launcher data folder under `snapshots/`. It is meant for building a store-specific purchase lister. Skim it before sharing, since it still contains visible page text.
+- **Library tools**: filter by source and by downloaded / not downloaded, sort by newest, name or source, and use "Download N shown" to fetch many Sketchfab models in one go (asks first above 25, and can be stopped). Your filter choices and selected project are remembered.
 - **Tags and filters**: type a tag on any card (comma-separate several) and press Enter. The search box matches titles, authors, sources and tags, and the dropdown filters by source.
 - **3D preview**: the "3D" button on a card opens an orbit viewer (glb, gltf, fbx, obj). Assets with no thumbnail get one saved automatically from the first preview. Models load through a restricted `asset://` protocol that only serves the library folder.
 

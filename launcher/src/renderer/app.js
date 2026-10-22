@@ -1,6 +1,8 @@
 import * as viewer from './viewer.js';
 const $ = s => document.querySelector(s);
 let assets = [], config = {}, selProject = null;
+const pref = { get: k => { try { return localStorage.getItem('tiko.' + k) || ''; } catch { return ''; } }, set: (k, v) => { try { localStorage.setItem('tiko.' + k, v); } catch {} } };
+selProject = pref.get('project') || null;
 const status = t => { $('#status').textContent = t; };
 const guard = async (label, fn) => { status(label + '...'); try { const r = await fn(); status(typeof r === 'string' ? r : 'Done'); return r; } catch (e) { status('Error: ' + e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')); } };
 
@@ -14,9 +16,10 @@ async function refresh() {
   assets = await tiko.list();
   config = await tiko.getConfig();
   if (!config.projects.find(p => p.path === selProject)) selProject = config.projects[0]?.path ?? null;
+  pref.set('project', selProject || '');
   const sel = $('#source'), cur = sel.value;
   sel.replaceChildren(el('option', { value: '', textContent: 'All sources' }), ...[...new Set(assets.map(a => a.provider))].sort().map(v => el('option', { value: v, textContent: v })));
-  sel.value = cur;
+  sel.value = cur || pref.get('source');
   renderSources(); renderProjects(); renderGrid();
 }
 
@@ -50,11 +53,44 @@ function renderProjects() {
   if (!config.projects.length) box.append(el('small', { textContent: 'Add a Unity, Godot, Unreal or .blend project.' }));
 }
 
+function visibleAssets() {
+  const q = $('#search').value.toLowerCase(), src = $('#source').value, show = $('#show').value, sort = $('#sort').value;
+  const list = assets.filter(a => (!src || a.provider === src)
+    && (!show || (show === 'yes') === !!a.downloaded)
+    && `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q));
+  const by = { new: (x, y) => (y.addedAt || 0) - (x.addedAt || 0), name: (x, y) => x.title.localeCompare(y.title), source: (x, y) => x.provider.localeCompare(y.provider) || x.title.localeCompare(y.title) };
+  return list.sort(by[sort] || by.new);
+}
+
+let bulk = { running: false, stop: false };
+function updateBulk(list) {
+  const todo = list.filter(a => !a.downloaded && a.provider === 'sketchfab');
+  const btn = $('#bulk');
+  btn.hidden = !todo.length && !bulk.running;
+  btn.textContent = bulk.running ? 'Stop downloading' : `Download ${todo.length} shown`;
+  btn.onclick = async () => {
+    if (bulk.running) { bulk.stop = true; return; }
+    if (todo.length > 25 && !confirm(`Download ${todo.length} models from Sketchfab? This can take a while and uses disk space.`)) return;
+    bulk = { running: true, stop: false }; updateBulk(list);
+    let done = 0, failed = 0;
+    for (const a of todo) {
+      if (bulk.stop) break;
+      status(`Downloading ${done + failed + 1}/${todo.length}: ${a.title}`);
+      try { await tiko.download(a.id); done++; } catch { failed++; }
+    }
+    bulk = { running: false, stop: false };
+    status(`Downloaded ${done}${failed ? `, ${failed} failed (not downloadable on your plan?)` : ''}`);
+    refresh();
+  };
+}
+
 function renderGrid() {
   viewer.stop();
-  const q = $('#search').value.toLowerCase();
+  const shown = visibleAssets();
+  $('#count').textContent = `${shown.length} of ${assets.length}`;
+  updateBulk(shown);
   const grid = $('#grid'); grid.replaceChildren();
-  for (const a of assets.filter(a => (!$('#source').value || a.provider === $('#source').value) && `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
+  for (const a of shown) {
     const thumb = el('div', { className: 'thumb', textContent: a.thumbnail ? '' : a.provider });
     if (a.thumbnail) thumb.append(el('img', { src: a.thumbnail, loading: 'lazy', decoding: 'async', alt: '' }));
     const actions = el('div', { className: 'actions' });
@@ -93,7 +129,8 @@ async function preview(a, thumb) {
 }
 
 let searchT; $('#search').oninput = () => { clearTimeout(searchT); searchT = setTimeout(renderGrid, 150); };
-$('#source').onchange = renderGrid;
+for (const id of ['source', 'show', 'sort']) { $('#' + id).onchange = () => { pref.set(id, $('#' + id).value); renderGrid(); }; }
+$('#show').value = pref.get('show'); $('#sort').value = pref.get('sort') || 'new';
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
 $('#settingsBtn').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true;

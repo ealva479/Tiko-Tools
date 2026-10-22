@@ -16,7 +16,10 @@
   <button id="settingsBtn">Settings</button>
 </aside>
 <main>
-  <header><input id="search" placeholder="Search your library..."><select id="source"><option value="">All sources</option></select><span id="status"></span></header>
+  <header><input id="search" placeholder="Search your library..."><select id="source"><option value="">All sources</option></select>
+  <select id="show"><option value="">All</option><option value="yes">Downloaded</option><option value="no">Not downloaded</option></select>
+  <select id="sort"><option value="new">Newest</option><option value="name">Name</option><option value="source">Source</option></select>
+  <button id="bulk" hidden></button><span id="count"></span><span id="status"></span></header>
   <div id="grid"></div>
   <div id="drop">Drop files, folders or zips to add</div>
 </main>
