@@ -6,8 +6,8 @@ const { pickPrimary, copyAssetDir, safeName } = require('./common');
 module.exports = {
   id: 'unity', name: 'Unity',
   detect: dir => fs.existsSync(path.join(dir, 'ProjectSettings', 'ProjectVersion.txt')),
-  async importAsset({ asset, project, config }) {
-    const primary = pickPrimary(asset, 'unity');
+  async importAsset({ asset, project, config, format }) {
+    const primary = pickPrimary(asset, 'unity', format);
     if (!primary) throw new Error('No model format Unity can import.');
     if (primary.format === 'unitypackage') {
       // With the editor path set, import headless (project must be closed); otherwise stage it for a double-click.

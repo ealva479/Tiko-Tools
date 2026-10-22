@@ -23,6 +23,7 @@ Double-click `Tiko Launcher.bat` (installs what's needed, then starts the app). 
 - **Anything else**: drag files, folders or zips onto the window.
 - **Page snapshots**: in any store window, Ctrl+Shift+S saves a cleaned copy of the current page (scripts, forms, inline data and long tokens removed) to the launcher data folder under `snapshots/`. It is meant for building a store-specific purchase lister. Skim it before sharing, since it still contains visible page text.
 - **Library tools**: filter by source and by downloaded / not downloaded, sort by newest, name or source, and use "Download N shown" to fetch many Sketchfab models in one go (asks first above 25, and can be stopped). Your filter choices and selected project are remembered.
+- **Asset details**: click a card's title to see its files and sizes, open its store page, view where you've sent it before, and choose which file format to send (useful for Blender and Unreal, which import one file).
 - **Tags and filters**: type a tag on any card (comma-separate several) and press Enter. The search box matches titles, authors, sources and tags, and the dropdown filters by source.
 - **3D preview**: the "3D" button on a card opens an orbit viewer (glb, gltf, fbx, obj). Assets with no thumbnail get one saved automatically from the first preview. Models load through a restricted `asset://` protocol that only serves the library folder.
 

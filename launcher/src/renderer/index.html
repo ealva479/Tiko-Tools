@@ -23,6 +23,13 @@
   <div id="grid"></div>
   <div id="drop">Drop files, folders or zips to add</div>
 </main>
+<dialog id="detail"><form method="dialog">
+  <h3 id="dTitle"></h3><small id="dSub"></small>
+  <div id="dFiles"></div>
+  <label>Send format <select id="dFormat"></select></label>
+  <div id="dHistory"></div>
+  <menu><button type="button" id="dPage">Open store page</button><button type="button" id="dSend" class="primary">Send to selected project</button><button value="close">Close</button></menu>
+</form></dialog>
 <dialog id="settings"><form method="dialog">
   <h3>Settings</h3>
   <label>Sketchfab API token <input id="tokSketchfab" type="password" placeholder="saved (hidden)"></label>

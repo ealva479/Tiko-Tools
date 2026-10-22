@@ -111,12 +111,30 @@ function renderGrid() {
     };
     renderTags();
     const card = el('div', { className: 'card', draggable: !!a.downloaded, title: a.downloaded ? 'Drag onto a project to import' : '' }, thumb,
-      el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title }),
+      el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title + ' (click for details)', onclick: () => showDetail(a) }),
         el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
       tagBox, actions);
     card.ondragstart = e => e.dataTransfer.setData('text/tiko-asset', a.id);
     grid.append(card);
   }
+}
+
+const fmtSize = n => n > 1e9 ? (n / 1e9).toFixed(1) + ' GB' : n > 1e6 ? (n / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB';
+async function showDetail(a) {
+  const info = await tiko.info(a.id);
+  if (!info) return;
+  $('#dTitle').textContent = a.title;
+  $('#dSub').textContent = [a.provider, a.author, a.license, a.downloaded ? fmtSize(info.total) + ' on disk' : 'not downloaded'].filter(Boolean).join(' · ');
+  $('#dFiles').replaceChildren(...info.files.map(f => el('div', {}, el('span', { textContent: f.name }), el('span', { textContent: `${f.format} · ${fmtSize(f.size)}` }))), ...(info.files.length ? [] : [el('div', { textContent: 'No model files yet.' })]));
+  const fm = $('#dFormat');
+  fm.replaceChildren(el('option', { value: '', textContent: 'Best for the engine (automatic)' }), ...[...new Set(info.files.map(f => f.format))].map(f => el('option', { value: f, textContent: f })));
+  $('#dHistory').replaceChildren(...(info.history.length ? [el('div', { textContent: 'Sent before:' })] : []), ...info.history.map(h => el('div', {}, el('span', { textContent: `${h.project} (${h.engine})${h.format ? ' · ' + h.format : ''}` }), el('span', { textContent: new Date(h.at).toLocaleString() }))));
+  const proj = config.projects.find(p => p.path === selProject);
+  $('#dSend').disabled = !a.downloaded || !proj;
+  $('#dSend').textContent = proj ? `Send to ${proj.name}` : 'Pick a project first';
+  $('#dSend').onclick = () => { $('#detail').close(); guard('Importing', () => tiko.send(a.id, selProject, fm.value || undefined)); };
+  $('#dPage').onclick = () => tiko.openPage(a.id).then(ok => { if (!ok) status('No store page known for this asset'); });
+  $('#detail').showModal();
 }
 
 async function preview(a, thumb) {

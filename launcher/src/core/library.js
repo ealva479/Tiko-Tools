@@ -28,6 +28,10 @@ function extractZip(zipPath, destDir) {
   new AdmZip(zipPath).extractAllTo(destDir, true);
 }
 
+function dirSize(dir) {
+  try { return walk(dir).reduce((n, f) => n + fs.statSync(f).size, 0); } catch { return 0; }
+}
+
 class Library {
   constructor(stores) {
     this.stores = stores;
@@ -84,4 +88,4 @@ class Library {
   }
 }
 
-module.exports = { Library, findModels, extractZip, slug, MODEL_EXTS };
+module.exports = { dirSize, Library, findModels, extractZip, slug, MODEL_EXTS };

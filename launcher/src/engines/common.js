@@ -9,7 +9,8 @@ const PREFERRED = {
   blender: ['blend', 'glb', 'gltf', 'fbx', 'obj', 'usd', 'usdz', 'abc', 'dae']
 };
 
-function pickPrimary(asset, engine) {
+function pickPrimary(asset, engine, format) {
+  if (format) return asset.files.find(x => x.format === format) || null; // explicit choice wins
   for (const fmt of PREFERRED[engine]) {
     const f = asset.files.find(x => x.format === fmt);
     if (f) return f;

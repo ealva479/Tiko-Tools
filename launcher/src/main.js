@@ -8,7 +8,7 @@ const { createChromeBridge } = require('./core/chromeBridge');
 const { scanUnityCache } = require('./core/unityCache');
 const { STORES, safeStoreUrl } = require('../extension/shared');
 const { openStores } = require('./core/store');
-const { Library } = require('./core/library');
+const { Library, dirSize } = require('./core/library');
 const providers = require('./providers');
 const { engines, detectEngine } = require('./engines');
 
@@ -141,7 +141,7 @@ function handlers() {
     return proj;
   });
   ipcMain.handle('project:remove', (_e, p) => { cfg().projects = cfg().projects.filter(x => x.path !== p); stores.config.save(); });
-  ipcMain.handle('asset:send', async (_e, id, projectPath) => {
+  ipcMain.handle('asset:send', async (_e, id, projectPath, format) => {
     const asset = library.get(id);
     const project = cfg().projects.find(p => p.path === projectPath);
     if (!asset || !project) throw new Error('Unknown asset or project');
@@ -150,7 +150,24 @@ function handlers() {
       ? 'DAZ content is in Daz formats. Export it from Daz Studio (FBX or glTF, e.g. with the Daz to Blender/Unreal/Unity bridge), then drag the export into the launcher.'
       : 'No importable model files were found in this download.');
     if (asset.files.every(f => f.format === 'unitypackage') && project.engine !== 'unity') throw new Error('Unity packages can only be imported into Unity projects.');
-    return engines[project.engine].importAsset({ asset, project, config: cfg() });
+    if (format && !asset.files.some(f => f.format === format)) throw new Error(`This asset has no ${format} file.`);
+    const message = await engines[project.engine].importAsset({ asset, project, config: cfg(), format });
+    cfg().history = [{ assetId: id, project: project.name, engine: project.engine, format: format || null, at: Date.now(), message }, ...cfg().history].slice(0, 500);
+    stores.config.save();
+    return message;
+  });
+  ipcMain.handle('asset:info', (_e, id) => {
+    const a = library.get(id);
+    if (!a) return null;
+    const files = (a.files || []).map(f => { let size = 0; try { size = fs.statSync(f.path).size; } catch {} return { format: f.format, name: path.relative(a.dir, f.path), size }; });
+    return { files, total: a.dir ? dirSize(a.dir) : 0, history: cfg().history.filter(h => h.assetId === id).slice(0, 8) };
+  });
+  ipcMain.handle('asset:openPage', (_e, id) => {
+    const a = library.get(id);
+    let u; try { u = new URL(a && a.pageUrl); } catch { return false; }
+    const ok = /^https:$/.test(u.protocol) && (safeStoreUrl(a.provider, u.href) || /(^|\.)sketchfab\.com$/.test(u.hostname));
+    if (ok) shell.openExternal(u.href);
+    return !!ok;
   });
   ipcMain.handle('asset:reveal', (_e, id) => shell.showItemInFolder(library.get(id).dir));
   ipcMain.handle('asset:setThumb', (_e, id, dataUrl) => {

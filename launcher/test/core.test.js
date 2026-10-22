@@ -71,3 +71,13 @@ test('setTags normalizes and dedupes', () => {
   const a = lib.addFromPath(makeZip());
   assert.deepStrictEqual(lib.setTags(a.id, [' Furniture', 'furniture', 'PBR', '']).tags, ['furniture', 'pbr']);
 });
+
+test('explicit format choice picks that file for Unreal import', async () => {
+  const lib = makeLib();
+  const a = lib.addFromPath(makeZip()); // contains chair.fbx and chair.glb; fbx is Unreal's default
+  const r = tmp(); fs.writeFileSync(path.join(r, 'G.uproject'), '{}');
+  await engines.unreal.importAsset({ asset: a, project: { path: r }, config: {}, format: 'glb' });
+  const py = fs.readFileSync(path.join(r, 'Saved/TikoImport/Cool_Chair/_import.py'), 'utf8');
+  assert.match(py, /chair\.glb/);
+  await assert.rejects(engines.unreal.importAsset({ asset: a, project: { path: r }, config: {}, format: 'obj' }), /No model format/);
+});

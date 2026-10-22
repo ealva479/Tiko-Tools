@@ -24,7 +24,7 @@ function openStores(home) {
     config: new JsonStore(path.join(home, 'config.json'), {
       tokens: {}, projects: [], blenderPath: '', unrealEditor: '',
       extToken: '', extPort: 47821, extLastSeen: 0, embedStores: false, extraDownloadDir: '',
-      storeMode: 'chrome', chromePath: '', unityEditor: '', chromeSignInDone: false
+      storeMode: 'chrome', chromePath: '', unityEditor: '', chromeSignInDone: false, history: []
     })
   };
 }

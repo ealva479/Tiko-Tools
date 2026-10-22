@@ -17,8 +17,8 @@ unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
 module.exports = {
   id: 'unreal', name: 'Unreal Engine',
   detect: dir => fs.readdirSync(dir).some(f => f.endsWith('.uproject')),
-  async importAsset({ asset, project, config }) {
-    const primary = pickPrimary(asset, 'unreal');
+  async importAsset({ asset, project, config, format }) {
+    const primary = pickPrimary(asset, 'unreal', format);
     if (!primary) throw new Error('No model format Unreal can import.');
     const name = safeName(asset);
     const staging = path.join(project.path, 'Saved', 'TikoImport', name);

@@ -23,8 +23,8 @@ module.exports = {
   id: 'blender', name: 'Blender',
   detect: dir => fs.statSync(dir).isFile() && dir.endsWith('.blend'),
   // project.path is a .blend file. Imports headless and saves it.
-  async importAsset({ asset, project, config }) {
-    const primary = pickPrimary(asset, 'blender');
+  async importAsset({ asset, project, config, format }) {
+    const primary = pickPrimary(asset, 'blender', format);
     if (!primary) throw new Error('No model format Blender can import.');
     if (!config.blenderPath) throw new Error('Set the Blender executable path in Settings.');
     const py = path.join(asset.dir, '_tiko_import.py');
