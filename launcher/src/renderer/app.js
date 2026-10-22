@@ -14,12 +14,13 @@ function el(tag, props = {}, ...kids) {
 
 async function refresh() {
   assets = await tiko.list();
+  computeDups();
   config = await tiko.getConfig();
   if (!config.projects.find(p => p.path === selProject)) selProject = config.projects[0]?.path ?? null;
   pref.set('project', selProject || '');
   const sel = $('#source'), cur = sel.value;
   sel.replaceChildren(el('option', { value: '', textContent: 'All sources' }), ...[...new Set(assets.map(a => a.provider))].sort().map(v => el('option', { value: v, textContent: v })));
-  sel.value = cur || pref.get('source');
+  sel.value = cur;
   renderSources(); renderProjects(); renderGrid();
 }
 
@@ -53,10 +54,19 @@ function renderProjects() {
   if (!config.projects.length) box.append(el('small', { textContent: 'Add a Unity, Godot, Unreal or .blend project.' }));
 }
 
+const dupKey = a => String(a.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+let dups = new Map(); // key -> assets sharing that title
+function computeDups() {
+  const groups = new Map();
+  for (const a of assets) { const k = dupKey(a); if (k.length >= 4) (groups.get(k) || groups.set(k, []).get(k)).push(a); }
+  dups = new Map([...groups].filter(([, v]) => v.length > 1));
+}
+const dupsOf = a => (dups.get(dupKey(a)) || []).filter(x => x.id !== a.id);
+
 function visibleAssets() {
   const q = $('#search').value.toLowerCase(), src = $('#source').value, show = $('#show').value, sort = $('#sort').value;
   const list = assets.filter(a => (!src || a.provider === src)
-    && (!show || (show === 'yes') === !!a.downloaded)
+    && (!show || (show === 'dup' ? dupsOf(a).length > 0 : (show === 'yes') === !!a.downloaded))
     && `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q));
   const by = { new: (x, y) => (y.addedAt || 0) - (x.addedAt || 0), name: (x, y) => x.title.localeCompare(y.title), source: (x, y) => x.provider.localeCompare(y.provider) || x.title.localeCompare(y.title) };
   return list.sort(by[sort] || by.new);
@@ -112,7 +122,7 @@ function renderGrid() {
     renderTags();
     const card = el('div', { className: 'card', draggable: !!a.downloaded, title: a.downloaded ? 'Drag onto a project to import' : '' }, thumb,
       el('div', { className: 'meta' }, el('b', { textContent: a.title, title: a.title + ' (click for details)', onclick: () => showDetail(a) }),
-        el('small', { textContent: [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
+        el('small', { className: dupsOf(a).length ? 'dupnote' : '', textContent: (dupsOf(a).length ? 'Also in: ' + [...new Set(dupsOf(a).map(x => x.provider))].join(', ') + ' · ' : '') + [a.provider, a.author, a.files?.map(f => f.format).filter((v, i, s) => s.indexOf(v) === i).join('/')].filter(Boolean).join(' · ') })),
       tagBox, actions);
     card.ondragstart = e => e.dataTransfer.setData('text/tiko-asset', a.id);
     grid.append(card);
@@ -125,6 +135,8 @@ async function showDetail(a) {
   if (!info) return;
   $('#dTitle').textContent = a.title;
   $('#dSub').textContent = [a.provider, a.author, a.license, a.downloaded ? fmtSize(info.total) + ' on disk' : 'not downloaded'].filter(Boolean).join(' · ');
+  const d = dupsOf(a);
+  if (d.length) $('#dSub').textContent += ' · also owned: ' + d.map(x => x.provider).join(', ');
   $('#dFiles').replaceChildren(...info.files.map(f => el('div', {}, el('span', { textContent: f.name }), el('span', { textContent: `${f.format} · ${fmtSize(f.size)}` }))), ...(info.files.length ? [] : [el('div', { textContent: 'No model files yet.' })]));
   const fm = $('#dFormat');
   fm.replaceChildren(el('option', { value: '', textContent: 'Best for the engine (automatic)' }), ...[...new Set(info.files.map(f => f.format))].map(f => el('option', { value: f, textContent: f })));
@@ -147,15 +159,35 @@ async function preview(a, thumb) {
 }
 
 let searchT; $('#search').oninput = () => { clearTimeout(searchT); searchT = setTimeout(renderGrid, 150); };
-for (const id of ['source', 'show', 'sort']) { $('#' + id).onchange = () => { pref.set(id, $('#' + id).value); renderGrid(); }; }
-$('#show').value = pref.get('show'); $('#sort').value = pref.get('sort') || 'new';
+for (const id of ['source', 'show', 'sort']) { $('#' + id).onchange = () => { if (id === 'sort') pref.set(id, $('#sort').value); renderGrid(); }; }
+$('#sort').value = pref.get('sort') || 'new'; // filters deliberately reset each start so nothing stays hidden by accident
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
 $('#settingsBtn').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true;
   const x = await tiko.extStatus(), cfg = await tiko.getConfig();
+  fillSettingsExtras();
   $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#unityEditor').value = cfg.unityEditor || ''; $('#mode').value = cfg.storeMode || 'chrome'; $('#chromePath').value = cfg.chromePath || '';
   $('#extState').textContent = x.lastSeen ? `Extension connected (last seen ${new Date(x.lastSeen).toLocaleString()}). Port ${x.port}.` : `Extension not connected yet. Port ${x.port}.`; $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
 document.querySelectorAll('[data-pick]').forEach(b => b.onclick = async () => { const f = await tiko.pickFile(); if (f) $('#' + b.dataset.pick).value = f; });
+async function fillSettingsExtras() {
+  const d = await tiko.diag();
+  $('#libDir').value = d.libraryDir; $('#libInfo').textContent = `${d.assets} assets, ${fmtSize(d.libraryBytes)} in this folder. Changing it moves your existing downloads there.`;
+  const ago = t => t ? new Date(t).toLocaleString() : 'never';
+  $('#diag').textContent = [
+    `Chrome/Edge: ${d.chrome || 'NOT FOUND (set the path below)'}`,
+    `Chrome sign-in step: ${d.signInDone ? 'done' : 'not done yet'}   Mode: ${d.mode}`,
+    `Extension last seen: ${ago(d.extLastSeen)}`,
+    ...Object.entries(d.syncLog).map(([k, v]) => `${k}: ${v.total} items synced (last ${v.last} via ${v.via}, ${ago(v.at)})`),
+    ...(Object.keys(d.syncLog).length ? [] : ['No store has synced anything yet.'])
+  ].join('\n');
+}
+$('#libPick').onclick = async () => {
+  const dir = await tiko.pickDir();
+  if (!dir || !confirm(`Move your library to:\n${dir}\n\nThis copies every downloaded asset, then deletes the old copies.`)) return;
+  $('#settings').close('cancel');
+  guard('Moving library', async () => { const n = await tiko.moveLibrary(dir); return `Moved ${n} assets to ${dir}`; }).then(refresh);
+};
+$('#resetSign').onclick = async () => { await tiko.resetSignIn(); fillSettingsExtras(); status('The next store click opens the plain sign-in window again'); };
 $('#copyTok').onclick = () => navigator.clipboard.writeText($('#extToken').value);
 $('#settings').addEventListener('close', async () => {
   if ($('#settings').returnValue !== 'ok') return;

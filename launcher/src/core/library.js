@@ -32,6 +32,9 @@ function dirSize(dir) {
   try { return walk(dir).reduce((n, f) => n + fs.statSync(f).size, 0); } catch { return 0; }
 }
 
+const assetUrl = p => 'asset://local/' + encodeURI(p.replace(/\\/g, '/'));
+const isInside = (p, root) => { const r = path.relative(root, p); return !!r && !r.startsWith('..') && !path.isAbsolute(r); };
+
 class Library {
   constructor(stores) {
     this.stores = stores;
@@ -73,6 +76,37 @@ class Library {
     const a = this.upsert({ provider, providerId, title: base, dir, downloaded: true });
     return this.refreshFiles(a.id);
   }
+  // Files may be served to the UI only from the library folder or a known asset folder.
+  isServable(p) {
+    const f = path.resolve(p);
+    return isInside(f, this.stores.assetsDir) || this.assets.some(a => a.dir && isInside(f, a.dir));
+  }
+  // Moves every asset stored under the current library folder to newRoot. Copy first,
+  // switch over only when everything copied, then delete the originals.
+  async moveTo(newRoot, onProgress = () => {}) {
+    const oldRoot = path.resolve(this.stores.assetsDir);
+    newRoot = path.resolve(newRoot);
+    if (newRoot === oldRoot) return 0;
+    if (isInside(newRoot, oldRoot) || isInside(oldRoot, newRoot)) throw new Error('Choose a folder that is not inside the current library folder, or the other way round.');
+    fs.mkdirSync(newRoot, { recursive: true });
+    const list = this.assets.filter(a => a.dir && isInside(path.resolve(a.dir), oldRoot) && fs.existsSync(a.dir));
+    const plan = [];
+    for (const [i, a] of list.entries()) {
+      onProgress(i + 1, list.length);
+      const dest = path.join(newRoot, path.relative(oldRoot, a.dir));
+      await fs.promises.cp(a.dir, dest, { recursive: true });
+      plan.push([a, a.dir, dest]);
+    }
+    for (const [a, old, dest] of plan) {
+      a.dir = dest;
+      a.files = (a.files || []).map(f => ({ ...f, path: path.join(dest, path.relative(old, f.path)) }));
+      if (a.generatedThumb) a.thumbnail = assetUrl(path.join(dest, '_thumb.png'));
+    }
+    this.stores.config.data.libraryDir = newRoot;
+    this.stores.library.save(); this.stores.config.save();
+    for (const [, old] of plan) await fs.promises.rm(old, { recursive: true, force: true });
+    return plan.length;
+  }
   setTags(id, tags) {
     const a = this.get(id);
     if (!a) return null;
@@ -88,4 +122,4 @@ class Library {
   }
 }
 
-module.exports = { dirSize, Library, findModels, extractZip, slug, MODEL_EXTS };
+module.exports = { assetUrl, dirSize, Library, findModels, extractZip, slug, MODEL_EXTS };

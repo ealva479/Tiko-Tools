@@ -17,7 +17,7 @@
 </aside>
 <main>
   <header><input id="search" placeholder="Search your library..."><select id="source"><option value="">All sources</option></select>
-  <select id="show"><option value="">All</option><option value="yes">Downloaded</option><option value="no">Not downloaded</option></select>
+  <select id="show"><option value="">All</option><option value="yes">Downloaded</option><option value="no">Not downloaded</option><option value="dup">Duplicates</option></select>
   <select id="sort"><option value="new">Newest</option><option value="name">Name</option><option value="source">Source</option></select>
   <button id="bulk" hidden></button><span id="count"></span><span id="status"></span></header>
   <div id="grid"></div>
@@ -35,6 +35,12 @@
   <label>Sketchfab API token <input id="tokSketchfab" type="password" placeholder="saved (hidden)"></label>
   <label>Blender executable <span class="row"><input id="blenderPath"><button type="button" data-pick="blenderPath">Browse</button></span></label>
   <label>UnrealEditor-Cmd <span class="row"><input id="unrealEditor"><button type="button" data-pick="unrealEditor">Browse</button></span></label>
+  <h3>Library folder</h3>
+  <label><span class="row"><input id="libDir" readonly><button type="button" id="libPick">Change...</button></span></label>
+  <small id="libInfo"></small>
+  <h3>Status</h3>
+  <pre id="diag"></pre>
+  <button type="button" id="resetSign">Redo Chrome sign-in step</button>
   <h3>Stores</h3>
   <small>Use "Sign in to stores (Chrome)" in the sidebar to log in once (Google, then each store). Close that window and click a store to sync. Your logins are kept between runs.</small>
   <h3>Browser extension (optional)</h3>

@@ -8,7 +8,8 @@ const { createChromeBridge } = require('./core/chromeBridge');
 const { scanUnityCache } = require('./core/unityCache');
 const { STORES, safeStoreUrl } = require('../extension/shared');
 const { openStores } = require('./core/store');
-const { Library, dirSize } = require('./core/library');
+const { Library, dirSize, assetUrl } = require('./core/library');
+const { findChrome } = require('./core/chromeBridge');
 const providers = require('./providers');
 const { engines, detectEngine } = require('./engines');
 
@@ -120,6 +121,17 @@ function handlers() {
     await chrome.signIn((STORES[id] || STORES.fab).url);
     cfg().chromeSignInDone = true; stores.config.save();
   });
+  ipcMain.handle('pick:dir', async () => {
+    const r = await dialog.showOpenDialog(win, { properties: ['openDirectory', 'createDirectory'] });
+    return r.canceled ? '' : r.filePaths[0];
+  });
+  ipcMain.handle('library:move', async (_e, dir) => library.moveTo(dir, (i, n) => send('library:changed', `Moving library: ${i}/${n}`)));
+  ipcMain.handle('diag:get', () => ({
+    chrome: findChrome(cfg().chromePath), signInDone: cfg().chromeSignInDone, mode: cfg().storeMode,
+    syncLog: cfg().syncLog, extLastSeen: cfg().extLastSeen, libraryDir: stores.assetsDir,
+    libraryBytes: dirSize(stores.assetsDir), assets: library.list().length
+  }));
+  ipcMain.handle('diag:resetSignIn', () => { cfg().chromeSignInDone = false; stores.config.save(); });
   ipcMain.handle('unity:scanCache', () => scanUnityCache(library));
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
 
@@ -175,7 +187,7 @@ function handlers() {
     if (!a || !a.dir || !/^data:image\/png;base64,/.test(dataUrl)) return;
     const file = path.join(a.dir, '_thumb.png');
     fs.writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
-    library.upsert({ provider: a.provider, providerId: a.providerId, thumbnail: 'asset://local/' + encodeURI(file.replace(/\\/g, '/')), generatedThumb: true });
+    library.upsert({ provider: a.provider, providerId: a.providerId, thumbnail: assetUrl(file), generatedThumb: true });
     return library.get(id);
   });
   ipcMain.handle('pick:file', async () => {
@@ -190,26 +202,26 @@ app.whenReady().then(() => {
   protocol.handle('asset', req => {
     let p = decodeURIComponent(new URL(req.url).pathname);
     if (/^\/[A-Za-z]:/.test(p)) p = p.slice(1);
-    const rel = path.relative(stores.assetsDir, path.resolve(p));
-    if (rel.startsWith('..') || path.isAbsolute(rel)) return new Response('Forbidden', { status: 403 });
+    if (!library.isServable(p)) return new Response('Forbidden', { status: 403 });
     return net.fetch(pathToFileURL(path.resolve(p)).href);
   });
   createWindow();
   handlers();
   const cfg = stores.config.data;
+  const logSync = (store, n, via) => { const e = cfg.syncLog[store] || { total: 0 }; cfg.syncLog[store] = { at: Date.now(), last: n, total: e.total + n, via }; stores.config.save(); };
   if (!cfg.extToken) { cfg.extToken = crypto.randomBytes(24).toString('hex'); stores.config.save(); }
   const bridge = createBridge({
     library, getToken: () => cfg.extToken,
     downloadDirs: () => [app.getPath('downloads'), cfg.extraDownloadDir].filter(Boolean).map(d => { try { return fs.realpathSync(d); } catch { return d; } }),
     onSeen: () => { cfg.extLastSeen = Date.now(); },
-    onItems: (store, n) => send('library:changed', `${STORES[store].name}: synced ${n} items from your browser`),
+    onItems: (store, n) => { logSync(store, n, 'extension'); send('library:changed', `${STORES[store].name}: synced ${n} items from your browser`); },
     onDownload: a => { send('library:changed', `Added "${a.title}" from your browser`); focusWindow(); }
   });
   chrome = createChromeBridge({
     library, profileDir: path.join(stores.home, 'chrome-profile'), stagingDir: path.join(stores.home, 'chrome-downloads'),
     getChromePath: () => cfg.chromePath, downloadsDir: () => app.getPath('downloads'),
     hooks: {
-      onItems: (store, n) => send('library:changed', `${STORES[store].name}: synced ${n} items from Chrome`),
+      onItems: (store, n) => { logSync(store, n, 'chrome'); send('library:changed', `${STORES[store].name}: synced ${n} items from Chrome`); },
       onDownload: a => { send('library:changed', `Added "${a.title}" from Chrome`); focusWindow(); },
       onState: msg => send('library:changed', msg)
     }

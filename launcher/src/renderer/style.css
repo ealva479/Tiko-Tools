@@ -26,3 +26,4 @@ dialog label{display:flex;flex-direction:column;gap:4px;margin:10px 0}dialog inp
 dialog h3{margin:14px 0 4px}dialog small{color:#8a90a0}dialog label.check{flex-direction:row;align-items:center;gap:8px}dialog label.check input{width:auto}
 #count{color:#8a90a0;white-space:nowrap}#bulk{white-space:nowrap}
 #dFiles,#dHistory{font-size:12px;color:#aab;margin:8px 0;max-height:150px;overflow:auto}#dFiles div,#dHistory div{padding:2px 0;display:flex;justify-content:space-between;gap:10px}.meta b{cursor:pointer}.meta b:hover{text-decoration:underline}#dSend{background:#2f6fed;border-color:#2f6fed}dialog select{padding:6px;background:#14161a;color:inherit;border:1px solid #3a4150;border-radius:6px}
+#diag{font-size:12px;background:#14161a;border:1px solid #2a2f3a;border-radius:6px;padding:8px;white-space:pre-wrap;color:#aab;max-height:170px;overflow:auto}.dupnote{color:#e0a84a}

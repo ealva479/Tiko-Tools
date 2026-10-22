@@ -81,3 +81,20 @@ test('explicit format choice picks that file for Unreal import', async () => {
   assert.match(py, /chair\.glb/);
   await assert.rejects(engines.unreal.importAsset({ asset: a, project: { path: r }, config: {}, format: 'obj' }), /No model format/);
 });
+
+test('moveTo relocates assets, rewrites paths, and keeps files servable', async () => {
+  const lib = makeLib();
+  const a = lib.addFromPath(makeZip());
+  const oldDir = a.dir;
+  const target = path.join(tmp(), 'bigdrive');
+  assert.strictEqual(await lib.moveTo(target), 1);
+  const b = lib.get(a.id);
+  assert.ok(b.dir.startsWith(fs.realpathSync(path.dirname(target)) ) || b.dir.startsWith(target));
+  assert.ok(b.files.every(f => fs.existsSync(f.path) && f.path.startsWith(target)));
+  assert.ok(!fs.existsSync(oldDir));
+  assert.ok(lib.isServable(b.files[0].path));
+  assert.ok(!lib.isServable('/etc/passwd'));
+  assert.strictEqual(lib.stores.assetsDir, target);
+  assert.ok(lib.dirFor('x', 'y').startsWith(target));
+  await assert.rejects(lib.moveTo(path.join(target, 'inside')), /not inside/);
+});
