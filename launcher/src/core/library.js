@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const AdmZip = require('adm-zip');
 
-const MODEL_EXTS = ['.blend', '.fbx', '.glb', '.gltf', '.obj', '.usd', '.usdz', '.usda', '.abc', '.dae', '.3ds', '.stl', '.ply'];
+const MODEL_EXTS = ['.blend', '.fbx', '.glb', '.gltf', '.obj', '.usd', '.usdz', '.usda', '.abc', '.dae', '.3ds', '.stl', '.ply', '.unitypackage'];
 
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'asset';
 

@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { pathToFileURL } = require('url');
 const { createBridge } = require('./core/bridge');
 const { createChromeBridge } = require('./core/chromeBridge');
+const { scanUnityCache } = require('./core/unityCache');
 const { STORES, safeStoreUrl } = require('../extension/shared');
 const { openStores } = require('./core/store');
 const { Library } = require('./core/library');
@@ -107,6 +108,7 @@ function handlers() {
     if (mode === 'extension') { await shell.openExternal(target); return { mode }; }
     return { mode: 'embedded' };
   });
+  ipcMain.handle('unity:scanCache', () => scanUnityCache(library));
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
 
   ipcMain.handle('local:add', async () => {
@@ -131,7 +133,11 @@ function handlers() {
     const asset = library.get(id);
     const project = cfg().projects.find(p => p.path === projectPath);
     if (!asset || !project) throw new Error('Unknown asset or project');
-    if (!asset.downloaded || !asset.files.length) throw new Error('Download the asset first.');
+    if (!asset.downloaded) throw new Error('Download the asset first.');
+    if (!asset.files.length) throw new Error(asset.provider === 'daz'
+      ? 'DAZ content is in Daz formats. Export it from Daz Studio (FBX or glTF, e.g. with the Daz to Blender/Unreal/Unity bridge), then drag the export into the launcher.'
+      : 'No importable model files were found in this download.');
+    if (asset.files.every(f => f.format === 'unitypackage') && project.engine !== 'unity') throw new Error('Unity packages can only be imported into Unity projects.');
     return engines[project.engine].importAsset({ asset, project, config: cfg() });
   });
   ipcMain.handle('asset:reveal', (_e, id) => shell.showItemInFolder(library.get(id).dir));

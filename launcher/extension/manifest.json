@@ -6,17 +6,17 @@
   "permissions": ["downloads", "storage"],
   "host_permissions": [
     "https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*",
-    "http://127.0.0.1/*"
+    "https://assetstore.unity.com/*", "https://*.daz3d.com/*", "http://127.0.0.1/*"
   ],
   "background": { "service_worker": "background.js" },
   "action": { "default_popup": "popup.html", "default_title": "Tiko Launcher" },
   "content_scripts": [
     {
-      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*"],
+      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*", "https://assetstore.unity.com/*", "https://*.daz3d.com/*"],
       "js": ["shared.js", "inject.js"], "run_at": "document_start", "world": "MAIN"
     },
     {
-      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*"],
+      "matches": ["https://*.fab.com/*", "https://*.cgtrader.com/*", "https://*.turbosquid.com/*", "https://*.renderhub.com/*", "https://assetstore.unity.com/*", "https://*.daz3d.com/*"],
       "js": ["relay.js"], "run_at": "document_start"
     }
   ]

@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/core.test.js test/harvest.test.js test/bridge.test.js"
+    "test": "node --test test/core.test.js test/harvest.test.js test/bridge.test.js test/unity.test.js"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

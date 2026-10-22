@@ -3,7 +3,7 @@ const path = require('path');
 
 // Preferred import format per engine, best first.
 const PREFERRED = {
-  unity:   ['fbx', 'obj', 'dae', 'gltf', 'glb'],     // glb/gltf need the glTFast package
+  unity:   ['unitypackage', 'fbx', 'obj', 'dae', 'gltf', 'glb'],     // glb/gltf need the glTFast package
   godot:   ['glb', 'gltf', 'fbx', 'obj', 'dae'],
   unreal:  ['fbx', 'glb', 'gltf', 'obj', 'usd'],
   blender: ['blend', 'glb', 'gltf', 'fbx', 'obj', 'usd', 'usdz', 'abc', 'dae']

@@ -75,3 +75,20 @@ test('download with an unrelated referrer still merges into the single card whos
   assert.strictEqual(s.library.list().length, 2);
   s.close();
 });
+
+test('unity asset store packages are accepted and DAZ/Unity stores are known', async () => {
+  const s = await setup();
+  await s.call('POST', '/items', { store: 'unity', items: [{ id: '123', title: 'Stylized Props', thumbnail: 'https://cdn.x/p.jpg' }] }, ok);
+  assert.strictEqual(s.library.get('unity:123').provider, 'unity');
+  const file = path.join(s.downloads, 'Stylized Props.unitypackage'); fs.writeFileSync(file, 'pkg');
+  const r = await s.call('POST', '/download', { store: 'unity', path: file, referrer: 'https://assetstore.unity.com/packages/x' }, ok);
+  assert.strictEqual(r.body.id, 'unity:123');
+  assert.deepStrictEqual(s.library.get('unity:123').files.map(f => f.format), ['unitypackage']);
+  assert.strictEqual((await s.call('POST', '/items', { store: 'daz', items: [{ id: 'd1', title: 'Genesis Outfit', thumbnail: 'https://cdn.x/g.jpg' }] }, ok)).body.added, 1);
+  const u = fs.mkdtempSync(path.join(os.tmpdir(), 'tiko-'));
+  const { engines } = require('../src/engines');
+  const msg = await engines.unity.importAsset({ asset: s.library.get('unity:123'), project: { path: u }, config: {} });
+  assert.match(msg, /double-click/);
+  assert.ok(fs.existsSync(path.join(u, 'Assets/TikoAssets/Stylized_Props/Stylized Props.unitypackage')));
+  s.close();
+});

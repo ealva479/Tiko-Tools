@@ -32,6 +32,7 @@ $('#back').onclick = async () => { await tiko.hideStore(); $('#back').hidden = t
 async function renderSources() {
   const box = $('#sources'); box.replaceChildren();
   box.append(el('button', { textContent: 'Sync Sketchfab (API)', onclick: () => guard('Syncing Sketchfab', async () => `Synced ${await tiko.sync('sketchfab')} models`).then(refresh) }));
+  box.append(el('button', { textContent: 'Scan Unity Asset Store downloads', title: 'Imports packages you already downloaded with Unity\'s Package Manager', onclick: () => guard('Scanning', async () => `Added ${await tiko.scanUnityCache()} Unity packages`).then(refresh) }));
   for (const s of await tiko.stores())
     box.append(el('button', { textContent: `${s.name} library`, title: 'Sign in and browse your purchases. Your library is read automatically and downloads are captured. Ctrl+Shift+S saves a page snapshot.', onclick: () => openStore(s.id) }));
 }
@@ -95,13 +96,13 @@ $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refre
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
 $('#settingsBtn').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true;
   const x = await tiko.extStatus(), cfg = await tiko.getConfig();
-  $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#mode').value = cfg.storeMode || 'chrome'; $('#chromePath').value = cfg.chromePath || '';
+  $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#unityEditor').value = cfg.unityEditor || ''; $('#mode').value = cfg.storeMode || 'chrome'; $('#chromePath').value = cfg.chromePath || '';
   $('#extState').textContent = x.lastSeen ? `Extension connected (last seen ${new Date(x.lastSeen).toLocaleString()}). Port ${x.port}.` : `Extension not connected yet. Port ${x.port}.`; $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
 document.querySelectorAll('[data-pick]').forEach(b => b.onclick = async () => { const f = await tiko.pickFile(); if (f) $('#' + b.dataset.pick).value = f; });
 $('#copyTok').onclick = () => navigator.clipboard.writeText($('#extToken').value);
 $('#settings').addEventListener('close', async () => {
   if ($('#settings').returnValue !== 'ok') return;
-  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value, storeMode: $('#mode').value, chromePath: $('#chromePath').value.trim(), extraDownloadDir: $('#extraDir').value.trim() };
+  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value, unityEditor: $('#unityEditor').value.trim(), storeMode: $('#mode').value, chromePath: $('#chromePath').value.trim(), extraDownloadDir: $('#extraDir').value.trim() };
   if ($('#tokSketchfab').value) patch.tokens = { sketchfab: $('#tokSketchfab').value };
   await tiko.setConfig(patch); refresh();
 });

@@ -9,6 +9,8 @@ const STORES = {
   cgtrader:   { name: 'CGTrader',   url: 'https://www.cgtrader.com/', hosts: ['cgtrader.com'], libraryPath: /order|purchase|download|library|account|dashboard/i },
   turbosquid: { name: 'TurboSquid', url: 'https://www.turbosquid.com/', hosts: ['turbosquid.com'], libraryPath: /order|purchase|download|library|account|my/i },
   renderhub:  { name: 'RenderHub',  url: 'https://www.renderhub.com/', hosts: ['renderhub.com'], libraryPath: /order|purchase|download|library|account|my/i },
+  unity:      { name: 'Unity Asset Store', url: 'https://assetstore.unity.com/account/assets', hosts: ['assetstore.unity.com'], libraryPath: /account|assets|library/i, listing: null },
+  daz:        { name: 'DAZ 3D',     url: 'https://www.daz3d.com/', hosts: ['daz3d.com'], libraryPath: /account|library|order|product/i },
   other:      { name: 'Other',      url: 'https://www.google.com/', hosts: [], libraryPath: /./ }
 };
 

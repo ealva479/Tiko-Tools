@@ -15,6 +15,8 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
   Chrome is only reachable from this computer (DevTools port on 127.0.0.1). Only listing data (id, title, thumbnail, author) is read from pages, and only on store library pages.
   Alternatives in Settings, "Open stores with": your normal browser plus the optional extension in `extension/` (see below), or a panel inside the launcher.
   Set the Chrome path in Settings if it isn't found automatically.
+- **Unity Asset Store**: the store opens like the others and lists your purchases (assetstore.unity.com, My Assets). Unity delivers packages through its Package Manager, so use **Scan Unity Asset Store downloads** to import packages you've already downloaded there. They can only be sent to Unity projects: copied as a `.unitypackage` for you to double-click, or imported automatically if you set the Unity editor path in Settings (the project must be closed).
+- **DAZ 3D**: listed like the other stores, but DAZ content is in Daz's own formats. Export from Daz Studio (FBX or glTF, e.g. via the Daz to Blender/Unreal/Unity bridges) and drag the export into the launcher.
 - **Anything else**: drag files, folders or zips onto the window.
 - **Page snapshots**: in any store window, Ctrl+Shift+S saves a cleaned copy of the current page (scripts, forms, inline data and long tokens removed) to the launcher data folder under `snapshots/`. It is meant for building a store-specific purchase lister. Skim it before sharing, since it still contains visible page text.
 - **Tags and filters**: type a tag on any card (comma-separate several) and press Enter. The search box matches titles, authors, sources and tags, and the dropdown filters by source.
