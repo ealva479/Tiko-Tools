@@ -9,8 +9,8 @@ One library for every 3D asset you own, with one-click "send to project" for Uni
 ## How assets get in
 - **Sketchfab**: API token (Settings), then "Sync" lists purchases and your uploads; "Download" fetches the glTF archive.
 - **Fab, CGTrader, TurboSquid, RenderHub** (no public library API): click the store in the sidebar. The launcher starts your installed Chrome (or Edge) with its own profile and watches it.
-  1. First time only: sign in to your Google account in that Chrome window. Chrome sync brings your saved passwords and autofill, and the login is kept between runs.
-  2. Open your library page in that Chrome. Your purchases appear in the launcher as cards.
+  1. First time only: the first click opens a plain Chrome window (no debugging connection, because Google and some stores refuse sign-in otherwise). Sign in to Google (Chrome sync brings your saved passwords and autofill) and then to each store, close the window, and click the store again. Logins are kept between runs. "Sign in to stores (Chrome)" in the sidebar reopens that window any time.
+  2. Open your library page in the Chrome that opens next. Your purchases appear in the launcher as cards.
   3. Downloads you make there from those stores are imported automatically (into the matching card when it can tell which one) and the launcher comes to the front. Other downloads made in that Chrome are moved to your normal Downloads folder.
   Chrome is only reachable from this computer (DevTools port on 127.0.0.1). Only listing data (id, title, thumbnail, author) is read from pages, and only on store library pages.
   Alternatives in Settings, "Open stores with": your normal browser plus the optional extension in `extension/` (see below), or a panel inside the launcher.

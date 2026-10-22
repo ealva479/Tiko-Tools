@@ -146,10 +146,28 @@ function createChromeBridge({ library, profileDir, stagingDir, getChromePath, do
       await sleep(250);
       if (await tryConnect()) return;
     }
-    throw new Error('Could not connect to the launcher Chrome. If a launcher Chrome window is already open, close it and try again.');
+    throw new Error('Could not connect to the launcher Chrome. If a launcher Chrome window (for example the sign-in window) is still open, close it and try again.');
+  }
+
+  // Plain Chrome on the same profile, with NO debugging port. Google and some stores refuse
+  // sign-in in a browser that has one, so logins happen here and the profile is reused for syncing.
+  async function signIn(url) {
+    const exe = findChrome(getChromePath());
+    if (!exe) throw new Error('Chrome or Edge was not found. Set its path in Settings.');
+    if (cdp) { // a syncing Chrome holds the profile: close it first
+      const c = cdp;
+      await new Promise(res => { c.once('close', res); c.send('Browser.close').catch(res); setTimeout(res, 8000); });
+      await sleep(800);
+    }
+    fs.mkdirSync(profileDir, { recursive: true });
+    try { fs.rmSync(portFile()); } catch {}
+    const p = spawn(exe, [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', url], { stdio: 'ignore', detached: true });
+    p.on('exit', () => hooks.onState && hooks.onState('Sign-in window closed. Click a store to start syncing.'));
+    p.unref();
   }
 
   return {
+    signIn,
     isConnected: () => !!cdp,
     async open(url, assetId) {
       if (assetId) pendingAsset = assetId;

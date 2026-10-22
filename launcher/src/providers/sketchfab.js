@@ -17,7 +17,9 @@ async function collect(url, token, limit = 500) {
 
 function toMeta(m, source) {
   const thumbs = (m.thumbnails && m.thumbnails.images) || [];
-  const best = thumbs.slice().sort((a, b) => b.width - a.width)[0];
+  // Smallest image that is still sharp on a ~210px card (2x), not the 1920px original.
+  const sorted = thumbs.slice().sort((a, b) => a.width - b.width);
+  const best = sorted.find(t => t.width >= 400) || sorted[sorted.length - 1];
   return {
     provider: 'sketchfab',
     providerId: m.uid,

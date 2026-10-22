@@ -23,6 +23,7 @@ async function refresh() {
 const openStore = (id, url, assetId) => guard('Opening', async () => {
   const r = await tiko.openStore(id, url, assetId);
   if (r.mode === 'embedded') { await tiko.showStore(id, url, assetId); $('#back').hidden = false; return 'Store opened in the launcher'; }
+  if (r.firstRun) return 'First time: sign in in the Chrome window that opened (Google, then the store), then CLOSE that window and click the store again to start syncing.';
   return r.mode === 'chrome'
     ? 'Opened in the launcher\'s Chrome. Browse your library there; it syncs here automatically.'
     : 'Opened in your browser. Browse or download there; the launcher picks it up.';
@@ -33,6 +34,7 @@ async function renderSources() {
   const box = $('#sources'); box.replaceChildren();
   box.append(el('button', { textContent: 'Sync Sketchfab (API)', onclick: () => guard('Syncing Sketchfab', async () => `Synced ${await tiko.sync('sketchfab')} models`).then(refresh) }));
   box.append(el('button', { textContent: 'Scan Unity Asset Store downloads', title: 'Imports packages you already downloaded with Unity\'s Package Manager', onclick: () => guard('Scanning', async () => `Added ${await tiko.scanUnityCache()} Unity packages`).then(refresh) }));
+  box.append(el('button', { textContent: 'Sign in to stores (Chrome)', title: 'Opens a plain Chrome window to sign in. Close it when done, then click a store to sync.', onclick: () => guard('Opening sign-in', async () => { await tiko.signIn('fab'); return 'Sign in there (Google, then each store), then close the window and click a store to sync.'; }) }));
   for (const s of await tiko.stores())
     box.append(el('button', { textContent: `${s.name} library`, title: 'Sign in and browse your purchases. Your library is read automatically and downloads are captured. Ctrl+Shift+S saves a page snapshot.', onclick: () => openStore(s.id) }));
 }
@@ -54,7 +56,7 @@ function renderGrid() {
   const grid = $('#grid'); grid.replaceChildren();
   for (const a of assets.filter(a => (!$('#source').value || a.provider === $('#source').value) && `${a.title} ${a.author} ${a.provider} ${(a.tags || []).join(' ')}`.toLowerCase().includes(q))) {
     const thumb = el('div', { className: 'thumb', textContent: a.thumbnail ? '' : a.provider });
-    if (a.thumbnail) thumb.style.backgroundImage = `url("${a.thumbnail}")`;
+    if (a.thumbnail) thumb.append(el('img', { src: a.thumbnail, loading: 'lazy', decoding: 'async', alt: '' }));
     const actions = el('div', { className: 'actions' });
     if (a.downloaded && viewer.previewFile(a))
       actions.append(el('button', { textContent: '3D', title: 'Interactive 3D preview', onclick: () => preview(a, thumb) }));
@@ -90,7 +92,7 @@ async function preview(a, thumb) {
   } catch (e) { viewer.stop(); status('Preview failed: ' + e.message); }
 }
 
-$('#search').oninput = renderGrid;
+let searchT; $('#search').oninput = () => { clearTimeout(searchT); searchT = setTimeout(renderGrid, 150); };
 $('#source').onchange = renderGrid;
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);

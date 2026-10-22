@@ -104,9 +104,21 @@ function handlers() {
   ipcMain.handle('store:open', async (_e, id, url, assetId) => {
     const target = (url && safeStoreUrl(id, url)) || STORES[id].url;
     const mode = cfg().storeMode;
-    if (mode === 'chrome') { await chrome.open(target, assetId); return { mode }; }
+    if (mode === 'chrome') {
+      if (!cfg().chromeSignInDone) { // first run: sign in with a plain window (see chromeBridge.signIn)
+        cfg().chromeSignInDone = true; stores.config.save();
+        await chrome.signIn(target);
+        return { mode, firstRun: true };
+      }
+      await chrome.open(target, assetId);
+      return { mode };
+    }
     if (mode === 'extension') { await shell.openExternal(target); return { mode }; }
     return { mode: 'embedded' };
+  });
+  ipcMain.handle('store:signin', async (_e, id) => {
+    await chrome.signIn((STORES[id] || STORES.fab).url);
+    cfg().chromeSignInDone = true; stores.config.save();
   });
   ipcMain.handle('unity:scanCache', () => scanUnityCache(library));
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
