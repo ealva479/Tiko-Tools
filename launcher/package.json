@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
-    "three": "^0.170.0"
+    "three": "^0.170.0",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "electron": "^33.0.0"

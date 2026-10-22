@@ -25,12 +25,20 @@
   <label>Sketchfab API token <input id="tokSketchfab" type="password" placeholder="saved (hidden)"></label>
   <label>Blender executable <span class="row"><input id="blenderPath"><button type="button" data-pick="blenderPath">Browse</button></span></label>
   <label>UnrealEditor-Cmd <span class="row"><input id="unrealEditor"><button type="button" data-pick="unrealEditor">Browse</button></span></label>
-  <h3>Browser extension</h3>
+  <h3>Stores</h3>
+  <small>Sign in to Google in the launcher's Chrome once (Chrome sync brings your passwords). Your login is kept between runs.</small>
+  <h3>Browser extension (optional)</h3>
   <small id="extState"></small>
   <label>Pairing token <span class="row"><input id="extToken" readonly><button type="button" id="copyTok">Copy</button></span></label>
   <small>Chrome / Edge: open chrome://extensions, turn on Developer mode, Load unpacked, choose the <b>launcher/extension</b> folder. Click its icon and paste the token.</small>
   <label>Browser downloads folder (only if not your default Downloads) <input id="extraDir" placeholder="e.g. D:\\Downloads"></label>
-  <label class="check"><input id="embed" type="checkbox"> Open stores inside the launcher instead of my browser</label>
+  <label>Open stores with
+    <select id="mode">
+      <option value="chrome">The launcher's own Chrome (recommended)</option>
+      <option value="extension">My normal browser + extension</option>
+      <option value="embedded">A panel inside the launcher</option>
+    </select></label>
+  <label>Chrome / Edge path (only if not found automatically) <input id="chromePath" placeholder="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"></label>
   <menu><button id="saveSettings" value="ok">Save</button><button value="cancel">Cancel</button></menu>
 </form></dialog>
 <script type="module" src="app.js"></script>

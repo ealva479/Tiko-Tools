@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld('tiko', {
   list: call('library:list'), remove: call('library:remove'), setTags: call('library:setTags'),
   getConfig: call('config:get'), setConfig: call('config:set'),
   sync: call('provider:sync'), download: call('asset:download'),
-  extStatus: call('ext:status'), openExternal: call('store:external'), showStore: call('store:show'), hideStore: call('store:hide'), stores: call('store:list'),
+  extStatus: call('ext:status'), openStore: call('store:open'), showStore: call('store:show'), hideStore: call('store:hide'), stores: call('store:list'),
   addLocal: call('local:add'), addPaths: call('local:addPaths'),
   addProject: call('project:add'), removeProject: call('project:remove'),
   send: call('asset:send'), reveal: call('asset:reveal'), setThumb: call('asset:setThumb'), pickFile: call('pick:file'),

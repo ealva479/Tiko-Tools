@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { STORES, safeStoreUrl } = require('../../extension/shared');
+const { STORES, safeStoreUrl, storeForHost, extractItems } = require('../../extension/shared');
 const { extractZip, slug, MODEL_EXTS } = require('./library');
 
 const clip = (v, n) => (typeof v === 'string' ? v.slice(0, n) : undefined);
@@ -27,9 +27,22 @@ function ingestItems(library, storeId, items, pageUrl) {
   return n;
 }
 
+// A JSON response seen while browsing. Reads it only when the page is a
+// supported store's library-like page; returns {store, count} or null.
+function harvestResponse(library, pageUrl, text) {
+  let u;
+  try { u = new URL(pageUrl); } catch { return null; }
+  const store = storeForHost(u.hostname);
+  if (!store || !STORES[store].libraryPath.test(pageUrl) || text.length > 8e6) return null;
+  let items;
+  try { items = extractItems(JSON.parse(text)); } catch { return null; }
+  if (!items.length) return null;
+  return { store, count: ingestItems(library, store, items, pageUrl) };
+}
+
 // A file the user downloaded in their own browser. Merged into the matching
 // library card when its page URL equals the download's referrer, else a new asset.
-function ingestFile(library, storeId, filePath, referrer) {
+function ingestFile(library, storeId, filePath, referrer, preferId) {
   const real = fs.realpathSync(filePath);
   const ext = path.extname(real).toLowerCase();
   if (!fs.statSync(real).isFile() || (ext !== '.zip' && !MODEL_EXTS.includes(ext))) throw new Error('Unsupported file type');
@@ -39,7 +52,8 @@ function ingestFile(library, storeId, filePath, referrer) {
   // Prefer the card whose page the download came from; else a card whose title matches the file name.
   const fileSlug = slug(base);
   const similar = a => { const t = slug(a.title); return t.length >= 4 && (fileSlug.includes(t) || t.includes(fileSlug)); };
-  const prev = (key && waiting.find(a => pageKey(a.pageUrl) === key)) || (() => { const m = waiting.filter(similar); return m.length === 1 ? m[0] : null; })();
+  const preferred = preferId && waiting.find(a => a.id === preferId);
+  const prev = preferred || (key && waiting.find(a => pageKey(a.pageUrl) === key)) || (() => { const m = waiting.filter(similar); return m.length === 1 ? m[0] : null; })();
   const providerId = prev ? prev.providerId : `${slug(base)}-${Date.now().toString(36)}`;
   const dir = library.dirFor(storeId, providerId);
   fs.mkdirSync(dir, { recursive: true });
@@ -48,4 +62,4 @@ function ingestFile(library, storeId, filePath, referrer) {
   return library.refreshFiles(a.id);
 }
 
-module.exports = { ingestItems, ingestFile };
+module.exports = { ingestItems, ingestFile, harvestResponse };

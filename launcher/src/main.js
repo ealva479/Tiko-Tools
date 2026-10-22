@@ -4,6 +4,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { pathToFileURL } = require('url');
 const { createBridge } = require('./core/bridge');
+const { createChromeBridge } = require('./core/chromeBridge');
 const { STORES, safeStoreUrl } = require('../extension/shared');
 const { openStores } = require('./core/store');
 const { Library } = require('./core/library');
@@ -20,7 +21,7 @@ if (!TEST_MODE && !app.requestSingleInstanceLock()) app.quit();
 if (process.defaultApp && process.argv[1]) app.setAsDefaultProtocolClient('tiko-launcher', process.execPath, [path.resolve(process.argv[1])]);
 else app.setAsDefaultProtocolClient('tiko-launcher');
 
-let stores, library, win;
+let stores, library, win, chrome;
 
 function focusWindow() {
   if (!win || win.isDestroyed()) return;
@@ -97,10 +98,14 @@ function handlers() {
     layout();
   });
   ipcMain.handle('store:hide', hideStore);
-  ipcMain.handle('ext:status', () => ({ token: cfg().extToken, port: cfg().extPort, lastSeen: cfg().extLastSeen, embed: cfg().embedStores }));
-  ipcMain.handle('store:external', (_e, id, url) => {
+  ipcMain.handle('ext:status', () => ({ token: cfg().extToken, port: cfg().extPort, lastSeen: cfg().extLastSeen }));
+  // How a store opens: the launcher's own Chrome (default), the user's browser + extension, or an embedded panel.
+  ipcMain.handle('store:open', async (_e, id, url, assetId) => {
     const target = (url && safeStoreUrl(id, url)) || STORES[id].url;
-    return shell.openExternal(target);
+    const mode = cfg().storeMode;
+    if (mode === 'chrome') { await chrome.open(target, assetId); return { mode }; }
+    if (mode === 'extension') { await shell.openExternal(target); return { mode }; }
+    return { mode: 'embedded' };
   });
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));
 
@@ -165,6 +170,16 @@ app.whenReady().then(() => {
     onItems: (store, n) => send('library:changed', `${STORES[store].name}: synced ${n} items from your browser`),
     onDownload: a => { send('library:changed', `Added "${a.title}" from your browser`); focusWindow(); }
   });
+  chrome = createChromeBridge({
+    library, profileDir: path.join(stores.home, 'chrome-profile'), stagingDir: path.join(stores.home, 'chrome-downloads'),
+    getChromePath: () => cfg.chromePath, downloadsDir: () => app.getPath('downloads'),
+    hooks: {
+      onItems: (store, n) => send('library:changed', `${STORES[store].name}: synced ${n} items from Chrome`),
+      onDownload: a => { send('library:changed', `Added "${a.title}" from Chrome`); focusWindow(); },
+      onState: msg => send('library:changed', msg)
+    }
+  });
+  app.on('before-quit', () => chrome.close());
   bridge.on('error', err => console.error('extension bridge unavailable:', err.message));
   bridge.listen(cfg.extPort, '127.0.0.1');
 });

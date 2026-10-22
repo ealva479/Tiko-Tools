@@ -20,14 +20,13 @@ async function refresh() {
   renderSources(); renderProjects(); renderGrid();
 }
 
-const openStore = async (id, url, assetId) => {
-  const ext = await tiko.extStatus();
-  if (ext.lastSeen && !ext.embed) { // signed-in browser + extension: use it (autofill, passkeys)
-    await tiko.openExternal(id, url);
-    return status('Opened in your browser. Browse or download there; the launcher picks it up.');
-  }
-  await tiko.showStore(id, url, assetId); $('#back').hidden = false;
-};
+const openStore = (id, url, assetId) => guard('Opening', async () => {
+  const r = await tiko.openStore(id, url, assetId);
+  if (r.mode === 'embedded') { await tiko.showStore(id, url, assetId); $('#back').hidden = false; return 'Store opened in the launcher'; }
+  return r.mode === 'chrome'
+    ? 'Opened in the launcher\'s Chrome. Browse your library there; it syncs here automatically.'
+    : 'Opened in your browser. Browse or download there; the launcher picks it up.';
+});
 $('#back').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true; refresh(); };
 
 async function renderSources() {
@@ -95,14 +94,14 @@ $('#source').onchange = renderGrid;
 $('#addLocal').onclick = () => guard('Adding', () => tiko.addLocal()).then(refresh);
 $('#addProject').onclick = () => guard('Adding project', () => tiko.addProject()).then(refresh);
 $('#settingsBtn').onclick = async () => { await tiko.hideStore(); $('#back').hidden = true;
-  const x = await tiko.extStatus();
-  $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#embed').checked = x.embed;
+  const x = await tiko.extStatus(), cfg = await tiko.getConfig();
+  $('#extraDir').value = (await tiko.getConfig()).extraDownloadDir || ''; $('#extToken').value = x.token; $('#mode').value = cfg.storeMode || 'chrome'; $('#chromePath').value = cfg.chromePath || '';
   $('#extState').textContent = x.lastSeen ? `Extension connected (last seen ${new Date(x.lastSeen).toLocaleString()}). Port ${x.port}.` : `Extension not connected yet. Port ${x.port}.`; $('#blenderPath').value = config.blenderPath || ''; $('#unrealEditor').value = config.unrealEditor || ''; $('#tokSketchfab').value = ''; $('#settings').showModal(); };
 document.querySelectorAll('[data-pick]').forEach(b => b.onclick = async () => { const f = await tiko.pickFile(); if (f) $('#' + b.dataset.pick).value = f; });
 $('#copyTok').onclick = () => navigator.clipboard.writeText($('#extToken').value);
 $('#settings').addEventListener('close', async () => {
   if ($('#settings').returnValue !== 'ok') return;
-  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value, embedStores: $('#embed').checked, extraDownloadDir: $('#extraDir').value.trim() };
+  const patch = { blenderPath: $('#blenderPath').value, unrealEditor: $('#unrealEditor').value, storeMode: $('#mode').value, chromePath: $('#chromePath').value.trim(), extraDownloadDir: $('#extraDir').value.trim() };
   if ($('#tokSketchfab').value) patch.tokens = { sketchfab: $('#tokSketchfab').value };
   await tiko.setConfig(patch); refresh();
 });

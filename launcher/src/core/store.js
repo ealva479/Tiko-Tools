@@ -23,7 +23,8 @@ function openStores(home) {
     library: new JsonStore(path.join(home, 'library.json'), { assets: [] }),
     config: new JsonStore(path.join(home, 'config.json'), {
       tokens: {}, projects: [], blenderPath: '', unrealEditor: '',
-      extToken: '', extPort: 47821, extLastSeen: 0, embedStores: false, extraDownloadDir: ''
+      extToken: '', extPort: 47821, extLastSeen: 0, embedStores: false, extraDownloadDir: '',
+      storeMode: 'chrome', chromePath: ''
     })
   };
 }
