@@ -13,7 +13,7 @@ function ingestItems(library, storeId, items, pageUrl) {
   const store = STORES[storeId];
   if (!store || !Array.isArray(items)) return 0;
   let n = 0;
-  for (const it of items.slice(0, 2000)) {
+  library.batch(() => { for (const it of items.slice(0, 2000)) {
     if (!it || it.id == null || typeof it.title !== 'string') continue;
     const providerId = String(it.id).slice(0, 200);
     const prev = library.get(`${storeId}:${providerId}`);
@@ -23,7 +23,7 @@ function ingestItems(library, storeId, items, pageUrl) {
       pageUrl: (prev && prev.pageUrl) || (store.listing && store.listing(providerId)) || safeStoreUrl(storeId, pageUrl) || store.url
     });
     n++;
-  }
+  } });
   return n;
 }
 

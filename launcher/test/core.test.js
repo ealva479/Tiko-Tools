@@ -98,3 +98,14 @@ test('moveTo relocates assets, rewrites paths, and keeps files servable', async 
   assert.ok(lib.dirFor('x', 'y').startsWith(target));
   await assert.rejects(lib.moveTo(path.join(target, 'inside')), /not inside/);
 });
+
+test('batch defers saves to one write', () => {
+  const lib = makeLib();
+  let saves = 0; const real = lib.stores.library.save.bind(lib.stores.library);
+  lib.stores.library.save = () => { saves++; real(); };
+  lib.batch(() => { for (let i = 0; i < 50; i++) lib.upsert({ provider: 'x', providerId: String(i), title: 't' + i }); });
+  assert.strictEqual(saves, 1);
+  assert.strictEqual(lib.list().length, 50);
+  lib.upsert({ provider: 'x', providerId: 'late', title: 'late' });
+  assert.strictEqual(saves, 2);
+});

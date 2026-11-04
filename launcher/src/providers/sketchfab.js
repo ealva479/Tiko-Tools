@@ -5,7 +5,7 @@ const { extractZip } = require('../core/library');
 const API = 'https://api.sketchfab.com/v3';
 const auth = token => ({ Authorization: `Token ${token}` });
 
-async function collect(url, token, limit = 500) {
+async function collect(url, token, limit = 10000) {
   const out = [];
   while (url && out.length < limit) {
     const page = await getJson(url, auth(token));
@@ -46,15 +46,17 @@ module.exports = {
     ]);
     const seen = new Set();
     let n = 0;
-    for (const [list, source] of [[purchases, 'purchased'], [own, 'uploaded']]) {
-      for (const m of list) {
-        const model = m.model || m; // purchases wrap the model object
-        if (seen.has(model.uid)) continue;
-        seen.add(model.uid);
-        library.upsert(toMeta(model, source));
-        n++;
+    library.batch(() => {
+      for (const [list, source] of [[purchases, 'purchased'], [own, 'uploaded']]) {
+        for (const m of list) {
+          const model = m.model || m; // purchases wrap the model object
+          if (seen.has(model.uid)) continue;
+          seen.add(model.uid);
+          library.upsert(toMeta(model, source));
+          n++;
+        }
       }
-    }
+    });
     return n;
   },
   // Fetches the glTF archive and extracts it into the library.
@@ -66,6 +68,7 @@ module.exports = {
     const zip = path.join(dir, 'download.zip');
     await download(fmt.url, zip); // signed URL: no auth header
     extractZip(zip, dir);
+    require('fs').rmSync(zip, { force: true }); // the archive would double the disk use
     return library.upsert({ provider: 'sketchfab', providerId: asset.providerId, dir, downloaded: true });
   }
 };

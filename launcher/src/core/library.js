@@ -45,6 +45,14 @@ class Library {
   dirFor(provider, providerId) {
     return path.join(this.stores.assetsDir, slug(provider), slug(providerId));
   }
+  // Runs fn with disk writes deferred, then saves once (a 500-item sync was rewriting the file 500 times).
+  batch(fn) {
+    this._deferred = (this._deferred || 0) + 1;
+    try { return fn(); } finally {
+      if (--this._deferred === 0 && this._dirty) { this._dirty = false; this.stores.library.save(); }
+    }
+  }
+  _save() { if (this._deferred) this._dirty = true; else this.stores.library.save(); }
   // Insert or merge metadata by (provider, providerId).
   upsert(meta) {
     const id = `${meta.provider}:${meta.providerId}`;
@@ -52,7 +60,7 @@ class Library {
     const prev = i >= 0 ? this.assets[i] : { addedAt: Date.now(), files: [], tags: [] };
     const next = { ...prev, ...meta, id };
     if (i >= 0) this.assets[i] = next; else this.assets.push(next);
-    this.stores.library.save();
+    this._save();
     return next;
   }
   // Re-scan the asset folder for model files after a download/extract.

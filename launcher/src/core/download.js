@@ -25,17 +25,22 @@ function download(url, dest, headers = {}, hops = 0) {
   });
 }
 
-function getJson(url, headers = {}) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { headers }, res => {
-      let body = '';
-      res.on('data', c => body += c);
-      res.on('end', () => {
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 200)}`));
-        try { resolve(JSON.parse(body)); } catch (e) { reject(e); }
-      });
-    }).on('error', reject);
-  });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Retries when the API says "too many requests", honouring Retry-After (capped at 60s).
+async function getJson(url, headers = {}, tries = 4) {
+  for (let i = 0; ; i++) {
+    const res = await new Promise((resolve, reject) => {
+      https.get(url, { headers }, r => {
+        let body = '';
+        r.on('data', c => body += c);
+        r.on('end', () => resolve({ status: r.statusCode, retryAfter: Number(r.headers['retry-after']), body }));
+      }).on('error', reject);
+    });
+    if (res.status === 429 && i < tries - 1) { await sleep(Math.min(60, res.retryAfter || 2 ** (i + 1)) * 1000); continue; }
+    if (res.status !== 200) throw new Error(`HTTP ${res.status}: ${res.body.slice(0, 200)}`);
+    return JSON.parse(res.body);
+  }
 }
 
 module.exports = { download, getJson };
