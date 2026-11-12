@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('tiko', {
   getConfig: call('config:get'), setConfig: call('config:set'),
   sync: call('provider:sync'), download: call('asset:download'),
   pickDir: call('pick:dir'), moveLibrary: call('library:move'), diag: call('diag:get'), resetSignIn: call('diag:resetSignIn'),
+  cleanupZips: call('library:cleanup'),
   scanUnityCache: call('unity:scanCache'),
   extStatus: call('ext:status'), openStore: call('store:open'), showStore: call('store:show'), hideStore: call('store:hide'), stores: call('store:list'),
   addLocal: call('local:add'), addPaths: call('local:addPaths'),

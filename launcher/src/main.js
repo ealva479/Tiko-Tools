@@ -131,6 +131,7 @@ function handlers() {
     syncLog: cfg().syncLog, extLastSeen: cfg().extLastSeen, libraryDir: stores.assetsDir,
     libraryBytes: dirSize(stores.assetsDir), assets: library.list().length
   }));
+  ipcMain.handle('library:cleanup', () => library.cleanupZips());
   ipcMain.handle('diag:resetSignIn', () => { cfg().chromeSignInDone = false; stores.config.save(); });
   ipcMain.handle('unity:scanCache', () => scanUnityCache(library));
   ipcMain.handle('store:list', () => Object.entries(providers.browser.STORES).map(([id, s]) => ({ id, name: s.name })));

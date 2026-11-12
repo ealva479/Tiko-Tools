@@ -109,3 +109,16 @@ test('batch defers saves to one write', () => {
   lib.upsert({ provider: 'x', providerId: 'late', title: 'late' });
   assert.strictEqual(saves, 2);
 });
+
+test('cleanupZips removes leftover archives only when extracted files exist', () => {
+  const lib = makeLib();
+  const a = lib.addFromPath(makeZip());
+  fs.writeFileSync(path.join(a.dir, 'download.zip'), 'zipbytes');
+  const only = lib.upsert({ provider: 'x', providerId: 'only', title: 'only', dir: path.join(path.dirname(a.dir), 'only'), downloaded: true });
+  fs.mkdirSync(only.dir, { recursive: true });
+  fs.writeFileSync(path.join(only.dir, 'download.zip'), 'zipbytes');
+  const r = lib.cleanupZips();
+  assert.deepStrictEqual(r, { removed: 1, bytes: 8 });
+  assert.ok(!fs.existsSync(path.join(a.dir, 'download.zip')));
+  assert.ok(fs.existsSync(path.join(only.dir, 'download.zip')));
+});

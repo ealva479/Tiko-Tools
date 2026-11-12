@@ -187,6 +187,11 @@ $('#libPick').onclick = async () => {
   $('#settings').close('cancel');
   guard('Moving library', async () => { const n = await tiko.moveLibrary(dir); return `Moved ${n} assets to ${dir}`; }).then(refresh);
 };
+$('#cleanZips').onclick = async () => {
+  const r = await tiko.cleanupZips();
+  status(r.removed ? `Removed ${r.removed} leftover zip files, freed ${fmtSize(r.bytes)}` : 'No leftover zip files found');
+  fillSettingsExtras();
+};
 $('#resetSign').onclick = async () => { await tiko.resetSignIn(); fillSettingsExtras(); status('The next store click opens the plain sign-in window again'); };
 $('#copyTok').onclick = () => navigator.clipboard.writeText($('#extToken').value);
 $('#settings').addEventListener('close', async () => {

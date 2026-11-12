@@ -56,7 +56,7 @@ function createStoreView({ WebContentsView, session }, id, library, hooks) {
     item.once('done', (_ev, st) => {
       if (st !== 'completed') return;
       try {
-        if (filename.toLowerCase().endsWith('.zip')) extractZip(dest, dir);
+        if (filename.toLowerCase().endsWith('.zip')) { extractZip(dest, dir); fs.rmSync(dest, { force: true }); } // keep the extracted files, not a second copy
         const a = library.upsert({ provider: id, providerId, title: prev ? prev.title : base, pageUrl: prev ? prev.pageUrl : wc.getURL(), dir, downloaded: true });
         library.refreshFiles(a.id);
         hooks.onChanged(1, `Added "${a.title}" from ${store.name}`);

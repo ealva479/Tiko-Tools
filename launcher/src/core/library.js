@@ -115,6 +115,23 @@ class Library {
     for (const [, old] of plan) await fs.promises.rm(old, { recursive: true, force: true });
     return plan.length;
   }
+  // Deletes leftover download.zip archives whose contents were already extracted
+  // next to them. Returns {removed, bytes}.
+  cleanupZips() {
+    let removed = 0, bytes = 0;
+    for (const a of this.assets) {
+      if (!a.dir) continue;
+      const zip = path.join(a.dir, 'download.zip');
+      try {
+        const size = fs.statSync(zip).size;
+        const others = walk(a.dir).filter(f => f !== zip);
+        if (!others.length) continue; // the zip is the only copy: keep it
+        fs.rmSync(zip);
+        removed++; bytes += size;
+      } catch {}
+    }
+    return { removed, bytes };
+  }
   setTags(id, tags) {
     const a = this.get(id);
     if (!a) return null;
